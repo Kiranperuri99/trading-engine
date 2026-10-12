@@ -1,0 +1,62 @@
+
+from dataclasses import dataclass
+
+
+@dataclass
+class Order:
+    order_id: int
+    side: str
+    price: float
+    quantity: int
+
+
+class ChronosMatch:
+    def __init__(self):
+        self.buy_orders = []
+        self.sell_orders = []
+
+    def add_order(self, order):
+        side = order.side.upper()
+
+        if side not in ("BUY", "SELL"):
+            raise ValueError("Side must be BUY or SELL")
+
+        print(f"New order: {order}")
+
+        if side == "BUY":
+            self.buy_orders.append(order)
+        else:
+            self.sell_orders.append(order)
+
+        self.match_orders()
+
+    def match_orders(self):
+        while self.buy_orders and self.sell_orders:
+            buy = max(self.buy_orders, key=lambda order: order.price)
+            sell = min(self.sell_orders, key=lambda order: order.price)
+
+            if buy.price < sell.price:
+                break
+
+            quantity = min(buy.quantity, sell.quantity)
+            print(
+                f"MATCHED: {quantity} units at "
+                f"price {sell.price}"
+            )
+
+            buy.quantity -= quantity
+            sell.quantity -= quantity
+
+            if buy.quantity == 0:
+                self.buy_orders.remove(buy)
+
+            if sell.quantity == 0:
+                self.sell_orders.remove(sell)
+
+
+if __name__ == "__main__":
+    engine = ChronosMatch()
+
+    engine.add_order(Order(1, "BUY", 101.0, 10))
+    engine.add_order(Order(2, "SELL", 100.0, 5))
+
