@@ -43,7 +43,9 @@ class ChronosMatch:
 
         if side not in ("BUY", "SELL"):
             raise ValueError("Side must be BUY or SELL")
-
+        for existing in self.buy_orders + self.sell_orders:
+            if existing.order_id == order.order_id:
+                raise ValueError("Order ID is already active")
         print(f"New order: {order}")
 
         if side == "BUY":

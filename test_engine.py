@@ -171,5 +171,18 @@ class TestChronosMatch(unittest.TestCase):
         self.assertEqual(len(engine.buy_orders), 1)
         self.assertEqual(engine.buy_orders[0].order_id, 1)
         self.assertEqual(engine.buy_orders[0].quantity, 5)
+    def test_rejects_duplicate_active_order_id(self):
+        for side in ("BUY", "SELL"):
+            with self.subTest(side=side):
+                engine = ChronosMatch()
+                engine.add_order(Order(1, "BUY", 100.0, 5))
+
+                with self.assertRaises(ValueError):
+                    engine.add_order(Order(1, side, 100.0, 3))
+
+                self.assertEqual(len(engine.buy_orders), 1)
+                self.assertEqual(engine.buy_orders[0].quantity, 5)
+                self.assertEqual(engine.sell_orders, [])
+                self.assertEqual(engine.trades, [])
 if __name__ == "__main__":
     unittest.main()
