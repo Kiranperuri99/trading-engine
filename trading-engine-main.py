@@ -16,8 +16,10 @@ class ChronosMatch:
         self.sell_orders = []
 
     def add_order(self, order):
+        if type(order.order_id) is not int or order.order_id <= 0:
+            raise ValueError("Order ID must be a positive whole number")
         if type(order.quantity) is not int:
-                    raise ValueError("Quantity must be a whole number")
+            raise ValueError("Quantity must be a whole number")
 
         if order.quantity <= 0:
             raise ValueError("Quantity must be greater than zero")
