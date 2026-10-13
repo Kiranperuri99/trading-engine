@@ -49,6 +49,15 @@ class TestChronosMatch(unittest.TestCase):
 
                 self.assertEqual(engine.buy_orders, [])
                 self.assertEqual(engine.sell_orders, [])
+    def test_rejects_non_integer_quantity(self):
+        for quantity in (2.5, "5", True, None):
+            with self.subTest(quantity=quantity):
+                engine = ChronosMatch()
 
+                with self.assertRaises(ValueError):
+                    engine.add_order(Order(1, "BUY", 100.0, quantity))
+
+                self.assertEqual(engine.buy_orders, [])
+                self.assertEqual(engine.sell_orders, [])
 if __name__ == "__main__":
     unittest.main()

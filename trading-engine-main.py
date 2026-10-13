@@ -16,8 +16,11 @@ class ChronosMatch:
         self.sell_orders = []
 
     def add_order(self, order):
+        if type(order.quantity) is not int:
+                    raise ValueError("Quantity must be a whole number")
+
         if order.quantity <= 0:
-                    raise ValueError("Quantity must be greater than zero")
+            raise ValueError("Quantity must be greater than zero")
 
         if not isfinite(order.price) or order.price <= 0:
             raise ValueError("Price must be finite and greater than zero")
