@@ -16,7 +16,13 @@ class ChronosMatch:
         self.sell_orders = []
 
     def add_order(self, order):
+        if order.quantity <= 0:
+            raise ValueError("Quantity must be greater than zero")
         side = order.side.upper()
+            
+        if order.price <= 0:
+            raise ValueError("Price must be greater than zero")
+        
 
         if side not in ("BUY", "SELL"):
             raise ValueError("Side must be BUY or SELL")
