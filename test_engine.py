@@ -1,3 +1,5 @@
+import io
+from contextlib import redirect_stdout
 import unittest
 from importlib.machinery import SourceFileLoader
 
@@ -278,5 +280,17 @@ class TestChronosMatch(unittest.TestCase):
         self.assertEqual(len(engine.sell_orders), 1)
         self.assertEqual(engine.sell_orders[0].order_id, 10)
         self.assertEqual(engine.sell_orders[0].quantity, 2)
+    def test_quiet_mode_still_matches_orders(self):
+        output = io.StringIO()
+        engine = ChronosMatch(verbose=False)
+
+        with redirect_stdout(output):
+            engine.add_order(Order(1, "BUY", 100.0, 5))
+            engine.add_order(Order(2, "SELL", 100.0, 5))
+
+        self.assertEqual(output.getvalue(), "")
+        self.assertEqual(engine.total_traded_quantity(), 5)
+        self.assertEqual(engine.buy_orders, [])
+        self.assertEqual(engine.sell_orders, [])
 if __name__ == "__main__":
     unittest.main()

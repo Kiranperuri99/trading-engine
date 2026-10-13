@@ -11,7 +11,8 @@ class Order:
 
 
 class ChronosMatch:
-    def __init__(self):
+    def __init__(self, verbose=True):
+        self.verbose = verbose
         self.buy_orders = []
         self.sell_orders = []
         self.trades = []
@@ -46,7 +47,9 @@ class ChronosMatch:
         for existing in self.buy_orders + self.sell_orders:
             if existing.order_id == order.order_id:
                 raise ValueError("Order ID is already active")
-        print(f"New order: {order}")
+        if self.verbose:
+            if self.verbose:
+                print(f"New order: {order}")
 
         if side == "BUY":
             self.buy_orders.append(order)
@@ -104,7 +107,8 @@ class ChronosMatch:
                 "price": sell.price,
                 "quantity": quantity,
             })
-            print(
+            if self.verbose:
+                print(
                 f"MATCHED: {quantity} units at "
                 f"price {sell.price}"
             )
