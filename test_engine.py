@@ -184,5 +184,20 @@ class TestChronosMatch(unittest.TestCase):
                 self.assertEqual(engine.buy_orders[0].quantity, 5)
                 self.assertEqual(engine.sell_orders, [])
                 self.assertEqual(engine.trades, [])
+    def test_total_traded_quantity_starts_at_zero(self):
+        engine = ChronosMatch()
+
+        self.assertEqual(engine.total_traded_quantity(), 0)
+
+    def test_total_traded_quantity_across_multiple_matches(self):
+        engine = ChronosMatch()
+        engine.add_order(Order(1, "SELL", 100.0, 3))
+        engine.add_order(Order(2, "SELL", 101.0, 4))
+        engine.add_order(Order(3, "BUY", 101.0, 10))
+
+        self.assertEqual(len(engine.trades), 2)
+        self.assertEqual(engine.total_traded_quantity(), 7)
+        self.assertEqual(engine.buy_orders[0].quantity, 3)
+        self.assertEqual(engine.sell_orders, [])
 if __name__ == "__main__":
     unittest.main()

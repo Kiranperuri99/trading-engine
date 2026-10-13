@@ -81,6 +81,8 @@ class ChronosMatch:
                     return True
 
         return False
+    def total_traded_quantity(self):
+        return sum(trade["quantity"] for trade in self.trades)
     def match_orders(self):
         while self.buy_orders and self.sell_orders:
             buy = max(self.buy_orders, key=lambda order: order.price)
