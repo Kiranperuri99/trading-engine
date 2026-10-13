@@ -1,4 +1,4 @@
-
+from math import isfinite
 from dataclasses import dataclass
 
 
@@ -17,7 +17,12 @@ class ChronosMatch:
 
     def add_order(self, order):
         if order.quantity <= 0:
-            raise ValueError("Quantity must be greater than zero")
+                    raise ValueError("Quantity must be greater than zero")
+
+        if not isfinite(order.price) or order.price <= 0:
+            raise ValueError("Price must be finite and greater than zero")
+
+        
         side = order.side.upper()
             
         if order.price <= 0:
