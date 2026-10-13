@@ -152,5 +152,24 @@ class TestChronosMatch(unittest.TestCase):
         engine = ChronosMatch()
         engine.add_order(Order(2, "SELL", 102.0, 5))
         self.assertIsNone(engine.spread())     
+    def test_cancel_waiting_order(self):
+        for side in ("BUY", "SELL"):
+            with self.subTest(side=side):
+                engine = ChronosMatch()
+                engine.add_order(Order(1, side, 100.0, 5))
+
+                self.assertTrue(engine.cancel_order(1))
+                self.assertEqual(engine.buy_orders, [])
+                self.assertEqual(engine.sell_orders, [])
+                self.assertEqual(engine.trades, [])
+
+    def test_cancel_unknown_order_preserves_book(self):
+        engine = ChronosMatch()
+        engine.add_order(Order(1, "BUY", 100.0, 5))
+
+        self.assertFalse(engine.cancel_order(999))
+        self.assertEqual(len(engine.buy_orders), 1)
+        self.assertEqual(engine.buy_orders[0].order_id, 1)
+        self.assertEqual(engine.buy_orders[0].quantity, 5)
 if __name__ == "__main__":
     unittest.main()

@@ -71,7 +71,14 @@ class ChronosMatch:
             return None
 
         return ask - bid
+    def cancel_order(self, order_id):
+        for orders in (self.buy_orders, self.sell_orders):
+            for index, order in enumerate(orders):
+                if order.order_id == order_id:
+                    del orders[index]
+                    return True
 
+        return False
     def match_orders(self):
         while self.buy_orders and self.sell_orders:
             buy = max(self.buy_orders, key=lambda order: order.price)
