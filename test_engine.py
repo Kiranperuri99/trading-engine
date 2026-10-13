@@ -96,6 +96,24 @@ class TestChronosMatch(unittest.TestCase):
                     engine.add_order(Order(1, "BUY", price, 5))
 
                 self.assertEqual(engine.buy_orders, [])
-                self.assertEqual(engine.sell_orders, [])          
+                self.assertEqual(engine.sell_orders, []) 
+    def test_records_completed_trade(self):
+        engine = ChronosMatch()
+        engine.add_order(Order(1, "BUY", 101.0, 10))
+        engine.add_order(Order(2, "SELL", 100.0, 5))
+
+        self.assertEqual(engine.trades, [{
+            "buy_order_id": 1,
+            "sell_order_id": 2,
+            "price": 100.0,
+            "quantity": 5,
+        }])
+
+    def test_no_trade_recorded_when_prices_do_not_cross(self):
+        engine = ChronosMatch()
+        engine.add_order(Order(1, "BUY", 99.0, 10))
+        engine.add_order(Order(2, "SELL", 100.0, 5))
+
+        self.assertEqual(engine.trades, [])         
 if __name__ == "__main__":
     unittest.main()

@@ -14,6 +14,7 @@ class ChronosMatch:
     def __init__(self):
         self.buy_orders = []
         self.sell_orders = []
+        self.trades = []
 
     def add_order(self, order):
         if type(order.order_id) is not int or order.order_id <= 0:
@@ -61,6 +62,12 @@ class ChronosMatch:
                 break
 
             quantity = min(buy.quantity, sell.quantity)
+            self.trades.append({
+                "buy_order_id": buy.order_id,
+                "sell_order_id": sell.order_id,
+                "price": sell.price,
+                "quantity": quantity,
+            })
             print(
                 f"MATCHED: {quantity} units at "
                 f"price {sell.price}"
