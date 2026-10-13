@@ -86,6 +86,16 @@ class TestChronosMatch(unittest.TestCase):
                     engine.add_order(Order(1, side, 100.0, 5))
 
                 self.assertEqual(engine.buy_orders, [])
-                self.assertEqual(engine.sell_orders, [])           
+                self.assertEqual(engine.sell_orders, [])
+    def test_rejects_invalid_price_types(self):
+        for price in ("100", True, False, None):
+            with self.subTest(price=price):
+                engine = ChronosMatch()
+
+                with self.assertRaises(ValueError):
+                    engine.add_order(Order(1, "BUY", price, 5))
+
+                self.assertEqual(engine.buy_orders, [])
+                self.assertEqual(engine.sell_orders, [])          
 if __name__ == "__main__":
     unittest.main()

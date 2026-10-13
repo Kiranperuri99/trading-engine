@@ -24,6 +24,9 @@ class ChronosMatch:
         if order.quantity <= 0:
             raise ValueError("Quantity must be greater than zero")
 
+        if type(order.price) not in (int, float):
+            raise ValueError("Price must be a number")
+
         if not isfinite(order.price) or order.price <= 0:
             raise ValueError("Price must be finite and greater than zero")
 
