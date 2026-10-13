@@ -134,6 +134,23 @@ class TestChronosMatch(unittest.TestCase):
         engine.add_order(Order(5, "BUY", 102.0, 5))
 
         self.assertEqual(engine.best_bid(), 99.0)
-        self.assertEqual(engine.best_ask(), 103.0)         
+        self.assertEqual(engine.best_ask(), 103.0)    
+    def test_spread_between_best_prices(self):
+        engine = ChronosMatch()
+        engine.add_order(Order(1, "BUY", 99.0, 5))
+        engine.add_order(Order(2, "SELL", 102.0, 5))
+
+        self.assertEqual(engine.spread(), 3.0)
+
+    def test_spread_requires_both_sides(self):
+        engine = ChronosMatch()
+        self.assertIsNone(engine.spread())
+
+        engine.add_order(Order(1, "BUY", 99.0, 5))
+        self.assertIsNone(engine.spread())
+
+        engine = ChronosMatch()
+        engine.add_order(Order(2, "SELL", 102.0, 5))
+        self.assertIsNone(engine.spread())     
 if __name__ == "__main__":
     unittest.main()

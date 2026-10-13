@@ -63,6 +63,14 @@ class ChronosMatch:
             (order.price for order in self.sell_orders),
             default=None,
         )
+    def spread(self):
+        bid = self.best_bid()
+        ask = self.best_ask()
+
+        if bid is None or ask is None:
+            return None
+
+        return ask - bid
 
     def match_orders(self):
         while self.buy_orders and self.sell_orders:
