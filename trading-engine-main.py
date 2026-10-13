@@ -28,7 +28,10 @@ class ChronosMatch:
             raise ValueError("Price must be finite and greater than zero")
 
         
-        side = order.side.upper()
+        if not isinstance(order.side, str):
+            raise ValueError("Side must be BUY or SELL")
+
+        side = order.side.strip().upper()
             
         if order.price <= 0:
             raise ValueError("Price must be greater than zero")

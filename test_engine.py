@@ -68,6 +68,24 @@ class TestChronosMatch(unittest.TestCase):
                     engine.add_order(Order(order_id, "BUY", 100.0, 5))
 
                 self.assertEqual(engine.buy_orders, [])
-                self.assertEqual(engine.sell_orders, [])            
+                self.assertEqual(engine.sell_orders, []) 
+    def test_accepts_side_with_spaces_and_lowercase(self):
+        engine = ChronosMatch()
+        engine.add_order(Order(1, " buy ", 100.0, 5))
+        engine.add_order(Order(2, " sell ", 100.0, 5))
+
+        self.assertEqual(engine.buy_orders, [])
+        self.assertEqual(engine.sell_orders, [])
+
+    def test_rejects_invalid_side(self):
+        for side in ("HOLD", "", "   ", None, 123):
+            with self.subTest(side=side):
+                engine = ChronosMatch()
+
+                with self.assertRaises(ValueError):
+                    engine.add_order(Order(1, side, 100.0, 5))
+
+                self.assertEqual(engine.buy_orders, [])
+                self.assertEqual(engine.sell_orders, [])           
 if __name__ == "__main__":
     unittest.main()
