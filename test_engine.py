@@ -243,5 +243,40 @@ class TestChronosMatch(unittest.TestCase):
                 self.assertEqual(len(engine.buy_orders), 1)
                 self.assertEqual(engine.buy_orders[0].order_id, 1)
                 self.assertEqual(engine.buy_orders[0].quantity, 5) 
+    def test_same_price_buy_orders_match_in_arrival_order(self):
+        engine = ChronosMatch()
+        engine.add_order(Order(20, "BUY", 100.0, 3))
+        engine.add_order(Order(10, "BUY", 100.0, 4))
+        engine.add_order(Order(30, "SELL", 100.0, 5))
+
+        self.assertEqual(
+            [trade["buy_order_id"] for trade in engine.trades],
+            [20, 10],
+        )
+        self.assertEqual(
+            [trade["quantity"] for trade in engine.trades],
+            [3, 2],
+        )
+        self.assertEqual(len(engine.buy_orders), 1)
+        self.assertEqual(engine.buy_orders[0].order_id, 10)
+        self.assertEqual(engine.buy_orders[0].quantity, 2)
+
+    def test_same_price_sell_orders_match_in_arrival_order(self):
+        engine = ChronosMatch()
+        engine.add_order(Order(20, "SELL", 100.0, 3))
+        engine.add_order(Order(10, "SELL", 100.0, 4))
+        engine.add_order(Order(30, "BUY", 100.0, 5))
+
+        self.assertEqual(
+            [trade["sell_order_id"] for trade in engine.trades],
+            [20, 10],
+        )
+        self.assertEqual(
+            [trade["quantity"] for trade in engine.trades],
+            [3, 2],
+        )
+        self.assertEqual(len(engine.sell_orders), 1)
+        self.assertEqual(engine.sell_orders[0].order_id, 10)
+        self.assertEqual(engine.sell_orders[0].quantity, 2)
 if __name__ == "__main__":
     unittest.main()
