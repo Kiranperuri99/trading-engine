@@ -199,5 +199,37 @@ class TestChronosMatch(unittest.TestCase):
         self.assertEqual(engine.total_traded_quantity(), 7)
         self.assertEqual(engine.buy_orders[0].quantity, 3)
         self.assertEqual(engine.sell_orders, [])
+    def test_pending_quantities_for_empty_book(self):
+        engine = ChronosMatch()
+
+        self.assertEqual(
+            engine.pending_quantities(),
+            {"BUY": 0, "SELL": 0},
+        )
+
+    def test_pending_quantities_after_match_and_cancel(self):
+        engine = ChronosMatch()
+        engine.add_order(Order(1, "BUY", 100.0, 10))
+        engine.add_order(Order(2, "BUY", 99.0, 4))
+        engine.add_order(Order(3, "SELL", 101.0, 6))
+
+        self.assertEqual(
+            engine.pending_quantities(),
+            {"BUY": 14, "SELL": 6},
+        )
+
+        engine.add_order(Order(4, "SELL", 100.0, 3))
+
+        self.assertEqual(
+            engine.pending_quantities(),
+            {"BUY": 11, "SELL": 6},
+        )
+
+        engine.cancel_order(2)
+
+        self.assertEqual(
+            engine.pending_quantities(),
+            {"BUY": 7, "SELL": 6},
+        ) 
 if __name__ == "__main__":
     unittest.main()

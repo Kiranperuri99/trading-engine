@@ -83,6 +83,11 @@ class ChronosMatch:
         return False
     def total_traded_quantity(self):
         return sum(trade["quantity"] for trade in self.trades)
+    def pending_quantities(self):
+        return {
+            "BUY": sum(order.quantity for order in self.buy_orders),
+            "SELL": sum(order.quantity for order in self.sell_orders),
+        }
     def match_orders(self):
         while self.buy_orders and self.sell_orders:
             buy = max(self.buy_orders, key=lambda order: order.price)
@@ -90,7 +95,6 @@ class ChronosMatch:
 
             if buy.price < sell.price:
                 break
-
             quantity = min(buy.quantity, sell.quantity)
             self.trades.append({
                 "buy_order_id": buy.order_id,
