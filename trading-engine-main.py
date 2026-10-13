@@ -74,6 +74,8 @@ class ChronosMatch:
 
         return ask - bid
     def cancel_order(self, order_id):
+        if type(order_id) is not int or order_id <= 0:
+            raise ValueError("Order ID must be a positive whole number")
         for orders in (self.buy_orders, self.sell_orders):
             for index, order in enumerate(orders):
                 if order.order_id == order_id:
@@ -115,7 +117,6 @@ class ChronosMatch:
 
             if sell.quantity == 0:
                 self.sell_orders.remove(sell)
-
 
 if __name__ == "__main__":
     engine = ChronosMatch()

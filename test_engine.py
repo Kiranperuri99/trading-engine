@@ -230,6 +230,18 @@ class TestChronosMatch(unittest.TestCase):
         self.assertEqual(
             engine.pending_quantities(),
             {"BUY": 7, "SELL": 6},
-        ) 
+        )
+    def test_cancel_rejects_invalid_order_id(self):
+        for order_id in (True, 1.0, "1", None, 0, -1):
+            with self.subTest(order_id=order_id):
+                engine = ChronosMatch()
+                engine.add_order(Order(1, "BUY", 100.0, 5))
+
+                with self.assertRaises(ValueError):
+                    engine.cancel_order(order_id)
+
+                self.assertEqual(len(engine.buy_orders), 1)
+                self.assertEqual(engine.buy_orders[0].order_id, 1)
+                self.assertEqual(engine.buy_orders[0].quantity, 5) 
 if __name__ == "__main__":
     unittest.main()
