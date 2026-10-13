@@ -52,6 +52,17 @@ class ChronosMatch:
             self.sell_orders.append(order)
 
         self.match_orders()
+    def best_bid(self):
+        return max(
+            (order.price for order in self.buy_orders),
+            default=None,
+        )
+
+    def best_ask(self):
+        return min(
+            (order.price for order in self.sell_orders),
+            default=None,
+        )
 
     def match_orders(self):
         while self.buy_orders and self.sell_orders:

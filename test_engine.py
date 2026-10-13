@@ -114,6 +114,26 @@ class TestChronosMatch(unittest.TestCase):
         engine.add_order(Order(1, "BUY", 99.0, 10))
         engine.add_order(Order(2, "SELL", 100.0, 5))
 
-        self.assertEqual(engine.trades, [])         
+        self.assertEqual(engine.trades, [])
+    def test_best_prices_for_empty_book(self):
+        engine = ChronosMatch()
+
+        self.assertIsNone(engine.best_bid())
+        self.assertIsNone(engine.best_ask())
+
+    def test_best_prices_update_after_matching(self):
+        engine = ChronosMatch()
+        engine.add_order(Order(1, "BUY", 98.0, 5))
+        engine.add_order(Order(2, "BUY", 99.0, 5))
+        engine.add_order(Order(3, "SELL", 103.0, 5))
+        engine.add_order(Order(4, "SELL", 102.0, 5))
+
+        self.assertEqual(engine.best_bid(), 99.0)
+        self.assertEqual(engine.best_ask(), 102.0)
+
+        engine.add_order(Order(5, "BUY", 102.0, 5))
+
+        self.assertEqual(engine.best_bid(), 99.0)
+        self.assertEqual(engine.best_ask(), 103.0)         
 if __name__ == "__main__":
     unittest.main()
