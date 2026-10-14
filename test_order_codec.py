@@ -79,5 +79,29 @@ class TestOrderCodec(unittest.TestCase):
 
                 with self.assertRaises(ValueError):
                     decode_order(record)
+    def test_largest_integer_fields_survive_round_trip(self):
+        maximum = (1 << 64) - 1
+        original = Order(maximum, "SELL", 100.0, maximum)
+
+        restored = decode_order(encode_order(original))
+
+        self.assertEqual(restored, original)
+
+    def test_encode_rejects_invalid_field_types(self):
+        orders = [
+            Order(True, "BUY", 100.0, 5),
+            Order("1", "BUY", 100.0, 5),
+            Order(1, "BUY", 100.0, True),
+            Order(1, "BUY", 100.0, 2.5),
+            Order(1, "BUY", "100", 5),
+            Order(1, "BUY", True, 5),
+            Order(1, None, 100.0, 5),
+            Order(1, "HOLD", 100.0, 5),
+        ]
+
+        for order in orders:
+            with self.subTest(order=order):
+                with self.assertRaises(ValueError):
+                    encode_order(order)
 if __name__ == "__main__":
     unittest.main()
