@@ -1,15 +1,7 @@
+import unittest
 import io
 from contextlib import redirect_stdout
-import unittest
-from importlib.machinery import SourceFileLoader
-
-engine_module = SourceFileLoader(
-    "trading_engine",
-    "trading-engine-main.py"
-).load_module()
-
-Order = engine_module.Order
-ChronosMatch = engine_module.ChronosMatch
+from trading_engine import Order, ChronosMatch
 
 
 class TestChronosMatch(unittest.TestCase):
