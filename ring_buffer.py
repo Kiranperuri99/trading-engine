@@ -1,3 +1,5 @@
+from order_codec import encode_order_into
+from ring_layout import slot_offset
 from mapped_storage import MappedStorage
 from ring_layout import HEADER_STRUCT, storage_size
 
@@ -26,6 +28,26 @@ class RingBuffer:
 
     def __len__(self):
         return HEADER_STRUCT.unpack_from(self._storage.buffer, 0)[3]
+
+    def put(self, order):
+        buffer = self._storage.buffer
+        capacity, read_pos, write_pos, count = (
+            HEADER_STRUCT.unpack_from(buffer, 0)
+        )
+
+        if count == capacity:
+            raise BufferError("Ring buffer is full")
+
+        encode_order_into(
+            order,
+            buffer,
+            slot_offset(write_pos, capacity),
+        )
+
+        next_write = (write_pos + 1) % capacity
+        HEADER_STRUCT.pack_into(
+            buffer, 0, capacity, read_pos, next_write, count + 1
+        )
 
     def close(self):
         self._storage.close()
