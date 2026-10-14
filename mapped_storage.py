@@ -15,6 +15,18 @@ class MappedStorage:
         except Exception:
             self._file.close()
             raise
+    @classmethod
+    def open_existing(cls, path):
+        storage = cls.__new__(cls)
+        storage._file = open(path, "r+b")
+
+        try:
+            storage.buffer = mmap.mmap(storage._file.fileno(), 0)
+        except Exception:
+            storage._file.close()
+            raise
+
+        return storage
 
     def close(self):
         self.buffer.close()

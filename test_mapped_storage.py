@@ -39,7 +39,31 @@ class TestMappedStorage(unittest.TestCase):
                         MappedStorage(path, size)
 
                     self.assertFalse(path.exists())
+    def test_existing_mapping_preserves_saved_data(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "orders.bin"
 
+            with MappedStorage(path, 100) as storage:
+                storage.buffer[:4] = b"TEST"
+                storage.buffer.flush()
+
+            with MappedStorage.open_existing(path) as storage:
+                self.assertEqual(len(storage.buffer), 100)
+                self.assertEqual(storage.buffer[:4], b"TEST")
+
+    def test_two_mappings_share_changes(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "orders.bin"
+
+            with MappedStorage(path, 100) as first:
+                with MappedStorage.open_existing(path) as second:
+                    first.buffer[:4] = b"BUY!"
+                    first.buffer.flush()
+                    self.assertEqual(second.buffer[:4], b"BUY!")
+
+                    second.buffer[4:8] = b"SELL"
+                    second.buffer.flush()
+                    self.assertEqual(first.buffer[4:8], b"SELL")
 
 if __name__ == "__main__":
     unittest.main()
