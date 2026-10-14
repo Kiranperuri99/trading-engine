@@ -1,7 +1,9 @@
+
+from order_codec import encode_order
+from trading_engine import Order
 import unittest
 
 from order_codec import BUY, SELL, ORDER_SIZE, ORDER_STRUCT
-
 
 class TestOrderCodec(unittest.TestCase):
 
@@ -19,6 +21,31 @@ class TestOrderCodec(unittest.TestCase):
                     (42, side, 101.5, 10),
                 )
 
+    def test_encode_order_preserves_fields(self):
+        for side, code in ((" buy ", BUY), ("SELL", SELL)):
+            with self.subTest(side=side):
+                order = Order(42, side, 101.5, 10)
 
+                record = encode_order(order)
+
+                self.assertEqual(len(record), 25)
+                self.assertEqual(
+                    ORDER_STRUCT.unpack(record),
+                    (42, code, 101.5, 10),
+                )
+                self.assertEqual(order.side, side)
+
+    def test_encode_rejects_values_outside_binary_range(self):
+        orders = [
+            Order(1 << 64, "BUY", 100.0, 5),
+            Order(1, "BUY", 100.0, 1 << 64),
+            Order(0, "BUY", 100.0, 5),
+            Order(1, "BUY", 100.0, -1),
+        ]
+
+        for order in orders:
+            with self.subTest(order=order):
+                with self.assertRaises(ValueError):
+                    encode_order(order)
 if __name__ == "__main__":
     unittest.main()
