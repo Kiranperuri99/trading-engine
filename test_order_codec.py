@@ -1,4 +1,5 @@
 
+from order_codec import decode_order_from
 from order_codec import decode_order
 from order_codec import encode_order
 from trading_engine import Order

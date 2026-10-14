@@ -53,7 +53,19 @@ def decode_order(record):
     if len(record) != ORDER_SIZE:
         raise ValueError(f"Order record must be exactly {ORDER_SIZE} bytes")
 
-    order_id, side_code, price, quantity = ORDER_STRUCT.unpack(record)
+    return decode_order_from(record)
+
+
+def decode_order_from(buffer, offset=0):
+    if type(offset) is not int or offset < 0:
+        raise ValueError("Offset must be a non-negative whole number")
+
+    if offset + ORDER_SIZE > len(buffer):
+        raise ValueError("Not enough bytes for an order at this offset")
+
+    order_id, side_code, price, quantity = ORDER_STRUCT.unpack_from(
+        buffer, offset
+    )
 
     if side_code not in (BUY, SELL):
         raise ValueError("Invalid binary order side")
