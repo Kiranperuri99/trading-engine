@@ -1,3 +1,4 @@
+from order_codec import encode_order_into
 from order_codec import decode_order_from
 import tempfile
 import unittest
@@ -66,6 +67,38 @@ class TestMappedOrders(unittest.TestCase):
                     second_read = decode_order_from(reader.buffer)
                     self.assertEqual(second_read, updated)
                     self.assertEqual(first_read.quantity, 10)
+    def test_direct_write_and_read_between_mappings(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "orders.bin"
+            first = Order(1, "BUY", 99.0, 10)
+            second = Order(2, "SELL", 102.0, 5)
 
+            with MappedStorage(path, ORDER_SIZE * 2) as writer:
+                with MappedStorage.open_existing(path) as reader:
+                    encode_order_into(first, writer.buffer)
+                    encode_order_into(second, writer.buffer, ORDER_SIZE)
+                    writer.buffer.flush()
+
+                    self.assertEqual(
+                        decode_order_from(reader.buffer),
+                        first,
+                    )
+                    self.assertEqual(
+                        decode_order_from(reader.buffer, ORDER_SIZE),
+                        second,
+                    )
+
+                    updated = Order(1, "BUY", 99.0, 4)
+                    encode_order_into(updated, writer.buffer)
+                    writer.buffer.flush()
+
+                    self.assertEqual(
+                        decode_order_from(reader.buffer),
+                        updated,
+                    )
+                    self.assertEqual(
+                        decode_order_from(reader.buffer, ORDER_SIZE),
+                        second,
+                    )
 if __name__ == "__main__":
     unittest.main()
