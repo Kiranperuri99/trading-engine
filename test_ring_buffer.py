@@ -83,5 +83,52 @@ class TestRingBuffer(unittest.TestCase):
                     ring.put(Order(1, "BUY", 100.0, 0))
 
                 self.assertEqual(len(ring), 0)
+    def test_get_returns_orders_in_arrival_order(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "ring.bin"
+            first = Order(20, "BUY", 100.0, 5)
+            second = Order(10, "SELL", 101.0, 3)
+
+            with RingBuffer(path, 2) as ring:
+                ring.put(first)
+                ring.put(second)
+
+                self.assertEqual(ring.get(), first)
+                self.assertEqual(len(ring), 1)
+                self.assertEqual(ring.get(), second)
+                self.assertEqual(len(ring), 0)
+
+    def test_get_from_empty_ring_raises_error(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "ring.bin"
+
+            with RingBuffer(path, 2) as ring:
+                with self.assertRaises(BufferError):
+                    ring.get()
+
+                self.assertEqual(len(ring), 0)
+
+                order = Order(1, "BUY", 100.0, 5)
+                ring.put(order)
+                self.assertEqual(ring.get(), order)
+
+    def test_ring_reuses_freed_slots_in_order(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "ring.bin"
+            first = Order(1, "BUY", 99.0, 5)
+            second = Order(2, "SELL", 102.0, 3)
+            third = Order(3, "BUY", 100.0, 4)
+
+            with RingBuffer(path, 2) as ring:
+                ring.put(first)
+                ring.put(second)
+                self.assertEqual(ring.get(), first)
+
+                ring.put(third)
+
+                self.assertEqual(len(ring), 2)
+                self.assertEqual(ring.get(), second)
+                self.assertEqual(ring.get(), third)
+                self.assertEqual(len(ring), 0)
 if __name__ == "__main__":
     unittest.main()

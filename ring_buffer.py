@@ -1,3 +1,4 @@
+from order_codec import decode_order_from
 from order_codec import encode_order_into
 from ring_layout import slot_offset
 from mapped_storage import MappedStorage
@@ -48,6 +49,26 @@ class RingBuffer:
         HEADER_STRUCT.pack_into(
             buffer, 0, capacity, read_pos, next_write, count + 1
         )
+    def get(self):
+        buffer = self._storage.buffer
+        capacity, read_pos, write_pos, count = (
+            HEADER_STRUCT.unpack_from(buffer, 0)
+        )
+
+        if count == 0:
+            raise BufferError("Ring buffer is empty")
+
+        order = decode_order_from(
+            buffer,
+            slot_offset(read_pos, capacity),
+        )
+
+        next_read = (read_pos + 1) % capacity
+        HEADER_STRUCT.pack_into(
+            buffer, 0, capacity, next_read, write_pos, count - 1
+        )
+
+        return order
 
     def close(self):
         self._storage.close()
