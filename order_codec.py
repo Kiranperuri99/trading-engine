@@ -12,7 +12,7 @@ ORDER_SIZE = ORDER_STRUCT.size
 
 BUY = 1
 SELL = 2
-def encode_order(order):
+def _validated_order_fields(order):
     max_uint64 = (1 << 64) - 1
 
     if type(order.order_id) is not int or not (
@@ -43,7 +43,7 @@ def encode_order(order):
     if side not in ("BUY", "SELL"):
         raise ValueError("Side must be BUY or SELL")
 
-    return ORDER_STRUCT.pack(
+    return (
         order.order_id,
         BUY if side == "BUY" else SELL,
         price,
@@ -85,3 +85,16 @@ def decode_order_from(buffer, offset=0):
         price,
         quantity,
     )
+def encode_order(order):
+    return ORDER_STRUCT.pack(*_validated_order_fields(order))
+
+
+def encode_order_into(order, buffer, offset=0):
+    if type(offset) is not int or offset < 0:
+        raise ValueError("Offset must be a non-negative whole number")
+
+    if offset + ORDER_SIZE > len(buffer):
+        raise ValueError("Not enough space for an order at this offset")
+
+    fields = _validated_order_fields(order)
+    ORDER_STRUCT.pack_into(buffer, offset, *fields)

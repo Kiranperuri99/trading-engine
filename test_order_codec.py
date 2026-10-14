@@ -1,4 +1,4 @@
-
+from order_codec import encode_order_into
 from order_codec import decode_order_from
 from order_codec import decode_order
 from order_codec import encode_order
@@ -104,5 +104,77 @@ class TestOrderCodec(unittest.TestCase):
             with self.subTest(order=order):
                 with self.assertRaises(ValueError):
                     encode_order(order)
+
+    def test_decode_from_offset(self):
+        orders = [
+            Order(1, "BUY", 100.0, 5),
+            Order(2, "SELL", 101.0, 10),
+        ]
+
+        buffer = b""
+        for order in orders:
+            buffer += encode_order(order)
+
+        for i, expected in enumerate(orders):
+            with self.subTest(order=expected):
+                restored = decode_order_from(buffer, i * ORDER_SIZE)
+                self.assertEqual(restored, expected)
+    def test_decode_from_second_record(self):
+        first = Order(1, "BUY", 99.0, 10)
+        second = Order(2, "SELL", 102.0, 5)
+        buffer = bytearray(encode_order(first) + encode_order(second))
+
+        self.assertEqual(decode_order_from(buffer), first)
+        self.assertEqual(
+            decode_order_from(buffer, ORDER_SIZE),
+            second,
+        )
+
+    def test_decode_from_rejects_invalid_offsets(self):
+        buffer = encode_order(Order(1, "BUY", 100.0, 5))
+
+        for offset in (-1, True, 1.5, "0"):
+            with self.subTest(offset=offset):
+                with self.assertRaises(ValueError):
+                    decode_order_from(buffer, offset)
+
+    def test_decode_from_rejects_insufficient_space(self):
+        buffer = encode_order(Order(1, "BUY", 100.0, 5))
+
+        with self.assertRaises(ValueError):
+            decode_order_from(buffer, 1)
+    def test_encode_into_preserves_neighboring_record(self):
+        first = Order(1, "BUY", 99.0, 10)
+        second = Order(2, "SELL", 102.0, 5)
+        buffer = bytearray(ORDER_SIZE * 2)
+
+        encode_order_into(first, buffer)
+        encode_order_into(second, buffer, ORDER_SIZE)
+
+        self.assertEqual(decode_order_from(buffer), first)
+        self.assertEqual(
+            decode_order_from(buffer, ORDER_SIZE),
+            second,
+        )
+
+    def test_encode_into_rejects_invalid_offsets(self):
+        order = Order(1, "BUY", 100.0, 5)
+        buffer = bytearray(ORDER_SIZE)
+
+        for offset in (-1, True, 1.5, "0", 1):
+            with self.subTest(offset=offset):
+                with self.assertRaises(ValueError):
+                    encode_order_into(order, buffer, offset)
+
+                self.assertEqual(buffer, bytearray(ORDER_SIZE))
+
+    def test_invalid_order_does_not_change_buffer(self):
+        buffer = bytearray(b"x" * ORDER_SIZE)
+        original = bytes(buffer)
+
+        with self.assertRaises(ValueError):
+            encode_order_into(Order(1, "BUY", 100.0, 0), buffer)
+
+        self.assertEqual(bytes(buffer), original)
 if __name__ == "__main__":
     unittest.main()
