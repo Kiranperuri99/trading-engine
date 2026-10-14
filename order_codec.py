@@ -1,3 +1,4 @@
+from trading_engine import Order
 from math import isfinite
 from struct import Struct
 
@@ -47,4 +48,28 @@ def encode_order(order):
         BUY if side == "BUY" else SELL,
         price,
         order.quantity,
+    )
+def decode_order(record):
+    if len(record) != ORDER_SIZE:
+        raise ValueError(f"Order record must be exactly {ORDER_SIZE} bytes")
+
+    order_id, side_code, price, quantity = ORDER_STRUCT.unpack(record)
+
+    if side_code not in (BUY, SELL):
+        raise ValueError("Invalid binary order side")
+
+    if order_id == 0:
+        raise ValueError("Order ID must be positive")
+
+    if quantity == 0:
+        raise ValueError("Quantity must be positive")
+
+    if not isfinite(price) or price <= 0:
+        raise ValueError("Price must be finite and greater than zero")
+
+    return Order(
+        order_id,
+        "BUY" if side_code == BUY else "SELL",
+        price,
+        quantity,
     )
