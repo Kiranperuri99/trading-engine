@@ -1,3 +1,8 @@
+
+import io
+import json
+from contextlib import redirect_stdout
+from run_simulation import main
 import argparse
 from run_simulation import build_parser, non_negative_count
 import unittest
@@ -56,6 +61,27 @@ class TestRunSimulation(unittest.TestCase):
             with self.subTest(value=value):
                 with self.assertRaises(argparse.ArgumentTypeError):
                     non_negative_count(value)
+    def test_json_output_matches_simulation_summary(self):
+        output = io.StringIO()
 
+        with redirect_stdout(output):
+            main(["--count", "37", "--seed", "7", "--json"])
+
+        result = json.loads(output.getvalue())
+
+        self.assertEqual(result, run_simulation(37, 7))
+
+    def test_empty_json_output_uses_null_for_missing_prices(self):
+        output = io.StringIO()
+
+        with redirect_stdout(output):
+            main(["--count", "0", "--json"])
+
+        result = json.loads(output.getvalue())
+
+        self.assertEqual(result["orders_processed"], 0)
+        self.assertIsNone(result["best_bid"])
+        self.assertIsNone(result["best_ask"])
+        self.assertIsNone(result["spread"])
 if __name__ == "__main__":
     unittest.main()

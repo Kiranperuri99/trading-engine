@@ -1,4 +1,6 @@
+import json
 import argparse
+from sys import argv
 import tempfile
 from pathlib import Path
 
@@ -72,15 +74,26 @@ def build_parser():
         default=42,
         help="Random seed for repeatable orders (default: 42)",
     )
+    parser.add_argument(
+        "--json",
+        action="store_true",
+        help="Print the simulation summary as JSON",
+    )
+    
     return parser
+def main(argv=None):
+    args = build_parser().parse_args(argv)
+    summary = run_simulation(count=args.count, seed=args.seed)
+
+    if args.json:
+        print(json.dumps(summary, indent=2, allow_nan=False))
+    else:
+        print("ChronosMatch simulation")
+        print("Mode: sequential ring-buffer pipeline")
+
+        for name, value in summary.items():
+            print(f"{name}: {value}")
 
 
 if __name__ == "__main__":
-    args = build_parser().parse_args()
-    summary = run_simulation(count=args.count, seed=args.seed)
-
-    print("ChronosMatch simulation")
-    print("Mode: sequential ring-buffer pipeline")
-
-    for name, value in summary.items():
-        print(f"{name}: {value}")
+    main()
