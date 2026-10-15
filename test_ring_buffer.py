@@ -162,5 +162,40 @@ class TestRingBuffer(unittest.TestCase):
 
             with self.assertRaises(ValueError):
                 RingBuffer.open_existing(path)
+    def test_reopen_preserves_wrapped_queue_order(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "ring.bin"
+            first = Order(1, "BUY", 99.0, 5)
+            second = Order(2, "SELL", 102.0, 3)
+            third = Order(3, "BUY", 100.0, 4)
+
+            with RingBuffer(path, 2) as ring:
+                ring.put(first)
+                ring.put(second)
+                self.assertEqual(ring.get(), first)
+                ring.put(third)
+
+            with RingBuffer.open_existing(path) as ring:
+                self.assertEqual(len(ring), 2)
+                self.assertEqual(ring.get(), second)
+                self.assertEqual(ring.get(), third)
+                self.assertEqual(len(ring), 0)
+
+    def test_reopened_empty_queue_can_be_reused(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "ring.bin"
+            first = Order(1, "BUY", 99.0, 5)
+            second = Order(2, "SELL", 102.0, 3)
+
+            with RingBuffer(path, 2) as ring:
+                ring.put(first)
+                self.assertEqual(ring.get(), first)
+
+            with RingBuffer.open_existing(path) as ring:
+                self.assertEqual(len(ring), 0)
+                ring.put(second)
+                self.assertEqual(ring.get(), second)
+                self.assertEqual(len(ring), 0)
+
 if __name__ == "__main__":
     unittest.main()
