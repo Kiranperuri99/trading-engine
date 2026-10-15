@@ -21,3 +21,27 @@ def slot_offset(index, capacity):
         raise ValueError("Slot index is outside the buffer")
 
     return HEADER_SIZE + index * ORDER_SIZE
+def validate_header(buffer):
+    if len(buffer) < HEADER_SIZE:
+        raise ValueError("Buffer is too small for the ring header")
+
+    capacity, read_pos, write_pos, count = HEADER_STRUCT.unpack_from(
+        buffer, 0
+    )
+
+    if capacity == 0:
+        raise ValueError("Ring capacity must be positive")
+
+    if len(buffer) != storage_size(capacity):
+        raise ValueError("Buffer size does not match ring capacity")
+
+    if read_pos >= capacity or write_pos >= capacity:
+        raise ValueError("Ring position is outside its capacity")
+
+    if count > capacity:
+        raise ValueError("Order count exceeds ring capacity")
+
+    if write_pos != (read_pos + count) % capacity:
+        raise ValueError("Ring positions do not match the order count")
+
+    return capacity, read_pos, write_pos, count
