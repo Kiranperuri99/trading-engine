@@ -1,3 +1,5 @@
+import argparse
+from run_simulation import build_parser, non_negative_count
 import unittest
 
 from market_simulator import generate_orders
@@ -35,7 +37,25 @@ class TestRunSimulation(unittest.TestCase):
         self.assertIsNone(result["best_bid"])
         self.assertIsNone(result["best_ask"])
         self.assertIsNone(result["spread"])
+    def test_command_line_options(self):
+        args = build_parser().parse_args(
+            ["--count", "37", "--seed", "7"]
+        )
 
+        self.assertEqual(args.count, 37)
+        self.assertEqual(args.seed, 7)
+
+    def test_command_line_defaults(self):
+        args = build_parser().parse_args([])
+
+        self.assertEqual(args.count, 100)
+        self.assertEqual(args.seed, 42)
+
+    def test_invalid_command_line_counts_are_rejected(self):
+        for value in ("-1", "2.5", "hello", str(1 << 64)):
+            with self.subTest(value=value):
+                with self.assertRaises(argparse.ArgumentTypeError):
+                    non_negative_count(value)
 
 if __name__ == "__main__":
     unittest.main()

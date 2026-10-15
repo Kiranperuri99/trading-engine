@@ -1,3 +1,4 @@
+import argparse
 import tempfile
 from pathlib import Path
 
@@ -39,9 +40,44 @@ def run_simulation(count=100, seed=42):
         "spread": engine.spread(),
     }
 
+def non_negative_count(value):
+    try:
+        count = int(value)
+    except ValueError:
+        raise argparse.ArgumentTypeError(
+            "Order count must be a whole number"
+        ) from None
+
+    if not 0 <= count <= (1 << 64) - 1:
+        raise argparse.ArgumentTypeError(
+            "Order count must be between 0 and 18446744073709551615"
+        )
+
+    return count
+
+
+def build_parser():
+    parser = argparse.ArgumentParser(
+        description="Run the ChronosMatch sequential simulation."
+    )
+    parser.add_argument(
+        "--count",
+        type=non_negative_count,
+        default=100,
+        help="Number of orders to generate (default: 100)",
+    )
+    parser.add_argument(
+        "--seed",
+        type=int,
+        default=42,
+        help="Random seed for repeatable orders (default: 42)",
+    )
+    return parser
+
 
 if __name__ == "__main__":
-    summary = run_simulation()
+    args = build_parser().parse_args()
+    summary = run_simulation(count=args.count, seed=args.seed)
 
     print("ChronosMatch simulation")
     print("Mode: sequential ring-buffer pipeline")
