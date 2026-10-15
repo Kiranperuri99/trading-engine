@@ -1,3 +1,4 @@
+from ring_layout import validate_header
 from order_codec import decode_order_from
 from order_codec import encode_order_into
 from ring_layout import slot_offset
@@ -69,6 +70,18 @@ class RingBuffer:
         )
 
         return order
+    @classmethod
+    def open_existing(cls, path):
+        ring = cls.__new__(cls)
+        ring._storage = MappedStorage.open_existing(path)
+
+        try:
+            validate_header(ring._storage.buffer)
+        except Exception:
+            ring._storage.close()
+            raise
+
+        return ring
 
     def close(self):
         self._storage.close()

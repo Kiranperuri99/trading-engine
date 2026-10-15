@@ -130,5 +130,37 @@ class TestRingBuffer(unittest.TestCase):
                 self.assertEqual(ring.get(), second)
                 self.assertEqual(ring.get(), third)
                 self.assertEqual(len(ring), 0)
+    def test_reopen_preserves_waiting_orders(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "ring.bin"
+            first = Order(1, "BUY", 99.0, 5)
+            second = Order(2, "SELL", 102.0, 3)
+
+            with RingBuffer(path, 3) as ring:
+                ring.put(first)
+                ring.put(second)
+
+            with RingBuffer.open_existing(path) as ring:
+                self.assertEqual(ring.capacity, 3)
+                self.assertEqual(len(ring), 2)
+                self.assertEqual(ring.get(), first)
+                self.assertEqual(ring.get(), second)
+                self.assertEqual(len(ring), 0)
+
+    def test_reopen_rejects_damaged_header(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "ring.bin"
+
+            with RingBuffer(path, 2):
+                pass
+
+            with MappedStorage.open_existing(path) as storage:
+                HEADER_STRUCT.pack_into(
+                    storage.buffer, 0, 2, 0, 0, 3
+                )
+                storage.buffer.flush()
+
+            with self.assertRaises(ValueError):
+                RingBuffer.open_existing(path)
 if __name__ == "__main__":
     unittest.main()
