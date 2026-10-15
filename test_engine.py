@@ -5,6 +5,19 @@ from trading_engine import Order, ChronosMatch
 
 
 class TestChronosMatch(unittest.TestCase):
+    def test_oversized_price_preserves_existing_orders(self):
+        engine = ChronosMatch(verbose=False)
+        engine.add_order(Order(1, "SELL", 100.0, 5))
+
+        with self.assertRaisesRegex(ValueError, "Price is too large"):
+            engine.add_order(Order(2, "BUY", 10**1000, 3))
+
+        self.assertEqual(engine.buy_orders, [])
+        self.assertEqual(len(engine.sell_orders), 1)
+        self.assertEqual(engine.sell_orders[0].order_id, 1)
+        self.assertEqual(engine.sell_orders[0].quantity, 5)
+        self.assertEqual(engine.trades, [])
+
     def test_incoming_sell_uses_each_waiting_buy_price(self):
         engine = ChronosMatch(verbose=False)
         engine.add_order(Order(1, "BUY", 101.0, 3))

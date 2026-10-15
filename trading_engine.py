@@ -29,7 +29,12 @@ class ChronosMatch:
         if type(order.price) not in (int, float):
             raise ValueError("Price must be a number")
 
-        if not isfinite(order.price) or order.price <= 0:
+        try:
+            valid_price = isfinite(order.price) and order.price > 0
+        except OverflowError:
+            raise ValueError("Price is too large") from None
+
+        if not valid_price:
             raise ValueError("Price must be finite and greater than zero")
 
         
