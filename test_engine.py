@@ -5,6 +5,58 @@ from trading_engine import Order, ChronosMatch
 
 
 class TestChronosMatch(unittest.TestCase):
+    def test_incoming_sell_uses_each_waiting_buy_price(self):
+        engine = ChronosMatch(verbose=False)
+        engine.add_order(Order(1, "BUY", 101.0, 3))
+        engine.add_order(Order(2, "BUY", 103.0, 2))
+
+        engine.add_order(Order(3, "SELL", 100.0, 4))
+
+        self.assertEqual(engine.trades, [
+            {
+                "buy_order_id": 2,
+                "sell_order_id": 3,
+                "price": 103.0,
+                "quantity": 2,
+            },
+            {
+                "buy_order_id": 1,
+                "sell_order_id": 3,
+                "price": 101.0,
+                "quantity": 2,
+            },
+        ])
+        self.assertEqual(len(engine.buy_orders), 1)
+        self.assertEqual(engine.buy_orders[0].order_id, 1)
+        self.assertEqual(engine.buy_orders[0].quantity, 1)
+        self.assertEqual(engine.sell_orders, [])
+
+    def test_incoming_buy_uses_each_waiting_sell_price(self):
+        engine = ChronosMatch(verbose=False)
+        engine.add_order(Order(1, "SELL", 103.0, 3))
+        engine.add_order(Order(2, "SELL", 101.0, 2))
+
+        engine.add_order(Order(3, "BUY", 104.0, 4))
+
+        self.assertEqual(engine.trades, [
+            {
+                "buy_order_id": 3,
+                "sell_order_id": 2,
+                "price": 101.0,
+                "quantity": 2,
+            },
+            {
+                "buy_order_id": 3,
+                "sell_order_id": 1,
+                "price": 103.0,
+                "quantity": 2,
+            },
+        ])
+        self.assertEqual(len(engine.sell_orders), 1)
+        self.assertEqual(engine.sell_orders[0].order_id, 1)
+        self.assertEqual(engine.sell_orders[0].quantity, 1)
+        self.assertEqual(engine.buy_orders, [])
+
     def test_incoming_buy_uses_waiting_sell_price(self):
         engine = ChronosMatch(verbose=False)
         engine.add_order(Order(1, "SELL", 100.0, 5))
