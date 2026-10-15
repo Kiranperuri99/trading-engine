@@ -41,7 +41,49 @@ class TestSynchronizedRing(unittest.TestCase):
                 finally:
                     if acquired:
                         lock.release()
+    def test_try_put_returns_false_when_full(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "ring.bin"
+            lock = multiprocessing.get_context("spawn").Lock()
+            first = Order(1, "BUY", 100.0, 5)
+            second = Order(2, "SELL", 101.0, 3)
 
+            with RingBuffer(path, 1) as ring:
+                queue = SynchronizedRing(ring, lock)
+
+                self.assertTrue(queue.try_put(first))
+                self.assertFalse(queue.try_put(second))
+                self.assertEqual(queue.get(), first)
+
+                self.assertTrue(queue.try_put(second))
+                self.assertEqual(queue.get(), second)
+
+    def test_try_get_returns_none_when_empty(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "ring.bin"
+            lock = multiprocessing.get_context("spawn").Lock()
+            order = Order(1, "BUY", 100.0, 5)
+
+            with RingBuffer(path, 1) as ring:
+                queue = SynchronizedRing(ring, lock)
+
+                self.assertIsNone(queue.try_get())
+                queue.put(order)
+                self.assertEqual(queue.try_get(), order)
+                self.assertIsNone(queue.try_get())
+
+    def test_try_put_rejects_invalid_order_when_space_exists(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "ring.bin"
+            lock = multiprocessing.get_context("spawn").Lock()
+
+            with RingBuffer(path, 1) as ring:
+                queue = SynchronizedRing(ring, lock)
+
+                with self.assertRaises(ValueError):
+                    queue.try_put(Order(1, "BUY", 100.0, 0))
+
+                self.assertEqual(len(queue), 0)
 
 if __name__ == "__main__":
     unittest.main()

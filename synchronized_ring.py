@@ -16,3 +16,17 @@ class SynchronizedRing:
     def __len__(self):
         with self._lock:
             return len(self._ring)
+    def try_put(self, order):
+        with self._lock:
+            if len(self._ring) == self._ring.capacity:
+                return False
+
+            self._ring.put(order)
+            return True
+
+    def try_get(self):
+        with self._lock:
+            if len(self._ring) == 0:
+                return None
+
+            return self._ring.get()
