@@ -33,8 +33,48 @@ The sample matches 5 units and leaves a buy order with 5 units remaining.
 ## Development Status
 
 This is a Python prototype using in-memory lists.
-The current execution price is the matched sell order's price.
+Trades execute at the price of the order already waiting in the book.
 
 Shared-memory IPC, the Cython engine, market simulator, latency
 benchmarks, and terminal dashboard are planned.
 Performance targets have not yet been verified.
+## Simulation
+
+Run the sequential ring-buffer simulation:
+
+```powershell
+python run_simulation.py --count 200 --seed 7
+```
+
+Print the summary as JSON:
+
+```powershell
+python run_simulation.py --count 200 --seed 7 --json
+```
+
+Using the same count and seed produces repeatable simulated orders.
+The summary includes processed orders, trades, pending quantities,
+best bid, best ask, and spread.
+
+## Baseline Benchmark
+
+```powershell
+python benchmark_simulation.py --count 1000 --seed 42
+```
+
+The timer includes order generation, temporary file setup, queueing,
+matching, and cleanup.
+
+- `elapsed_ns`: total duration in nanoseconds.
+- `orders_per_second`: processed orders divided by total seconds.
+- `average_ns_per_order`: total duration divided by processed orders.
+
+This average is not a measurement of individual order latency.
+Results depend on the computer and workload; performance targets
+have not yet been verified.
+
+## Run All Tests
+
+```powershell
+python -m unittest discover -v
+```
