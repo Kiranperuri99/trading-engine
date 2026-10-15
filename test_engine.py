@@ -5,6 +5,18 @@ from trading_engine import Order, ChronosMatch
 
 
 class TestChronosMatch(unittest.TestCase):
+    def test_incoming_buy_uses_waiting_sell_price(self):
+        engine = ChronosMatch(verbose=False)
+        engine.add_order(Order(1, "SELL", 100.0, 5))
+        engine.add_order(Order(2, "BUY", 105.0, 5))
+
+        self.assertEqual(engine.trades, [{
+            "buy_order_id": 2,
+            "sell_order_id": 1,
+            "price": 100.0,
+            "quantity": 5,
+        }])
+
 
     def test_matching_orders(self):
         engine = ChronosMatch()
@@ -99,7 +111,7 @@ class TestChronosMatch(unittest.TestCase):
         self.assertEqual(engine.trades, [{
             "buy_order_id": 1,
             "sell_order_id": 2,
-            "price": 100.0,
+            "price": 101.0,
             "quantity": 5,
         }])
 
@@ -284,5 +296,17 @@ class TestChronosMatch(unittest.TestCase):
         self.assertEqual(engine.total_traded_quantity(), 5)
         self.assertEqual(engine.buy_orders, [])
         self.assertEqual(engine.sell_orders, [])
+    def test_incoming_buy_uses_waiting_sell_price(self):
+        engine = ChronosMatch(verbose=False)
+        engine.add_order(Order(1, "SELL", 100.0, 5))
+        engine.add_order(Order(2, "BUY", 105.0, 5))
+
+        self.assertEqual(engine.trades, [{
+            "buy_order_id": 2,
+            "sell_order_id": 1,
+            "price": 100.0,
+            "quantity": 5,
+        }])
+
 if __name__ == "__main__":
     unittest.main()

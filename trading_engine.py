@@ -56,7 +56,7 @@ class ChronosMatch:
         else:
             self.sell_orders.append(order)
 
-        self.match_orders()
+        self.match_orders(incoming_order=order)
     def best_bid(self):
         return max(
             (order.price for order in self.buy_orders),
@@ -93,7 +93,7 @@ class ChronosMatch:
             "BUY": sum(order.quantity for order in self.buy_orders),
             "SELL": sum(order.quantity for order in self.sell_orders),
         }
-    def match_orders(self):
+    def match_orders(self, incoming_order=None):
         while self.buy_orders and self.sell_orders:
             buy = max(self.buy_orders, key=lambda order: order.price)
             sell = min(self.sell_orders, key=lambda order: order.price)
@@ -101,16 +101,19 @@ class ChronosMatch:
             if buy.price < sell.price:
                 break
             quantity = min(buy.quantity, sell.quantity)
+            trade_price = (
+                buy.price if sell is incoming_order else sell.price
+            )
             self.trades.append({
                 "buy_order_id": buy.order_id,
                 "sell_order_id": sell.order_id,
-                "price": sell.price,
+                "price": trade_price,
                 "quantity": quantity,
             })
             if self.verbose:
                 print(
                 f"MATCHED: {quantity} units at "
-                f"price {sell.price}"
+                f"price {trade_price}"
             )
 
             buy.quantity -= quantity

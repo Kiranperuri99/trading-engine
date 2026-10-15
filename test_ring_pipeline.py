@@ -25,7 +25,7 @@ class TestRingPipeline(unittest.TestCase):
             self.assertEqual(engine.trades, [{
                 "buy_order_id": 1,
                 "sell_order_id": 2,
-                "price": 100.0,
+                "price": 101.0,
                 "quantity": 5,
             }])
             self.assertEqual(
