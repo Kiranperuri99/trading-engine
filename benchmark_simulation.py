@@ -1,3 +1,6 @@
+
+import argparse
+from run_simulation import non_negative_count
 from time import perf_counter_ns
 
 from run_simulation import run_simulation
@@ -23,11 +26,36 @@ def benchmark_simulation(count=1000, seed=42):
     }
 
 
-if __name__ == "__main__":
-    result = benchmark_simulation()
+def build_parser():
+    parser = argparse.ArgumentParser(
+        description="Measure the whole sequential simulation."
+    )
+    parser.add_argument(
+        "--count",
+        type=non_negative_count,
+        default=1000,
+        help="Number of simulated orders (default: 1000)",
+    )
+    parser.add_argument(
+        "--seed",
+        type=int,
+        default=42,
+        help="Random seed (default: 42)",
+    )
+    return parser
+
+
+def main(argv=None):
+    args = build_parser().parse_args(argv)
+    result = benchmark_simulation(count=args.count, seed=args.seed)
 
     print("ChronosMatch sequential baseline")
+    print(f"Requested orders: {args.count}; seed: {args.seed}")
     print("Includes generation, file setup, queueing, matching, and cleanup.")
 
     for name, value in result.items():
         print(f"{name}: {value}")
+
+
+if __name__ == "__main__":
+    main()
