@@ -1,4 +1,4 @@
-
+from benchmark_environment import benchmark_environment
 import argparse
 from run_simulation import non_negative_count
 from time import perf_counter_ns

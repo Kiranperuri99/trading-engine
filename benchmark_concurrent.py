@@ -1,3 +1,4 @@
+from benchmark_environment import benchmark_environment
 from time import perf_counter_ns
 
 from run_concurrent import run_concurrent
@@ -37,4 +38,3 @@ if __name__ == "__main__":
 
     for name, value in result.items():
         print(f"{name}: {value}")
-        
