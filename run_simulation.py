@@ -1,3 +1,4 @@
+from engine_summary import summarize_engine
 import json
 import argparse
 from sys import argv
@@ -29,7 +30,7 @@ def run_simulation(count=100, seed=42):
                 engine.add_order(ring.get())
                 processed += 1
 
-    pending = engine.pending_quantities()
+        return summarize_engine(engine, processed)
 
     return {
         "orders_processed": processed,
