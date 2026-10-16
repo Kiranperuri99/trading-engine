@@ -1,3 +1,5 @@
+from simulation_workers import consume_orders
+from trading_engine import Order
 import unittest
 from unittest.mock import Mock, patch
 
@@ -6,6 +8,49 @@ from simulation_workers import produce_orders
 
 
 class TestSimulationWorkers(unittest.TestCase):
+    def test_consumer_waits_then_matches_orders(self):
+        queue = Mock()
+        queue.try_get_before.side_effect = [
+            None,
+            Order(1, "BUY", 101.0, 10),
+            Order(2, "SELL", 100.0, 4),
+        ]
+
+        with patch("simulation_workers.sleep") as pause:
+            result = consume_orders(queue, 2)
+
+        self.assertEqual(result["orders_processed"], 2)
+        self.assertEqual(result["trade_count"], 1)
+        self.assertEqual(result["traded_quantity"], 4)
+        self.assertEqual(result["pending_buy_quantity"], 6)
+        self.assertEqual(result["pending_sell_quantity"], 0)
+        pause.assert_called_once_with(0.001)
+
+    def test_consumer_reports_queue_timeout(self):
+        queue = Mock()
+        queue.try_get_before.side_effect = TimeoutError("Queue timed out")
+
+        with self.assertRaises(TimeoutError):
+            consume_orders(queue, 1)
+
+    def test_zero_count_consumer_does_not_read_queue(self):
+        queue = Mock()
+
+        result = consume_orders(queue, 0)
+
+        queue.try_get_before.assert_not_called()
+        self.assertEqual(result["orders_processed"], 0)
+        self.assertEqual(result["trade_count"], 0)
+
+    def test_consumer_rejects_invalid_count(self):
+        for count in (-1, True, 2.5, "2", 1 << 64):
+            with self.subTest(count=count):
+                queue = Mock()
+
+                with self.assertRaises(ValueError):
+                    consume_orders(queue, count)
+
+                queue.try_get_before.assert_not_called()
 
     def test_producer_sends_generated_orders_in_order(self):
         queue = Mock()
