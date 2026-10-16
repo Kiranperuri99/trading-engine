@@ -1,4 +1,5 @@
 
+import json
 import argparse
 import io
 from contextlib import redirect_stdout
@@ -18,6 +19,33 @@ def stalled_worker(*args):
 
 
 class TestRunConcurrent(unittest.TestCase):
+    def test_cli_json_output_is_valid_and_preserves_summary(self):
+        expected = {
+            "orders_processed": 0,
+            "trade_count": 0,
+            "traded_quantity": 0,
+            "pending_buy_quantity": 0,
+            "pending_sell_quantity": 0,
+            "best_bid": None,
+            "best_ask": None,
+            "spread": None,
+        }
+        output = io.StringIO()
+
+        with patch(
+            "run_concurrent.run_concurrent",
+            return_value=expected,
+        ) as runner:
+            with redirect_stdout(output):
+                main(["--count", "0", "--json"])
+
+        runner.assert_called_once_with(
+            count=0,
+            seed=42,
+            capacity=16,
+            timeout=30.0,
+        )
+        self.assertEqual(json.loads(output.getvalue()), expected)
     def test_cli_passes_selected_settings_to_runner(self):
         output = io.StringIO()
 

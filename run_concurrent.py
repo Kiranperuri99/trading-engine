@@ -119,6 +119,11 @@ def build_parser():
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--capacity", type=positive_capacity, default=16)
     parser.add_argument("--timeout", type=positive_timeout, default=30.0)
+    parser.add_argument(
+        "--json",
+        action="store_true",
+        help="Print the simulation summary as JSON",
+    )
     return parser
 
 
@@ -130,12 +135,13 @@ def main(argv=None):
         capacity=args.capacity,
         timeout=args.timeout,
     )
+    if args.json:
+        print(json.dumps(result, indent=2, allow_nan=False))
+    else:
+        print("ChronosMatch concurrent simulation")
 
-    print("ChronosMatch concurrent simulation")
-
-    for name, value in result.items():
-        print(f"{name}: {value}")
-
+        for name, value in result.items():
+            print(f"{name}: {value}")
 
 if __name__ == "__main__":
     main()
