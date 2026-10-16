@@ -15,6 +15,12 @@ def benchmark_simulation(count=1000, seed=42):
     elapsed_seconds = elapsed_ns / 1_000_000_000
 
     return {
+         "configuration": {
+            "mode": "sequential",
+            "count": count,
+            "seed": seed,
+            "capacity": 16,
+        },
         "environment": benchmark_environment(),
         "orders_processed": processed,
         "elapsed_ns": elapsed_ns,

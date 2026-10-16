@@ -24,6 +24,12 @@ class TestBenchmarkSimulation(unittest.TestCase):
         self.assertEqual(result["elapsed_ns"], 2_000_000_000)
         self.assertEqual(result["orders_per_second"], 50.0)
         self.assertEqual(result["average_ns_per_order"], 20_000_000.0)
+        self.assertEqual(result["configuration"], {
+            "mode": "sequential",
+            "count": 100,
+            "seed": 7,
+            "capacity": 16,
+        })
 
     def test_empty_benchmark_has_no_per_order_average(self):
         with patch(

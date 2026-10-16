@@ -30,6 +30,13 @@ class TestBenchmarkConcurrent(unittest.TestCase):
         self.assertEqual(
             result["average_ns_per_order"], 20_000_000.0
         )
+        self.assertEqual(result["configuration"], {
+            "mode": "concurrent",
+            "count": 100,
+            "seed": 7,
+            "capacity": 4,
+            "timeout_seconds": 20,
+        })
 
     def test_zero_orders_have_no_per_order_average(self):
         with patch(
