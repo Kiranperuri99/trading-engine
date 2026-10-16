@@ -1,4 +1,8 @@
 
+import argparse
+import io
+from contextlib import redirect_stdout
+from run_concurrent import main, positive_capacity, positive_timeout
 from time import sleep
 from unittest.mock import patch
 import unittest
@@ -14,6 +18,40 @@ def stalled_worker(*args):
 
 
 class TestRunConcurrent(unittest.TestCase):
+    def test_cli_passes_selected_settings_to_runner(self):
+        output = io.StringIO()
+
+        with patch(
+            "run_concurrent.run_concurrent",
+            return_value={"orders_processed": 50},
+        ) as runner:
+            with redirect_stdout(output):
+                main([
+                    "--count", "50",
+                    "--seed", "7",
+                    "--capacity", "4",
+                    "--timeout", "20",
+                ])
+
+        runner.assert_called_once_with(
+            count=50,
+            seed=7,
+            capacity=4,
+            timeout=20.0,
+        )
+        self.assertIn("orders_processed: 50", output.getvalue())
+
+    def test_cli_rejects_invalid_capacity(self):
+        for value in ("0", "-1", "2.5", "hello"):
+            with self.subTest(value=value):
+                with self.assertRaises(argparse.ArgumentTypeError):
+                    positive_capacity(value)
+
+    def test_cli_rejects_invalid_timeout(self):
+        for value in ("0", "-1", "nan", "inf", "hello"):
+            with self.subTest(value=value):
+                with self.assertRaises(argparse.ArgumentTypeError):
+                    positive_timeout(value)
     def test_failed_producer_is_reported(self):
         with patch(
             "run_concurrent.producer_process",

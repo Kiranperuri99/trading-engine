@@ -1,3 +1,5 @@
+import argparse
+from run_simulation import non_negative_count
 import json
 import multiprocessing
 import tempfile
@@ -91,6 +93,52 @@ def run_concurrent(count=100, seed=42, capacity=16, timeout=30):
             for process in started:
                 process.join()
                 process.close()
+def positive_capacity(value):
+    capacity = non_negative_count(value)
+
+    if capacity == 0:
+        raise argparse.ArgumentTypeError("Capacity must be positive")
+
+    return capacity
+
+
+def positive_timeout(value):
+    try:
+        return validate_timeout(float(value))
+    except (ValueError, OverflowError):
+        raise argparse.ArgumentTypeError(
+            "Timeout must be a positive finite number"
+        ) from None
+
+
+def build_parser():
+    parser = argparse.ArgumentParser(
+        description="Run the concurrent ChronosMatch simulation."
+    )
+    parser.add_argument("--count", type=non_negative_count, default=100)
+    parser.add_argument("--seed", type=int, default=42)
+    parser.add_argument("--capacity", type=positive_capacity, default=16)
+    parser.add_argument("--timeout", type=positive_timeout, default=30.0)
+    return parser
+
+
+def main(argv=None):
+    args = build_parser().parse_args(argv)
+    result = run_concurrent(
+        count=args.count,
+        seed=args.seed,
+        capacity=args.capacity,
+        timeout=args.timeout,
+    )
+
+    print("ChronosMatch concurrent simulation")
+
+    for name, value in result.items():
+        print(f"{name}: {value}")
+
+
+if __name__ == "__main__":
+    main()
 
 
 if __name__ == "__main__":
@@ -99,4 +147,3 @@ if __name__ == "__main__":
 
     for name, value in result.items():
         print(f"{name}: {value}")
-        
