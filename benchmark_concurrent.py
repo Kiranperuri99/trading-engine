@@ -18,6 +18,7 @@ def benchmark_concurrent(
     processed = summary["orders_processed"]
 
     return {
+        "environment": benchmark_environment(),
         "orders_processed": processed,
         "elapsed_ns": elapsed_ns,
         "orders_per_second": (
