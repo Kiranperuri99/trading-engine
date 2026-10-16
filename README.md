@@ -78,3 +78,57 @@ have not yet been verified.
 ```powershell
 python -m unittest discover -v
 ```
+## Concurrent Simulation
+
+Run the producer and matching consumer in separate processes:
+
+```powershell
+python run_concurrent.py --count 200 --seed 7 --capacity 4 --timeout 30
+```
+
+Options:
+- `--count`: number of orders to generate.
+- `--seed`: seed for repeatable simulated orders.
+- `--capacity`: number of order slots in the shared ring buffer.
+- `--timeout`: overall runner time limit in seconds, including startup.
+
+Print the summary as JSON:
+
+```powershell
+python run_concurrent.py --count 200 --seed 7 --capacity 4 --json
+```
+
+The workers share one multiprocessing lock. The parent detects worker
+failures and terminates remaining workers if the run fails or times out.
+
+If a valid workload times out on a slow computer, try a smaller count
+or a larger timeout. If it still fails, inspect the traceback.
+
+## Concurrent Baseline Benchmark
+
+```powershell
+python benchmark_concurrent.py
+```
+
+The benchmark currently defaults to 1,000 orders, seed 42,
+capacity 16, and a 30-second runner timeout.
+
+Results include:
+- Runtime environment details.
+- Workload configuration.
+- Total elapsed time.
+- Orders processed per second.
+- Average total time per processed order.
+
+Timing includes setup, process startup, processing, and cleanup.
+It does not measure individual order latency.
+
+## Expected Test Output
+
+```powershell
+python -m unittest discover -v
+```
+
+One failure-handling test deliberately crashes a child worker.
+Its traceback may appear even when the suite passes.
+Check the final suite result: it must say `OK`.
