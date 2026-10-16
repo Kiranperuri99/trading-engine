@@ -1,3 +1,5 @@
+from time import monotonic
+from worker_config import make_deadline
 import multiprocessing
 import tempfile
 import unittest
@@ -9,6 +11,44 @@ from trading_engine import Order
 
 
 class TestSynchronizedRing(unittest.TestCase):
+    def test_deadline_operations_preserve_queue_behavior(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "ring.bin"
+            lock = multiprocessing.get_context("spawn").Lock()
+            order = Order(1, "BUY", 100.0, 5)
+
+            with RingBuffer(path, 1) as ring:
+                queue = SynchronizedRing(ring, lock)
+                deadline = make_deadline(10)
+
+                self.assertIsNone(queue.try_get_before(deadline))
+                self.assertTrue(queue.try_put_before(order, deadline))
+                self.assertFalse(queue.try_put_before(order, deadline))
+                self.assertEqual(queue.try_get_before(deadline), order)
+                self.assertIsNone(queue.try_get_before(deadline))
+
+    def test_expired_deadline_preserves_queue(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "ring.bin"
+            lock = multiprocessing.get_context("spawn").Lock()
+            original = Order(1, "BUY", 100.0, 5)
+
+            with RingBuffer(path, 2) as ring:
+                queue = SynchronizedRing(ring, lock)
+                queue.put(original)
+                expired = monotonic() - 1
+
+                with self.assertRaises(TimeoutError):
+                    queue.try_get_before(expired)
+
+                with self.assertRaises(TimeoutError):
+                    queue.try_put_before(
+                        Order(2, "SELL", 101.0, 3),
+                        expired,
+                    )
+
+                self.assertEqual(len(queue), 1)
+                self.assertEqual(queue.get(), original)
 
     def test_wrapper_preserves_queue_behavior(self):
         with tempfile.TemporaryDirectory() as directory:

@@ -1,3 +1,4 @@
+from worker_config import acquire_before
 class SynchronizedRing:
     """Every user of the same ring must share the same lock."""
 
@@ -26,6 +27,20 @@ class SynchronizedRing:
 
     def try_get(self):
         with self._lock:
+            if len(self._ring) == 0:
+                return None
+
+            return self._ring.get()
+    def try_put_before(self, order, deadline):
+        with acquire_before(self._lock, deadline):
+            if len(self._ring) == self._ring.capacity:
+                return False
+
+            self._ring.put(order)
+            return True
+
+    def try_get_before(self, deadline):
+        with acquire_before(self._lock, deadline):
             if len(self._ring) == 0:
                 return None
 
