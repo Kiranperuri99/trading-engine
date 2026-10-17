@@ -57,3 +57,9 @@ until they have been measured using an appropriate workload.
 - Median, p95, and p99 latency.
 - Larger workloads and multiple queue capacities.
 - Python versus Cython matching performance.
+## Per-order engine latency
+
+Run this command to measure how long each `ChronosMatch.add_order()` call takes:
+
+```powershell
+python measure_engine_latency.py --count 1000 --seed 42 --json --output latency-results.json
