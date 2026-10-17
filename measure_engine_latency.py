@@ -40,6 +40,8 @@ def measure_engine_latency(count=1000, seed=42):
         "summary": summarize_engine(engine, len(samples)),
     }
 
+   
+
 
 def build_parser():
     parser = argparse.ArgumentParser(
@@ -87,6 +89,11 @@ def main(argv=None):
 
         for name, value in result["latency"].items():
             print(f"{name}: {value}")
+
+        for side, stats in result.get("latency_by_side", {}).items():
+            print(f"{side} order latency:")
+            for name, value in stats.items():
+                print(f"  {name}: {value}")
 
 
 if __name__ == "__main__":

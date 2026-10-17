@@ -1,3 +1,5 @@
+from contextlib import redirect_stdout
+from io import StringIO
 from trading_engine import Order
 import tempfile
 from pathlib import Path
@@ -171,6 +173,27 @@ class TestMeasureEngineLatency(unittest.TestCase):
         self.assertEqual(result["latency_by_side"]["BUY"]["min_ns"], 10)
         self.assertEqual(result["latency_by_side"]["SELL"]["count"], 1)
         self.assertEqual(result["latency_by_side"]["SELL"]["min_ns"], 30)
+    def test_human_output_includes_latency_by_side(self):
+        result = {
+            "scope": "ChronosMatch.add_order call",
+            "configuration": {"count": 2, "seed": 7},
+            "latency": {"count": 2, "median_ns": 20},
+            "latency_by_side": {
+                "BUY": {"count": 1, "median_ns": 10},
+                "SELL": {"count": 1, "median_ns": 30},
+            },
+            "summary": {},
+        }
 
+        with patch(
+            "measure_engine_latency.measure_engine_latency",
+            return_value=result,
+        ), redirect_stdout(StringIO()) as output:
+            main(["--count", "2"])
+
+        self.assertIn("BUY order latency:", output.getvalue())
+        self.assertIn("SELL order latency:", output.getvalue())
+        self.assertIn("median_ns: 10", output.getvalue())
+        self.assertIn("median_ns: 30", output.getvalue())
 if __name__ == "__main__":
     unittest.main()
