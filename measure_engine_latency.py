@@ -1,3 +1,4 @@
+from benchmark_environment import benchmark_environment
 import json
 import argparse
 from run_simulation import non_negative_count
@@ -20,6 +21,7 @@ def measure_engine_latency(count=1000, seed=42):
         samples.append(elapsed)
 
     return {
+        "environment": benchmark_environment(),
         "scope": "ChronosMatch.add_order call",
         "configuration": {
             "count": count,

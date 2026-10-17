@@ -10,6 +10,32 @@ from run_simulation import run_simulation
 
 
 class TestMeasureEngineLatency(unittest.TestCase):
+    def test_measurement_includes_environment_outside_timed_calls(self):
+        events = []
+
+        def clock():
+            events.append("clock")
+            return len(events) * 10
+
+        def environment():
+            events.append("environment")
+            return {"python_version": "test-version"}
+
+        with patch(
+            "measure_engine_latency.perf_counter_ns",
+            side_effect=clock,
+        ), patch(
+            "measure_engine_latency.benchmark_environment",
+            side_effect=environment,
+        ):
+            result = measure_engine_latency(count=1, seed=7)
+
+        self.assertEqual(
+            result["environment"],
+            {"python_version": "test-version"},
+        )
+        self.assertEqual(events, ["clock", "clock", "environment"])
+        self.assertEqual(result["latency"]["median_ns"], 10)
     def test_json_output_contains_measured_durations_and_summary(self):
         output = io.StringIO()
 
