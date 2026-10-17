@@ -69,3 +69,19 @@ Use `--warmup` to process some orders before measuring. For example:
 
 ```powershell
 python measure_engine_latency.py --count 1000 --warmup 100 --seed 42 --json --output latency-warmup-results.json
+
+Save the file. Check that the command option appears:
+
+```powershell
+python measure_engine_latency.py --help
+Use `--include-samples` to include the latency of every measured order in the JSON report. The values appear in the `samples_ns` list. This list can make the report large, so use the option when you need to inspect individual timings.
+
+Example:
+
+```powershell
+python measure_engine_latency.py --count 1000 --seed 42 --json --include-samples --output latency-samples.json
+
+Save the file and check that the option appears in the command help:
+
+```powershell
+python measure_engine_latency.py --help
