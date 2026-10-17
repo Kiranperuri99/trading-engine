@@ -1,3 +1,4 @@
+import json
 import io
 from contextlib import redirect_stdout
 from measure_engine_latency import build_parser, main
@@ -9,6 +10,39 @@ from run_simulation import run_simulation
 
 
 class TestMeasureEngineLatency(unittest.TestCase):
+    def test_json_output_contains_measured_durations_and_summary(self):
+        output = io.StringIO()
+
+        with patch(
+            "measure_engine_latency.perf_counter_ns",
+            side_effect=[100, 110, 200, 230],
+        ):
+            with redirect_stdout(output):
+                main(["--count", "2", "--seed", "7", "--json"])
+
+        result = json.loads(output.getvalue())
+
+        self.assertEqual(result["scope"], "ChronosMatch.add_order call")
+        self.assertEqual(result["configuration"], {
+            "count": 2,
+            "seed": 7,
+        })
+        self.assertEqual(result["latency"]["count"], 2)
+        self.assertEqual(result["latency"]["median_ns"], 20.0)
+        self.assertEqual(result["latency"]["p95_ns"], 30)
+        self.assertEqual(result["summary"]["orders_processed"], 2)
+
+    def test_empty_json_output_has_null_latency_values(self):
+        output = io.StringIO()
+
+        with redirect_stdout(output):
+            main(["--count", "0", "--json"])
+
+        result = json.loads(output.getvalue())
+
+        self.assertEqual(result["latency"]["count"], 0)
+        self.assertIsNone(result["latency"]["median_ns"])
+        self.assertIsNone(result["latency"]["p99_ns"])
     def test_cli_defaults(self):
         args = build_parser().parse_args([])
 

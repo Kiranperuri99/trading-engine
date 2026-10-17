@@ -1,3 +1,4 @@
+import json
 import argparse
 from run_simulation import non_negative_count
 from time import perf_counter_ns
@@ -45,6 +46,11 @@ def build_parser():
         default=42,
         help="Random seed (default: 42)",
     )
+    parser.add_argument(
+        "--json",
+        action="store_true",
+        help="Print the complete measurement result as JSON",
+    )
     return parser
 
 
@@ -54,13 +60,15 @@ def main(argv=None):
         count=args.count,
         seed=args.seed,
     )
+    if args.json:
+        print(json.dumps(result, indent=2, allow_nan=False))
+    else:
+        print("ChronosMatch engine-call latency")
+        print("Excludes queue waiting and order generation.")
+        print(f"Requested orders: {args.count}; seed: {args.seed}")
 
-    print("ChronosMatch engine-call latency")
-    print("Excludes queue waiting and order generation.")
-    print(f"Requested orders: {args.count}; seed: {args.seed}")
-
-    for name, value in result["latency"].items():
-        print(f"{name}: {value}")
+        for name, value in result["latency"].items():
+            print(f"{name}: {value}")
 
 
 if __name__ == "__main__":
