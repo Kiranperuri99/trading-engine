@@ -1,3 +1,4 @@
+from datetime import datetime
 import json
 from contextlib import redirect_stdout
 from io import StringIO
@@ -16,6 +17,18 @@ from run_simulation import run_simulation
 
 
 class TestMeasureEngineLatency(unittest.TestCase):
+    def test_json_report_has_utc_timestamp(self):
+        with patch(
+            "measure_engine_latency.generate_orders",
+            return_value=[],
+        ), redirect_stdout(StringIO()) as output:
+            main(["--count", "0", "--json"])
+
+        report = json.loads(output.getvalue())
+        timestamp = datetime.fromisoformat(report["generated_at_utc"])
+
+        self.assertIsNotNone(timestamp.tzinfo)
+        self.assertEqual(timestamp.utcoffset().total_seconds(), 0)
     def test_json_output_includes_schema_version(self):
         with patch(
             "measure_engine_latency.generate_orders",

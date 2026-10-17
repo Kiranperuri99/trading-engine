@@ -1,3 +1,4 @@
+from datetime import datetime, timezone
 from result_export import save_result
 from benchmark_environment import benchmark_environment
 import json
@@ -26,6 +27,7 @@ def measure_engine_latency(count=1000, seed=42):
         side_samples[side].append(elapsed)
 
     return {
+        "generated_at_utc": datetime.now(timezone.utc).isoformat(),
         "schema_version": 1,
         "environment": benchmark_environment(),
         "scope": "ChronosMatch.add_order call",
