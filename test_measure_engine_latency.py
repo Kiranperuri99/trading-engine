@@ -1,3 +1,4 @@
+from trading_engine import Order
 import tempfile
 from pathlib import Path
 import json
@@ -151,7 +152,25 @@ class TestMeasureEngineLatency(unittest.TestCase):
         self.assertEqual(result["latency"]["count"], 0)
         self.assertIsNone(result["latency"]["median_ns"])
         self.assertEqual(result["summary"]["orders_processed"], 0)
+    def test_latency_is_reported_separately_for_each_side(self):
+        orders = [
+            Order(1, "BUY", 100.0, 1),
+            Order(2, "SELL", 101.0, 1),
+        ]
 
+        with patch(
+            "measure_engine_latency.generate_orders",
+            return_value=orders,
+        ), patch(
+            "measure_engine_latency.perf_counter_ns",
+            side_effect=[100, 110, 200, 230],
+        ):
+            result = measure_engine_latency(count=2, seed=7)
+
+        self.assertEqual(result["latency_by_side"]["BUY"]["count"], 1)
+        self.assertEqual(result["latency_by_side"]["BUY"]["min_ns"], 10)
+        self.assertEqual(result["latency_by_side"]["SELL"]["count"], 1)
+        self.assertEqual(result["latency_by_side"]["SELL"]["min_ns"], 30)
 
 if __name__ == "__main__":
     unittest.main()

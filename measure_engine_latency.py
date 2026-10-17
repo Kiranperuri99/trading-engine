@@ -14,12 +14,16 @@ from trading_engine import ChronosMatch
 def measure_engine_latency(count=1000, seed=42):
     engine = ChronosMatch(verbose=False)
     samples = []
+    side_samples = {"BUY": [], "SELL": []
+                    }
 
     for order in generate_orders(count, seed):
         start = perf_counter_ns()
         engine.add_order(order)
         elapsed = perf_counter_ns() - start
         samples.append(elapsed)
+        side = order.side.strip().upper()
+        side_samples[side].append(elapsed)
 
     return {
         "environment": benchmark_environment(),
@@ -29,6 +33,10 @@ def measure_engine_latency(count=1000, seed=42):
             "seed": seed,
         },
         "latency": summarize_latencies(samples),
+        "latency_by_side": {
+    side: summarize_latencies(side_samples[side])
+    for side in ("BUY", "SELL")
+},
         "summary": summarize_engine(engine, len(samples)),
     }
 
