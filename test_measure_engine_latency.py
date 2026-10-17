@@ -242,5 +242,24 @@ class TestMeasureEngineLatency(unittest.TestCase):
         self.assertIn("SELL order latency:", output.getvalue())
         self.assertIn("median_ns: 10", output.getvalue())
         self.assertIn("median_ns: 30", output.getvalue())
+    def test_warmup_orders_are_excluded_from_report(self):
+        orders = [Order(1, "BUY", 100.0, 1)]
+
+        with patch(
+            "measure_engine_latency.generate_orders",
+            side_effect=[orders, orders],
+        ) as generate, patch(
+            "measure_engine_latency.perf_counter_ns",
+            side_effect=[100, 110],
+        ), redirect_stdout(StringIO()) as output:
+            main(["--count", "1", "--seed", "7", "--warmup", "1", "--json"])
+
+        report = json.loads(output.getvalue())
+
+        self.assertEqual(report["latency"]["count"], 1)
+        self.assertEqual(report["summary"]["orders_processed"], 1)
+        generate.assert_any_call(1, 8)
+        generate.assert_any_call(1, 7)
+
 if __name__ == "__main__":
     unittest.main()
