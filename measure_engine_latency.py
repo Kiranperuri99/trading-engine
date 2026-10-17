@@ -1,4 +1,6 @@
 from datetime import datetime, timezone
+from unittest import result
+from unittest import result
 from result_export import save_result
 from benchmark_environment import benchmark_environment
 import json
@@ -11,12 +13,11 @@ from latency_stats import summarize_latencies
 from market_simulator import generate_orders
 from trading_engine import ChronosMatch
 
-
-def measure_engine_latency(count=1000, seed=42, warmup=0):
+def measure_engine_latency(count=1000, seed=42, warmup=0, include_samples=False):
     engine = ChronosMatch(verbose=False)
     samples = []
-    side_samples = {"BUY": [], "SELL": []
-                    }
+    side_samples = {"BUY": [], "SELL": []}
+
     if warmup:
         warmup_engine = ChronosMatch(verbose=False)
         for warmup_order in generate_orders(warmup, seed + 1):
@@ -26,28 +27,33 @@ def measure_engine_latency(count=1000, seed=42, warmup=0):
         start = perf_counter_ns()
         engine.add_order(order)
         elapsed = perf_counter_ns() - start
+
         samples.append(elapsed)
         side = order.side.strip().upper()
         side_samples[side].append(elapsed)
 
-    return {
-        "generated_at_utc": datetime.now(timezone.utc).isoformat(),
+    result = {
         "schema_version": 1,
+        "generated_at_utc": datetime.now(timezone.utc).isoformat(),
         "environment": benchmark_environment(),
         "scope": "ChronosMatch.add_order call",
         "configuration": {
             "count": count,
             "seed": seed,
+            "warmup": warmup,
         },
         "latency": summarize_latencies(samples),
         "latency_by_side": {
-    side: summarize_latencies(side_samples[side])
-    for side in ("BUY", "SELL")
-},
+            side: summarize_latencies(side_samples[side])
+            for side in ("BUY", "SELL")
+        },
         "summary": summarize_engine(engine, len(samples)),
     }
 
-   
+    if include_samples:
+        result["samples_ns"] = samples
+
+    return result
 
 
 def build_parser():
@@ -81,15 +87,22 @@ def build_parser():
         default=0,
         help="Process this many orders before measuring",
     )
+    parser.add_argument(
+        "--include-samples",
+        action="store_true",
+        help="Include each order's latency in the report",
+    )
     return parser
 
 
 def main(argv=None):
-    args = build_parser().parse_args(argv)
+    parser = build_parser()
+    args = parser.parse_args(argv)
     result = measure_engine_latency(
         count=args.count,
         seed=args.seed,
-        warmup=args.warmup
+        warmup=args.warmup,
+        include_samples=args.include_samples,
     )
     if args.output:
         save_result(args.output, result)
@@ -113,7 +126,10 @@ def main(argv=None):
             print("Engine summary:")
             for name, value in result["summary"].items():
                 print(f" {name}: {value}")
+        
+
     return result
+    
 
 if __name__ == "__main__":
     main()

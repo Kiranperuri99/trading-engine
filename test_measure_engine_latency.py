@@ -17,6 +17,23 @@ from run_simulation import run_simulation
 
 
 class TestMeasureEngineLatency(unittest.TestCase):
+    def test_include_samples_adds_each_order_latency(self):
+        orders = [Order(1, "BUY", 100.0, 1)]
+
+        with patch(
+            "measure_engine_latency.generate_orders",
+            return_value=orders,
+        ), patch(
+            "measure_engine_latency.perf_counter_ns",
+            side_effect=[100, 113],
+        ):
+            result = measure_engine_latency(
+                count=1,
+                seed=7,
+                include_samples=True,
+            )
+
+        self.assertEqual(result["samples_ns"], [13])
     def test_json_report_has_utc_timestamp(self):
         with patch(
             "measure_engine_latency.generate_orders",
@@ -135,6 +152,7 @@ class TestMeasureEngineLatency(unittest.TestCase):
         self.assertEqual(result["configuration"], {
             "count": 2,
             "seed": 7,
+            "warmup": 0,
         })
         self.assertEqual(result["latency"]["count"], 2)
         self.assertEqual(result["latency"]["median_ns"], 20.0)
@@ -168,7 +186,7 @@ class TestMeasureEngineLatency(unittest.TestCase):
             with redirect_stdout(output):
                 main(["--count", "25", "--seed", "7"])
 
-        measurement.assert_called_once_with(count=25, seed=7, warmup=0)
+        measurement.assert_called_once_with(count=25, seed=7, warmup=0, include_samples=False,)
         self.assertIn("count: 25", output.getvalue())
 
     def test_records_one_duration_per_order(self):
