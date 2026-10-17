@@ -168,7 +168,7 @@ class TestMeasureEngineLatency(unittest.TestCase):
             with redirect_stdout(output):
                 main(["--count", "25", "--seed", "7"])
 
-        measurement.assert_called_once_with(count=25, seed=7)
+        measurement.assert_called_once_with(count=25, seed=7, warmup=0)
         self.assertIn("count: 25", output.getvalue())
 
     def test_records_one_duration_per_order(self):

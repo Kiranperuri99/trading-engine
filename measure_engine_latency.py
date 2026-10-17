@@ -12,11 +12,15 @@ from market_simulator import generate_orders
 from trading_engine import ChronosMatch
 
 
-def measure_engine_latency(count=1000, seed=42):
+def measure_engine_latency(count=1000, seed=42, warmup=0):
     engine = ChronosMatch(verbose=False)
     samples = []
     side_samples = {"BUY": [], "SELL": []
                     }
+    if warmup:
+        warmup_engine = ChronosMatch(verbose=False)
+        for warmup_order in generate_orders(warmup, seed + 1):
+            warmup_engine.add_order(warmup_order)
 
     for order in generate_orders(count, seed):
         start = perf_counter_ns()
@@ -71,6 +75,12 @@ def build_parser():
         "--output",
         help="Save results to a new JSON file",
     )
+    parser.add_argument(
+        "--warmup",
+        type=non_negative_count,
+        default=0,
+        help="Process this many orders before measuring",
+    )
     return parser
 
 
@@ -79,6 +89,7 @@ def main(argv=None):
     result = measure_engine_latency(
         count=args.count,
         seed=args.seed,
+        warmup=args.warmup
     )
     if args.output:
         save_result(args.output, result)
@@ -101,7 +112,7 @@ def main(argv=None):
         if result.get("summary"):
             print("Engine summary:")
             for name, value in result["summary"].items():
-                print(f"  {name}: {value}")
+                print(f" {name}: {value}")
     return result
 
 if __name__ == "__main__":
