@@ -1,3 +1,4 @@
+import json
 from contextlib import redirect_stdout
 from io import StringIO
 from trading_engine import Order
@@ -15,6 +16,17 @@ from run_simulation import run_simulation
 
 
 class TestMeasureEngineLatency(unittest.TestCase):
+    def test_json_output_includes_schema_version(self):
+        with patch(
+            "measure_engine_latency.generate_orders",
+            return_value=[],
+        ), redirect_stdout(StringIO()) as output:
+            main(["--count", "0", "--json"])
+
+        report = json.loads(output.getvalue())
+
+        self.assertEqual(report["schema_version"], 1)
+        self.assertIn("latency", report)
     def test_human_output_includes_engine_summary(self):
         result = {
             "scope": "ChronosMatch.add_order call",

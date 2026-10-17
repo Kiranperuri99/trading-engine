@@ -26,6 +26,7 @@ def measure_engine_latency(count=1000, seed=42):
         side_samples[side].append(elapsed)
 
     return {
+        "schema_version": 1,
         "environment": benchmark_environment(),
         "scope": "ChronosMatch.add_order call",
         "configuration": {
