@@ -1,3 +1,5 @@
+import tempfile
+from pathlib import Path
 import json
 import io
 from contextlib import redirect_stdout
@@ -10,6 +12,37 @@ from run_simulation import run_simulation
 
 
 class TestMeasureEngineLatency(unittest.TestCase):
+    def test_output_option_saves_complete_result(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "latency.json"
+            output = io.StringIO()
+
+            with redirect_stdout(output):
+                main([
+                    "--count", "0",
+                    "--json",
+                    "--output", str(path),
+                ])
+
+            saved = json.loads(path.read_text(encoding="utf-8"))
+            printed = json.loads(output.getvalue())
+
+            self.assertEqual(saved, printed)
+            self.assertEqual(saved["latency"]["count"], 0)
+            self.assertIn("environment", saved)
+
+    def test_output_option_preserves_existing_file(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "latency.json"
+            path.write_text("keep this", encoding="utf-8")
+
+            with self.assertRaises(FileExistsError):
+                main(["--count", "0", "--output", str(path)])
+
+            self.assertEqual(
+                path.read_text(encoding="utf-8"),
+                "keep this",
+            )
     def test_measurement_includes_environment_outside_timed_calls(self):
         events = []
 

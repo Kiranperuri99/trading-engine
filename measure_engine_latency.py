@@ -1,3 +1,4 @@
+from result_export import save_result
 from benchmark_environment import benchmark_environment
 import json
 import argparse
@@ -53,6 +54,10 @@ def build_parser():
         action="store_true",
         help="Print the complete measurement result as JSON",
     )
+    parser.add_argument(
+        "--output",
+        help="Save results to a new JSON file",
+    )
     return parser
 
 
@@ -62,6 +67,9 @@ def main(argv=None):
         count=args.count,
         seed=args.seed,
     )
+    if args.output:
+        save_result(args.output, result)
+
     if args.json:
         print(json.dumps(result, indent=2, allow_nan=False))
     else:
