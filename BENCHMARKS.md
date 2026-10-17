@@ -63,3 +63,9 @@ Run this command to measure how long each `ChronosMatch.add_order()` call takes:
 
 ```powershell
 python measure_engine_latency.py --count 1000 --seed 42 --json --output latency-results.json
+### Warm-up runs
+
+Use `--warmup` to process some orders before measuring. For example:
+
+```powershell
+python measure_engine_latency.py --count 1000 --warmup 100 --seed 42 --json --output latency-warmup-results.json
