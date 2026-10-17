@@ -1,3 +1,6 @@
+import io
+from contextlib import redirect_stdout
+from measure_engine_latency import build_parser, main
 import unittest
 from unittest.mock import patch
 
@@ -6,6 +9,24 @@ from run_simulation import run_simulation
 
 
 class TestMeasureEngineLatency(unittest.TestCase):
+    def test_cli_defaults(self):
+        args = build_parser().parse_args([])
+
+        self.assertEqual(args.count, 1000)
+        self.assertEqual(args.seed, 42)
+
+    def test_cli_passes_requested_count_and_seed(self):
+        output = io.StringIO()
+
+        with patch(
+            "measure_engine_latency.measure_engine_latency",
+            return_value={"latency": {"count": 25}},
+        ) as measurement:
+            with redirect_stdout(output):
+                main(["--count", "25", "--seed", "7"])
+
+        measurement.assert_called_once_with(count=25, seed=7)
+        self.assertIn("count: 25", output.getvalue())
 
     def test_records_one_duration_per_order(self):
         with patch(

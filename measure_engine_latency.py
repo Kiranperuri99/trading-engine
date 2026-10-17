@@ -1,3 +1,5 @@
+import argparse
+from run_simulation import non_negative_count
 from time import perf_counter_ns
 
 from engine_summary import summarize_engine
@@ -27,12 +29,39 @@ def measure_engine_latency(count=1000, seed=42):
     }
 
 
-if __name__ == "__main__":
-    result = measure_engine_latency()
+def build_parser():
+    parser = argparse.ArgumentParser(
+        description="Measure individual matching-engine calls."
+    )
+    parser.add_argument(
+        "--count",
+        type=non_negative_count,
+        default=1000,
+        help="Number of orders to measure (default: 1000)",
+    )
+    parser.add_argument(
+        "--seed",
+        type=int,
+        default=42,
+        help="Random seed (default: 42)",
+    )
+    return parser
+
+
+def main(argv=None):
+    args = build_parser().parse_args(argv)
+    result = measure_engine_latency(
+        count=args.count,
+        seed=args.seed,
+    )
 
     print("ChronosMatch engine-call latency")
     print("Excludes queue waiting and order generation.")
+    print(f"Requested orders: {args.count}; seed: {args.seed}")
 
     for name, value in result["latency"].items():
         print(f"{name}: {value}")
-        
+
+
+if __name__ == "__main__":
+    main()
