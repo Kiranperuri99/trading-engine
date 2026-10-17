@@ -95,6 +95,11 @@ def main(argv=None):
             for name, value in stats.items():
                 print(f"  {name}: {value}")
 
+        if result.get("summary"):
+            print("Engine summary:")
+            for name, value in result["summary"].items():
+                print(f"  {name}: {value}")
+    return result
 
 if __name__ == "__main__":
     main()

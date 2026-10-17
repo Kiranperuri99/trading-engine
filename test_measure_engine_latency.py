@@ -15,6 +15,28 @@ from run_simulation import run_simulation
 
 
 class TestMeasureEngineLatency(unittest.TestCase):
+    def test_human_output_includes_engine_summary(self):
+        result = {
+            "scope": "ChronosMatch.add_order call",
+            "configuration": {"count": 2, "seed": 7},
+            "latency": {"count": 2, "median_ns": 20},
+            "latency_by_side": {},
+            "summary": {
+                "orders_processed": 2,
+                "trade_count": 1,
+                "traded_quantity": 3,
+            },
+        }
+
+        with patch(
+            "measure_engine_latency.measure_engine_latency",
+            return_value=result,
+        ), redirect_stdout(StringIO()) as output:
+            main(["--count", "2"])
+
+        self.assertIn("Engine summary:", output.getvalue())
+        self.assertIn("orders_processed: 2", output.getvalue())
+        self.assertIn("trade_count: 1", output.getvalue())
     def test_output_option_saves_complete_result(self):
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / "latency.json"
