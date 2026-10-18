@@ -17,6 +17,20 @@ from run_simulation import run_simulation
 
 
 class TestMeasureEngineLatency(unittest.TestCase):
+    def test_include_samples_cli_adds_samples_to_json(self):
+        orders = [Order(1, "BUY", 100.0, 1)]
+
+        with patch(
+            "measure_engine_latency.generate_orders",
+            return_value=orders,
+        ), patch(
+            "measure_engine_latency.perf_counter_ns",
+            side_effect=[100, 113],
+        ), redirect_stdout(StringIO()) as output:
+            main(["--count", "1", "--include-samples", "--json"])
+
+        report = json.loads(output.getvalue())
+        self.assertEqual(report["samples_ns"], [13])
     def test_include_samples_adds_each_order_latency(self):
         orders = [Order(1, "BUY", 100.0, 1)]
 
