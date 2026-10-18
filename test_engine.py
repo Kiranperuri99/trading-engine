@@ -5,6 +5,26 @@ from trading_engine import Order, ChronosMatch
 
 
 class TestChronosMatch(unittest.TestCase):
+    def test_order_book_depth_limits_price_levels(self):
+        engine = ChronosMatch(verbose=False)
+        engine.add_order(Order(1, "BUY", 105.0, 1))
+        engine.add_order(Order(2, "BUY", 104.0, 2))
+        engine.add_order(Order(3, "SELL", 106.0, 3))
+        engine.add_order(Order(4, "SELL", 107.0, 4))
+
+        self.assertEqual(
+            engine.get_order_book(depth=1),
+            {
+                "bids": [{"price": 105.0, "quantity": 1}],
+                "asks": [{"price": 106.0, "quantity": 3}],
+            },
+        )
+
+    def test_order_book_rejects_zero_depth(self):
+        engine = ChronosMatch(verbose=False)
+
+        with self.assertRaises(ValueError):
+            engine.get_order_book(depth=0)
     def test_order_book_snapshot_stays_unchanged(self):
         engine = ChronosMatch(verbose=False)
         engine.add_order(Order(1, "BUY", 101.0, 2))

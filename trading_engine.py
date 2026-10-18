@@ -103,15 +103,22 @@ class ChronosMatch:
             "BUY": sum(order.quantity for order in self.buy_orders),
             "SELL": sum(order.quantity for order in self.sell_orders),
         }
-    def get_order_book(self):
+    def get_order_book(self, depth=None):
+        if depth is not None and (type(depth) is not int or depth <= 0):
+            raise ValueError("Depth must be a positive integer")
+
         def levels(orders, highest_first):
             totals = {}
             for order in orders:
                 totals[order.price] = totals.get(order.price, 0) + order.quantity
 
+            prices = sorted(totals, reverse=highest_first)
+            if depth is not None:
+                prices = prices[:depth]
+
             return [
                 {"price": price, "quantity": totals[price]}
-                for price in sorted(totals, reverse=highest_first)
+                for price in prices
             ]
 
         return {
