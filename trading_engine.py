@@ -166,6 +166,13 @@ class ChronosMatch:
             for trade in self.trades
         )
         return total_value / total_quantity
+    def get_trades_for_order(self, order_id):
+        return [
+            trade.copy()
+            for trade in self.trades
+            if trade["buy_order_id"] == order_id
+            or trade["sell_order_id"] == order_id
+        ]
     def match_orders(self, incoming_order=None):
         while self.buy_orders and self.sell_orders:
             buy = max(self.buy_orders, key=lambda order: order.price)

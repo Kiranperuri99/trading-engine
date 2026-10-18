@@ -5,6 +5,16 @@ from trading_engine import Order, ChronosMatch
 
 
 class TestChronosMatch(unittest.TestCase):
+    def test_get_trades_for_partially_filled_order(self):
+        engine = ChronosMatch(verbose=False)
+        engine.add_order(Order(1, "SELL", 100.0, 2))
+        engine.add_order(Order(2, "SELL", 101.0, 1))
+        engine.add_order(Order(3, "BUY", 102.0, 3))
+
+        trades = engine.get_trades_for_order(3)
+
+        self.assertEqual([trade["quantity"] for trade in trades], [2, 1])
+        self.assertEqual(engine.get_trades_for_order(999), [])
     def test_vwap_weights_trade_prices_by_quantity(self):
         engine = ChronosMatch(verbose=False)
         engine.add_order(Order(1, "SELL", 100.0, 2))
