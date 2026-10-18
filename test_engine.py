@@ -5,6 +5,22 @@ from trading_engine import Order, ChronosMatch
 
 
 class TestChronosMatch(unittest.TestCase):
+    def test_remaining_quantity_after_partial_fill(self):
+        engine = ChronosMatch(verbose=False)
+        engine.add_order(Order(1, "BUY", 101.0, 5))
+        engine.add_order(Order(2, "SELL", 100.0, 2))
+
+        self.assertEqual(engine.get_remaining_quantity(1), 3)
+        self.assertEqual(engine.get_remaining_quantity(2), 0)
+    def test_filled_quantity_for_order(self):
+        engine = ChronosMatch(verbose=False)
+        engine.add_order(Order(1, "BUY", 101.0, 5))
+        engine.add_order(Order(2, "SELL", 100.0, 2))
+        engine.add_order(Order(3, "SELL", 100.0, 1))
+
+        self.assertEqual(engine.get_filled_quantity(1), 3)
+        self.assertEqual(engine.get_filled_quantity(2), 2)
+        self.assertEqual(engine.get_filled_quantity(999), 0)
     def test_total_traded_quantity_counts_filled_units(self):
         engine = ChronosMatch(verbose=False)
         engine.add_order(Order(1, "BUY", 101.0, 5))

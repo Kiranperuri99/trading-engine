@@ -143,6 +143,19 @@ class ChronosMatch:
         return best_ask - best_bid
     def get_total_traded_quantity(self):
         return sum(trade["quantity"] for trade in self.trades)
+    def get_filled_quantity(self, order_id):
+        return sum(
+            trade["quantity"]
+            for trade in self.trades
+            if trade["buy_order_id"] == order_id
+            or trade["sell_order_id"] == order_id
+        )
+    def get_remaining_quantity(self, order_id):
+        for order in self.buy_orders + self.sell_orders:
+            if order.order_id == order_id:
+                return order.quantity
+
+        return 0
     def match_orders(self, incoming_order=None):
         while self.buy_orders and self.sell_orders:
             buy = max(self.buy_orders, key=lambda order: order.price)
