@@ -125,6 +125,14 @@ class ChronosMatch:
             "bids": levels(self.buy_orders, highest_first=True),
             "asks": levels(self.sell_orders, highest_first=False),
         }
+    def get_mid_price(self):
+        if not self.buy_orders or not self.sell_orders:
+            return None
+
+        best_bid = max(self.buy_orders, key=lambda order: order.price).price
+        best_ask = min(self.sell_orders, key=lambda order: order.price).price
+
+        return (best_bid + best_ask) / 2
     def match_orders(self, incoming_order=None):
         while self.buy_orders and self.sell_orders:
             buy = max(self.buy_orders, key=lambda order: order.price)

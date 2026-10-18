@@ -5,6 +5,18 @@ from trading_engine import Order, ChronosMatch
 
 
 class TestChronosMatch(unittest.TestCase):
+    def test_mid_price_is_average_of_best_bid_and_ask(self):
+        engine = ChronosMatch(verbose=False)
+        engine.add_order(Order(1, "BUY", 99.0, 1))
+        engine.add_order(Order(2, "SELL", 101.0, 1))
+
+        self.assertEqual(engine.get_mid_price(), 100.0)
+
+    def test_mid_price_is_none_when_one_side_is_empty(self):
+        engine = ChronosMatch(verbose=False)
+        engine.add_order(Order(1, "BUY", 99.0, 1))
+
+        self.assertIsNone(engine.get_mid_price())
     def test_order_book_depth_limits_price_levels(self):
         engine = ChronosMatch(verbose=False)
         engine.add_order(Order(1, "BUY", 105.0, 1))
