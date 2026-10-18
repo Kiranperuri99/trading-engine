@@ -5,6 +5,19 @@ from trading_engine import Order, ChronosMatch
 
 
 class TestChronosMatch(unittest.TestCase):
+    def test_incoming_buy_trades_at_resting_sell_price(self):
+        engine = ChronosMatch(verbose=False)
+        engine.add_order(Order(1, "SELL", 100.0, 1))
+        engine.add_order(Order(2, "BUY", 101.0, 1))
+
+        self.assertEqual(engine.trades[0]["price"], 100.0)
+
+    def test_incoming_sell_trades_at_resting_buy_price(self):
+        engine = ChronosMatch(verbose=False)
+        engine.add_order(Order(1, "BUY", 101.0, 1))
+        engine.add_order(Order(2, "SELL", 100.0, 1))
+
+        self.assertEqual(engine.trades[0]["price"], 101.0)
     def test_get_trades_for_partially_filled_order(self):
         engine = ChronosMatch(verbose=False)
         engine.add_order(Order(1, "SELL", 100.0, 2))
