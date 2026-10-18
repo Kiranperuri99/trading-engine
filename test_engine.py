@@ -5,6 +5,18 @@ from trading_engine import Order, ChronosMatch
 
 
 class TestChronosMatch(unittest.TestCase):
+    def test_vwap_weights_trade_prices_by_quantity(self):
+        engine = ChronosMatch(verbose=False)
+        engine.add_order(Order(1, "SELL", 100.0, 2))
+        engine.add_order(Order(2, "SELL", 102.0, 1))
+        engine.add_order(Order(3, "BUY", 103.0, 3))
+
+        self.assertAlmostEqual(engine.get_vwap(), 302 / 3)
+
+    def test_vwap_is_none_without_trades(self):
+        engine = ChronosMatch(verbose=False)
+
+        self.assertIsNone(engine.get_vwap())
     def test_remaining_quantity_after_partial_fill(self):
         engine = ChronosMatch(verbose=False)
         engine.add_order(Order(1, "BUY", 101.0, 5))

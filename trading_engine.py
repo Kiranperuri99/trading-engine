@@ -156,6 +156,16 @@ class ChronosMatch:
                 return order.quantity
 
         return 0
+    def get_vwap(self):
+        total_quantity = self.get_total_traded_quantity()
+        if total_quantity == 0:
+            return None
+
+        total_value = sum(
+            trade["price"] * trade["quantity"]
+            for trade in self.trades
+        )
+        return total_value / total_quantity
     def match_orders(self, incoming_order=None):
         while self.buy_orders and self.sell_orders:
             buy = max(self.buy_orders, key=lambda order: order.price)
