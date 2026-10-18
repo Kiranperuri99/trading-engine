@@ -12,6 +12,7 @@ class Order:
 
 class ChronosMatch:
     def __init__(self, verbose=True):
+        self.seen_order_ids = set()
         self.verbose = verbose
         self.buy_orders = []
         self.sell_orders = []
@@ -19,7 +20,10 @@ class ChronosMatch:
 
     def add_order(self, order):
         if type(order.order_id) is not int or order.order_id <= 0:
-            raise ValueError("Order ID must be a positive whole number")
+            raise ValueError("Order ID must be a positive integer")
+        if order.order_id in self.seen_order_ids:
+            raise ValueError("Order ID has already been used")
+        self.seen_order_ids.add(order.order_id)
         if type(order.quantity) is not int:
             raise ValueError("Quantity must be a whole number")
 

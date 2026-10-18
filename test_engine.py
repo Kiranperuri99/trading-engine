@@ -5,6 +5,21 @@ from trading_engine import Order, ChronosMatch
 
 
 class TestChronosMatch(unittest.TestCase):
+    def test_order_id_cannot_be_reused_after_filled(self):
+        engine = ChronosMatch(verbose=False)
+        engine.add_order(Order(1, "BUY", 101.0, 1))
+        engine.add_order(Order(2, "SELL", 100.0, 1))
+
+        with self.assertRaises(ValueError):
+            engine.add_order(Order(1, "BUY", 99.0, 1))
+
+    def test_order_id_cannot_be_reused_after_cancelled(self):
+        engine = ChronosMatch(verbose=False)
+        engine.add_order(Order(1, "BUY", 99.0, 1))
+        self.assertTrue(engine.cancel_order(1))
+
+        with self.assertRaises(ValueError):
+            engine.add_order(Order(1, "BUY", 98.0, 1))
     def test_oversized_price_preserves_existing_orders(self):
         engine = ChronosMatch(verbose=False)
         engine.add_order(Order(1, "SELL", 100.0, 5))
