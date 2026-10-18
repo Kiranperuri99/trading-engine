@@ -24,6 +24,7 @@ class TestLatencyStats(unittest.TestCase):
         self.assertEqual(result["count"], 0)
         for key in ("min_ns", "median_ns", "p95_ns", "p99_ns", "max_ns"):
             self.assertIsNone(result[key])
+            self.assertIsNone(result["p99_9_ns"])
 
     def test_single_zero_sample(self):
         result = summarize_latencies([0])
@@ -53,6 +54,7 @@ class TestLatencyStats(unittest.TestCase):
         self.assertEqual(result["median_ns"], 15)
         self.assertEqual(result["p95_ns"], 20)
         self.assertEqual(result["p99_ns"], 20)
+        self.assertEqual(result["p99_9_ns"], 20)
 
     def test_percentiles_round_up_for_101_samples(self):
         result = summarize_latencies(range(1, 102))
@@ -61,6 +63,7 @@ class TestLatencyStats(unittest.TestCase):
         self.assertEqual(result["p95_ns"], 96)
         self.assertEqual(result["p99_ns"], 100)
         self.assertEqual(result["max_ns"], 101)
+        self.assertEqual(result["p99_9_ns"], 101)
 
     def test_repeated_latencies_keep_the_same_percentiles(self):
         result = summarize_latencies([25] * 20)
@@ -71,6 +74,7 @@ class TestLatencyStats(unittest.TestCase):
         self.assertEqual(result["p95_ns"], 25)
         self.assertEqual(result["p99_ns"], 25)
         self.assertEqual(result["max_ns"], 25)
+        self.assertEqual(result["p99_9_ns"], 25)
 
 if __name__ == "__main__":
     unittest.main()
