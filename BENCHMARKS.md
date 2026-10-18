@@ -85,3 +85,4 @@ Save the file and check that the option appears in the command help:
 
 ```powershell
 python measure_engine_latency.py --help
+The latency report includes p95, p99, and p99.9 values in nanoseconds. It uses the nearest-rank method: the percentile position is rounded up to the next sample. With 100 samples, p99.9 is the slowest sample.
