@@ -5,6 +5,18 @@ from trading_engine import Order, ChronosMatch
 
 
 class TestChronosMatch(unittest.TestCase):
+    def test_spread_is_best_ask_minus_best_bid(self):
+        engine = ChronosMatch(verbose=False)
+        engine.add_order(Order(1, "BUY", 99.0, 1))
+        engine.add_order(Order(2, "SELL", 101.0, 1))
+
+        self.assertEqual(engine.get_spread(), 2.0)
+
+    def test_spread_is_none_when_one_side_is_empty(self):
+        engine = ChronosMatch(verbose=False)
+        engine.add_order(Order(1, "SELL", 101.0, 1))
+
+        self.assertIsNone(engine.get_spread())
     def test_mid_price_is_average_of_best_bid_and_ask(self):
         engine = ChronosMatch(verbose=False)
         engine.add_order(Order(1, "BUY", 99.0, 1))
