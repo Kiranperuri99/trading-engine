@@ -13,6 +13,7 @@ class Order:
 class ChronosMatch:
     def __init__(self, verbose=True):
         self.seen_order_ids = set()
+        self.seen_order_ids = set()
         self.verbose = verbose
         self.buy_orders = []
         self.sell_orders = []
@@ -101,6 +102,21 @@ class ChronosMatch:
         return {
             "BUY": sum(order.quantity for order in self.buy_orders),
             "SELL": sum(order.quantity for order in self.sell_orders),
+        }
+    def get_order_book(self):
+        def levels(orders, highest_first):
+            totals = {}
+            for order in orders:
+                totals[order.price] = totals.get(order.price, 0) + order.quantity
+
+            return [
+                {"price": price, "quantity": totals[price]}
+                for price in sorted(totals, reverse=highest_first)
+            ]
+
+        return {
+            "bids": levels(self.buy_orders, highest_first=True),
+            "asks": levels(self.sell_orders, highest_first=False),
         }
     def match_orders(self, incoming_order=None):
         while self.buy_orders and self.sell_orders:

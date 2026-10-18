@@ -5,6 +5,27 @@ from trading_engine import Order, ChronosMatch
 
 
 class TestChronosMatch(unittest.TestCase):
+    def test_order_book_groups_and_sorts_prices(self):
+        engine = ChronosMatch(verbose=False)
+        engine.add_order(Order(1, "BUY", 101.0, 2))
+        engine.add_order(Order(2, "BUY", 101.0, 4))
+        engine.add_order(Order(3, "BUY", 100.0, 3))
+        engine.add_order(Order(4, "SELL", 102.0, 1))
+        engine.add_order(Order(5, "SELL", 103.0, 2))
+
+        self.assertEqual(
+            engine.get_order_book(),
+            {
+                "bids": [
+                    {"price": 101.0, "quantity": 6},
+                    {"price": 100.0, "quantity": 3},
+                ],
+                "asks": [
+                    {"price": 102.0, "quantity": 1},
+                    {"price": 103.0, "quantity": 2},
+                ],
+            },
+        )
     def test_same_price_buy_orders_match_oldest_first(self):
         engine = ChronosMatch(verbose=False)
         engine.add_order(Order(1, "BUY", 101.0, 1))
