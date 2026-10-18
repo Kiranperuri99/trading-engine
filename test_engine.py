@@ -5,6 +5,17 @@ from trading_engine import Order, ChronosMatch
 
 
 class TestChronosMatch(unittest.TestCase):
+    def test_order_book_snapshot_stays_unchanged(self):
+        engine = ChronosMatch(verbose=False)
+        engine.add_order(Order(1, "BUY", 101.0, 2))
+
+        snapshot = engine.get_order_book()
+        engine.add_order(Order(2, "BUY", 100.0, 1))
+
+        self.assertEqual(
+            snapshot,
+            {"bids": [{"price": 101.0, "quantity": 2}], "asks": []},
+        )
     def test_order_book_groups_and_sorts_prices(self):
         engine = ChronosMatch(verbose=False)
         engine.add_order(Order(1, "BUY", 101.0, 2))
@@ -14,7 +25,7 @@ class TestChronosMatch(unittest.TestCase):
         engine.add_order(Order(5, "SELL", 103.0, 2))
 
         self.assertEqual(
-            engine.get_order_book(),
+        engine.get_order_book(),
             {
                 "bids": [
                     {"price": 101.0, "quantity": 6},
