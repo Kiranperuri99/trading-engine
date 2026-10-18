@@ -138,3 +138,10 @@ Run this command from the project folder:
 
 ```powershell
 python measure_engine_latency.py --count 1000 --warmup 100 --seed 42 --json --output latency-report.json
+## Market data and execution summaries
+
+`get_order_book()` returns open buy and sell orders grouped by price. Pass a
+positive `depth` value to limit the number of price levels:
+
+```python
+book = engine.get_order_book(depth=5)
