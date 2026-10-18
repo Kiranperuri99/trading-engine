@@ -5,6 +5,17 @@ from trading_engine import Order, ChronosMatch
 
 
 class TestChronosMatch(unittest.TestCase):
+    def test_total_traded_quantity_counts_filled_units(self):
+        engine = ChronosMatch(verbose=False)
+        engine.add_order(Order(1, "BUY", 101.0, 5))
+        engine.add_order(Order(2, "SELL", 100.0, 2))
+
+        self.assertEqual(engine.get_total_traded_quantity(), 2)
+
+    def test_total_traded_quantity_is_zero_without_trades(self):
+        engine = ChronosMatch(verbose=False)
+
+        self.assertEqual(engine.get_total_traded_quantity(), 0)
     def test_spread_is_best_ask_minus_best_bid(self):
         engine = ChronosMatch(verbose=False)
         engine.add_order(Order(1, "BUY", 99.0, 1))
