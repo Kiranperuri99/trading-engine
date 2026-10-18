@@ -5,6 +5,16 @@ from trading_engine import Order, ChronosMatch
 
 
 class TestChronosMatch(unittest.TestCase):
+    def test_same_price_buy_orders_match_oldest_first(self):
+        engine = ChronosMatch(verbose=False)
+        engine.add_order(Order(1, "BUY", 101.0, 1))
+        engine.add_order(Order(2, "BUY", 101.0, 1))
+        engine.add_order(Order(3, "SELL", 100.0, 1))
+
+        self.assertEqual(
+            [order.order_id for order in engine.buy_orders],
+            [2],
+        )
     def test_order_id_cannot_be_reused_after_filled(self):
         engine = ChronosMatch(verbose=False)
         engine.add_order(Order(1, "BUY", 101.0, 1))
