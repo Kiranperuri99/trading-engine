@@ -397,6 +397,15 @@ class TestChronosMatch(unittest.TestCase):
             "price": 100.0,
             "quantity": 5,
         }])
+    def test_same_price_sell_orders_match_oldest_first(self):
+        engine = ChronosMatch(verbose=False)
+        engine.add_order(Order(1, "SELL", 100.0, 1))
+        engine.add_order(Order(2, "SELL", 100.0, 1))
+        engine.add_order(Order(3, "BUY", 101.0, 1))
 
+        self.assertEqual(
+            [order.order_id for order in engine.sell_orders],
+            [2],
+        )
 if __name__ == "__main__":
     unittest.main()
