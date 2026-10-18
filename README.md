@@ -132,3 +132,9 @@ python -m unittest discover -v
 One failure-handling test deliberately crashes a child worker.
 Its traceback may appear even when the suite passes.
 Check the final suite result: it must say `OK`.
+## Measure engine-call latency
+
+Run this command from the project folder:
+
+```powershell
+python measure_engine_latency.py --count 1000 --warmup 100 --seed 42 --json --output latency-report.json
