@@ -216,6 +216,7 @@ class TestMeasureEngineLatency(unittest.TestCase):
             "median_ns": 20,
             "p95_ns": 30,
             "p99_ns": 30,
+            "p99_9_ns": 30,
             "max_ns": 30,
         })
         self.assertEqual(

@@ -14,6 +14,7 @@ class TestLatencyStats(unittest.TestCase):
             "median_ns": 50.5,
             "p95_ns": 95,
             "p99_ns": 99,
+            "p99_9_ns":100, 
             "max_ns": 100,
         })
 
