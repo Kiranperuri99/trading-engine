@@ -5,6 +5,26 @@ from trading_engine import Order, ChronosMatch
 
 
 class TestChronosMatch(unittest.TestCase):
+    def test_open_order_snapshot_after_partial_fill(self):
+        engine = ChronosMatch(verbose=False)
+        engine.add_order(Order(1, "BUY", 100.0, 5))
+        engine.add_order(Order(2, "SELL", 100.0, 2))
+
+        snapshot = engine.get_open_order(1)
+        self.assertEqual(snapshot, {
+            "order_id": 1,
+            "side": "BUY",
+            "price": 100.0,
+            "quantity": 3,
+        })
+
+        snapshot["quantity"] = 999
+        self.assertEqual(engine.get_remaining_quantity(1), 3)
+        self.assertIsNone(engine.get_open_order(2))
+        self.assertIsNone(engine.get_open_order(999))
+
+        engine.cancel_order(1)
+        self.assertIsNone(engine.get_open_order(1))
     def test_reducing_partially_filled_sell_preserves_fifo(self):
         engine = ChronosMatch(verbose=False)
         engine.add_order(Order(1, "SELL", 100.0, 5))
@@ -152,6 +172,7 @@ class TestChronosMatch(unittest.TestCase):
             engine.get_filled_quantity,
             engine.get_remaining_quantity,
             engine.get_trades_for_order,
+            engine.get_open_order,
         )
 
         for lookup in lookups:

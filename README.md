@@ -176,3 +176,6 @@ reduction, and bulk cancellation in one example.
 Run `python show_daily_progress.py` to list and count today's local
 commits on the current branch. Check GitHub after pushing to confirm
 the commits reached the remote repository.
+`get_open_order(order_id)` returns a separate dictionary containing an
+open order's ID, side, price, and remaining quantity. It returns `None`
+for a filled, cancelled, or unknown order. Invalid IDs raise `ValueError`.
