@@ -145,3 +145,21 @@ positive `depth` value to limit the number of price levels:
 
 ```python
 book = engine.get_order_book(depth=5)
+mid_price = engine.get_mid_price()
+spread = engine.get_spread()
+traded_units = engine.get_total_traded_quantity()
+filled_units = engine.get_filled_quantity(order_id=1)
+## Cancelling all open orders
+
+Use `cancel_all_orders()` to cancel every currently open buy and sell order:
+
+```python
+cancelled_count = engine.cancel_all_orders()
+print(f"Cancelled {cancelled_count} open orders")
+```
+
+The returned count is the number of orders cancelled, not the number of units.
+Calling this method on an empty order book returns `0`.
+
+Trade history remains available after cancellation. Previously accepted order
+IDs stay reserved and cannot be reused, including IDs of cancelled orders.
