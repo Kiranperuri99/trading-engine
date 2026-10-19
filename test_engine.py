@@ -5,6 +5,16 @@ from trading_engine import Order, ChronosMatch
 
 
 class TestChronosMatch(unittest.TestCase):
+    def test_vwap_handles_large_finite_prices(self):
+        engine = ChronosMatch(verbose=False)
+        engine.add_order(Order(1, "SELL", 1e308, 2))
+        engine.add_order(Order(2, "SELL", 1.2e308, 1))
+        engine.add_order(Order(3, "BUY", 1.3e308, 3))
+
+        self.assertAlmostEqual(
+            engine.get_vwap() / 1e308,
+            3.2 / 3,
+        )
     def test_order_lookups_reject_invalid_ids(self):
         engine = ChronosMatch(verbose=False)
         engine.add_order(Order(1, "BUY", 100.0, 3))

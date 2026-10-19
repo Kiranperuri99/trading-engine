@@ -159,15 +159,20 @@ class ChronosMatch:
 
         return 0
     def get_vwap(self):
-        total_quantity = self.get_total_traded_quantity()
-        if total_quantity == 0:
-            return None
+        average_price = None
+        total_quantity = 0
 
-        total_value = sum(
-            trade["price"] * trade["quantity"]
-            for trade in self.trades
-        )
-        return total_value / total_quantity
+        for trade in self.trades:
+            quantity = trade["quantity"]
+            total_quantity += quantity
+
+            if average_price is None:
+                average_price = float(trade["price"])
+            else:
+                weight = quantity / total_quantity
+                average_price += (trade["price"] - average_price) * weight
+
+        return average_price
     def get_trades_for_order(self, order_id):
         if type(order_id) is not int or order_id <= 0:
             raise ValueError("Order ID must be a positive integer")
