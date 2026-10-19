@@ -5,6 +5,32 @@ from trading_engine import Order, ChronosMatch
 
 
 class TestChronosMatch(unittest.TestCase):
+    def test_reducing_partially_filled_sell_preserves_fifo(self):
+        engine = ChronosMatch(verbose=False)
+        engine.add_order(Order(1, "SELL", 100.0, 5))
+        engine.add_order(Order(2, "SELL", 100.0, 4))
+        engine.add_order(Order(3, "BUY", 100.0, 2))
+
+        self.assertTrue(engine.reduce_order_quantity(1, 1))
+        engine.add_order(Order(4, "BUY", 100.0, 2))
+
+        self.assertEqual(
+            [trade["sell_order_id"] for trade in engine.trades],
+            [1, 1, 2],
+        )
+        self.assertEqual(engine.get_filled_quantity(1), 3)
+        self.assertEqual(engine.get_remaining_quantity(2), 3)
+
+    def test_reduction_cannot_exceed_remaining_after_fill(self):
+        engine = ChronosMatch(verbose=False)
+        engine.add_order(Order(1, "SELL", 100.0, 5))
+        engine.add_order(Order(2, "BUY", 100.0, 3))
+
+        with self.assertRaises(ValueError):
+            engine.reduce_order_quantity(1, 3)
+
+        self.assertEqual(engine.get_remaining_quantity(1), 2)
+        self.assertEqual(engine.get_filled_quantity(1), 3)
     def test_quantity_reduction_preserves_fifo(self):
         engine = ChronosMatch(verbose=False)
         engine.add_order(Order(1, "BUY", 100.0, 5))
