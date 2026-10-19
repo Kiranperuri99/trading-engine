@@ -173,3 +173,6 @@ Invalid quantities and increases raise `ValueError`. Use cancellation
 to remove the entire remaining quantity.
 Run `python demo_order_management.py` to see a partial fill, a quantity
 reduction, and bulk cancellation in one example.
+Run `python show_daily_progress.py` to list and count today's local
+commits on the current branch. Check GitHub after pushing to confirm
+the commits reached the remote repository.
