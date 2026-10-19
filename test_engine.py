@@ -5,6 +5,28 @@ from trading_engine import Order, ChronosMatch
 
 
 class TestChronosMatch(unittest.TestCase):
+    def test_cancel_all_orders_clears_both_sides(self):
+        engine = ChronosMatch(verbose=False)
+        engine.add_order(Order(1, "BUY", 99.0, 3))
+        engine.add_order(Order(2, "BUY", 98.0, 2))
+        engine.add_order(Order(3, "SELL", 101.0, 4))
+
+        self.assertEqual(engine.cancel_all_orders(), 3)
+        self.assertEqual(engine.buy_orders, [])
+        self.assertEqual(engine.sell_orders, [])
+        self.assertEqual(engine.cancel_all_orders(), 0)
+
+    def test_cancel_all_preserves_history_and_used_ids(self):
+        engine = ChronosMatch(verbose=False)
+        engine.add_order(Order(1, "BUY", 100.0, 5))
+        engine.add_order(Order(2, "SELL", 100.0, 2))
+        history = [trade.copy() for trade in engine.trades]
+
+        self.assertEqual(engine.cancel_all_orders(), 1)
+        self.assertEqual(engine.trades, history)
+
+        with self.assertRaises(ValueError):
+            engine.add_order(Order(1, "BUY", 99.0, 1))
     def test_vwap_handles_large_finite_prices(self):
         engine = ChronosMatch(verbose=False)
         engine.add_order(Order(1, "SELL", 1e308, 2))
