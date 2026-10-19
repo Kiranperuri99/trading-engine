@@ -130,7 +130,7 @@ class ChronosMatch:
         best_bid = max(self.buy_orders, key=lambda order: order.price).price
         best_ask = min(self.sell_orders, key=lambda order: order.price).price
 
-        return (best_bid + best_ask) / 2
+        return best_bid + (best_ask - best_bid) / 2
     def get_spread(self):
         if not self.buy_orders or not self.sell_orders:
             return None

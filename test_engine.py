@@ -5,6 +5,14 @@ from trading_engine import Order, ChronosMatch
 
 
 class TestChronosMatch(unittest.TestCase):
+    def test_mid_price_handles_large_finite_prices(self):
+        engine = ChronosMatch(verbose=False)
+        engine.add_order(Order(1, "BUY", 1e308, 1))
+        engine.add_order(Order(2, "SELL", 1.2e308, 1))
+
+        midpoint = engine.get_mid_price()
+
+        self.assertAlmostEqual(midpoint / 1e308, 1.1)
     def test_rejected_orders_do_not_reserve_order_ids(self):
         invalid_orders = [
             Order(1, "BUY", 100.0, 0),
