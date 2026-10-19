@@ -5,6 +5,20 @@ from trading_engine import Order, ChronosMatch
 
 
 class TestChronosMatch(unittest.TestCase):
+    def test_matching_conserves_quantities_across_partial_fills(self):
+        engine = ChronosMatch(verbose=False)
+        engine.add_order(Order(1, "BUY", 105.0, 7))
+        engine.add_order(Order(2, "BUY", 104.0, 5))
+        engine.add_order(Order(3, "SELL", 103.0, 4))
+        engine.add_order(Order(4, "SELL", 104.0, 6))
+        engine.add_order(Order(5, "SELL", 106.0, 3))
+
+        traded = engine.total_traded_quantity()
+        pending = engine.pending_quantities()
+
+        self.assertEqual(traded, 10)
+        self.assertEqual(traded + pending["BUY"], 12)
+        self.assertEqual(traded + pending["SELL"], 13)
     def test_returned_trade_history_cannot_change_engine_records(self):
         engine = ChronosMatch(verbose=False)
         engine.add_order(Order(1, "BUY", 100.0, 3))
