@@ -5,6 +5,24 @@ from trading_engine import Order, ChronosMatch
 
 
 class TestChronosMatch(unittest.TestCase):
+    def test_order_lookups_reject_invalid_ids(self):
+        engine = ChronosMatch(verbose=False)
+        engine.add_order(Order(1, "BUY", 100.0, 3))
+
+        lookups = (
+            engine.get_filled_quantity,
+            engine.get_remaining_quantity,
+            engine.get_trades_for_order,
+        )
+
+        for lookup in lookups:
+            for invalid_id in (0, -1, True, False, 1.0, 1.5, "1", None):
+                with self.subTest(
+                    method=lookup.__name__,
+                    order_id=invalid_id,
+                ):
+                    with self.assertRaises(ValueError):
+                        lookup(invalid_id)
     def test_mid_price_handles_large_finite_prices(self):
         engine = ChronosMatch(verbose=False)
         engine.add_order(Order(1, "BUY", 1e308, 1))

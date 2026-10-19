@@ -142,6 +142,8 @@ class ChronosMatch:
     def get_total_traded_quantity(self):
         return sum(trade["quantity"] for trade in self.trades)
     def get_filled_quantity(self, order_id):
+        if type(order_id) is not int or order_id <= 0:
+            raise ValueError("Order ID must be a positive integer")
         return sum(
             trade["quantity"]
             for trade in self.trades
@@ -149,6 +151,8 @@ class ChronosMatch:
             or trade["sell_order_id"] == order_id
         )
     def get_remaining_quantity(self, order_id):
+        if type(order_id) is not int or order_id <= 0:
+            raise ValueError("Order ID must be a positive integer")
         for order in self.buy_orders + self.sell_orders:
             if order.order_id == order_id:
                 return order.quantity
@@ -165,6 +169,8 @@ class ChronosMatch:
         )
         return total_value / total_quantity
     def get_trades_for_order(self, order_id):
+        if type(order_id) is not int or order_id <= 0:
+            raise ValueError("Order ID must be a positive integer")
         return [
             trade.copy()
             for trade in self.trades
