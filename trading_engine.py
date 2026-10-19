@@ -12,13 +12,11 @@ class Order:
 
 class ChronosMatch:
     def __init__(self, verbose=True):
-        self.seen_order_ids = set()
-        self.seen_order_ids = set()
         self.verbose = verbose
+        self.seen_order_ids = set()
         self.buy_orders = []
         self.sell_orders = []
         self.trades = []
-
     def add_order(self, order):
         if type(order.order_id) is not int or order.order_id <= 0:
             raise ValueError("Order ID must be a positive integer")
@@ -48,15 +46,11 @@ class ChronosMatch:
 
         side = order.side.strip().upper()
             
-        if order.price <= 0:
-            raise ValueError("Price must be greater than zero")
-        
 
         if side not in ("BUY", "SELL"):
             raise ValueError("Side must be BUY or SELL")
         if self.verbose:
-            if self.verbose:
-                print(f"New order: {order}")
+            print(f"New order: {order}")
 
         if side == "BUY":
             self.buy_orders.append(order)
