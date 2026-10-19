@@ -163,3 +163,11 @@ Calling this method on an empty order book returns `0`.
 
 Trade history remains available after cancellation. Previously accepted order
 IDs stay reserved and cannot be reused, including IDs of cancelled orders.
+Pass `side="BUY"` or `side="SELL"` to `cancel_all_orders()` to cancel
+only that side. Omitting `side` cancels both sides. An invalid side
+raises `ValueError` before any orders are cancelled.
+Use `reduce_order_quantity(order_id, new_quantity)` to lower an open
+order's remaining quantity while preserving its queue position. It
+returns `True` for an updated order or `False` for an unknown order.
+Invalid quantities and increases raise `ValueError`. Use cancellation
+to remove the entire remaining quantity.

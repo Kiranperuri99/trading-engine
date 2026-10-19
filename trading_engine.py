@@ -98,6 +98,23 @@ class ChronosMatch:
             book.clear()
 
         return cancelled_count
+    def reduce_order_quantity(self, order_id, new_quantity):
+        if type(order_id) is not int or order_id <= 0:
+            raise ValueError("Order ID must be a positive integer")
+        if type(new_quantity) is not int or new_quantity <= 0:
+            raise ValueError("New quantity must be a positive integer")
+
+        for book in (self.buy_orders, self.sell_orders):
+            for order in book:
+                if order.order_id == order_id:
+                    if new_quantity > order.quantity:
+                        raise ValueError(
+                            "New quantity cannot exceed remaining quantity"
+                        )
+                    order.quantity = new_quantity
+                    return True
+
+        return False
     def cancel_order(self, order_id):
         if type(order_id) is not int or order_id <= 0:
             raise ValueError("Order ID must be a positive whole number")

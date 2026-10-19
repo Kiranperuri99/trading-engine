@@ -5,6 +5,35 @@ from trading_engine import Order, ChronosMatch
 
 
 class TestChronosMatch(unittest.TestCase):
+    def test_quantity_reduction_preserves_fifo(self):
+        engine = ChronosMatch(verbose=False)
+        engine.add_order(Order(1, "BUY", 100.0, 5))
+        engine.add_order(Order(2, "BUY", 100.0, 5))
+
+        self.assertTrue(engine.reduce_order_quantity(1, 2))
+        engine.add_order(Order(3, "SELL", 100.0, 3))
+
+        self.assertEqual(
+            [trade["buy_order_id"] for trade in engine.trades],
+            [1, 2],
+        )
+        self.assertEqual(
+            [trade["quantity"] for trade in engine.trades],
+            [2, 1],
+        )
+
+    def test_invalid_reduction_preserves_quantity(self):
+        engine = ChronosMatch(verbose=False)
+        engine.add_order(Order(1, "BUY", 100.0, 5))
+
+        for quantity in (0, -1, True, 1.5, "1", None, 6):
+            with self.subTest(quantity=quantity):
+                with self.assertRaises(ValueError):
+                    engine.reduce_order_quantity(1, quantity)
+
+                self.assertEqual(engine.get_remaining_quantity(1), 5)
+
+        self.assertFalse(engine.reduce_order_quantity(999, 1))
     def test_bulk_cancel_selects_one_side(self):
         for side, remaining_id in ((" buy ", 2), (" sell ", 1)):
             with self.subTest(side=side):
