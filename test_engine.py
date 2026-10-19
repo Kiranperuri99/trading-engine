@@ -5,6 +5,19 @@ from trading_engine import Order, ChronosMatch
 
 
 class TestChronosMatch(unittest.TestCase):
+    def test_returned_trade_history_cannot_change_engine_records(self):
+        engine = ChronosMatch(verbose=False)
+        engine.add_order(Order(1, "BUY", 100.0, 3))
+        engine.add_order(Order(2, "SELL", 100.0, 1))
+
+        reported_trades = engine.get_trades_for_order(1)
+        reported_trades[0]["quantity"] = 999
+        reported_trades[0]["price"] = 0.0
+        reported_trades.clear()
+
+        self.assertEqual(engine.get_filled_quantity(1), 1)
+        self.assertEqual(engine.get_vwap(), 100.0)
+        self.assertEqual(len(engine.get_trades_for_order(1)), 1)
     def test_cancel_all_orders_clears_both_sides(self):
         engine = ChronosMatch(verbose=False)
         engine.add_order(Order(1, "BUY", 99.0, 3))
