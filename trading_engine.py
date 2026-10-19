@@ -129,23 +129,17 @@ class ChronosMatch:
             "asks": levels(self.sell_orders, highest_first=False),
         }
     def get_mid_price(self):
-        if not self.buy_orders or not self.sell_orders:
+        bid = self.best_bid()
+        ask = self.best_ask()
+
+        if bid is None or ask is None:
             return None
 
-        best_bid = max(self.buy_orders, key=lambda order: order.price).price
-        best_ask = min(self.sell_orders, key=lambda order: order.price).price
-
-        return best_bid + (best_ask - best_bid) / 2
+        return bid + (ask - bid) / 2
     def get_spread(self):
-        if not self.buy_orders or not self.sell_orders:
-            return None
-
-        best_bid = max(self.buy_orders, key=lambda order: order.price).price
-        best_ask = min(self.sell_orders, key=lambda order: order.price).price
-
-        return best_ask - best_bid
+        return self.spread()
     def get_total_traded_quantity(self):
-        return sum(trade["quantity"] for trade in self.trades)
+        return self.total_traded_quantity()
     def get_filled_quantity(self, order_id):
         if type(order_id) is not int or order_id <= 0:
             raise ValueError("Order ID must be a positive integer")
