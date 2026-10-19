@@ -5,6 +5,31 @@ from trading_engine import Order, ChronosMatch
 
 
 class TestChronosMatch(unittest.TestCase):
+    def test_bulk_cancel_selects_one_side(self):
+        for side, remaining_id in ((" buy ", 2), (" sell ", 1)):
+            with self.subTest(side=side):
+                engine = ChronosMatch(verbose=False)
+                engine.add_order(Order(1, "BUY", 99.0, 3))
+                engine.add_order(Order(2, "SELL", 101.0, 4))
+
+                self.assertEqual(engine.cancel_all_orders(side=side), 1)
+
+                remaining = engine.buy_orders + engine.sell_orders
+                self.assertEqual(
+                    [order.order_id for order in remaining],
+                    [remaining_id],
+                )
+
+    def test_invalid_bulk_cancel_side_preserves_orders(self):
+        engine = ChronosMatch(verbose=False)
+        engine.add_order(Order(1, "BUY", 99.0, 3))
+
+        for invalid_side in ("INVALID", "", 0, True):
+            with self.subTest(side=invalid_side):
+                with self.assertRaises(ValueError):
+                    engine.cancel_all_orders(side=invalid_side)
+
+                self.assertEqual(len(engine.buy_orders), 1)
     def test_matching_conserves_quantities_across_partial_fills(self):
         engine = ChronosMatch(verbose=False)
         engine.add_order(Order(1, "BUY", 105.0, 7))

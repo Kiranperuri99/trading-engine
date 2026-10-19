@@ -84,10 +84,25 @@ class ChronosMatch:
             return None
 
         return ask - bid
-    def cancel_all_orders(self):
-        cancelled_count = len(self.buy_orders) + len(self.sell_orders)
-        self.buy_orders.clear()
-        self.sell_orders.clear()
+    def cancel_all_orders(self, side=None):
+        if side is None:
+            books = (self.buy_orders, self.sell_orders)
+        else:
+            if not isinstance(side, str):
+                raise ValueError("Side must be BUY or SELL")
+
+            side = side.strip().upper()
+            if side == "BUY":
+                books = (self.buy_orders,)
+            elif side == "SELL":
+                books = (self.sell_orders,)
+            else:
+                raise ValueError("Side must be BUY or SELL")
+
+        cancelled_count = sum(len(book) for book in books)
+        for book in books:
+            book.clear()
+
         return cancelled_count
     def cancel_order(self, order_id):
         if type(order_id) is not int or order_id <= 0:
