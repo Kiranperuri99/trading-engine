@@ -5,6 +5,26 @@ from trading_engine import Order, ChronosMatch
 
 
 class TestChronosMatch(unittest.TestCase):
+    def test_rejected_orders_do_not_reserve_order_ids(self):
+        invalid_orders = [
+            Order(1, "BUY", 100.0, 0),
+            Order(1, "BUY", 0.0, 1),
+            Order(1, "INVALID", 100.0, 1),
+        ]
+
+        for invalid_order in invalid_orders:
+            with self.subTest(order=invalid_order):
+                engine = ChronosMatch(verbose=False)
+
+                with self.assertRaises(ValueError):
+                    engine.add_order(invalid_order)
+
+                self.assertNotIn(1, engine.seen_order_ids)
+
+                engine.add_order(Order(1, "BUY", 100.0, 1))
+
+                self.assertEqual(len(engine.buy_orders), 1)
+                self.assertEqual(engine.buy_orders[0].order_id, 1)
     def test_incoming_buy_trades_at_resting_sell_price(self):
         engine = ChronosMatch(verbose=False)
         engine.add_order(Order(1, "SELL", 100.0, 1))

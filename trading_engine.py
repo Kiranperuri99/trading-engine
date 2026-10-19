@@ -24,7 +24,7 @@ class ChronosMatch:
             raise ValueError("Order ID must be a positive integer")
         if order.order_id in self.seen_order_ids:
             raise ValueError("Order ID has already been used")
-        self.seen_order_ids.add(order.order_id)
+        
         if type(order.quantity) is not int:
             raise ValueError("Quantity must be a whole number")
 
@@ -66,6 +66,7 @@ class ChronosMatch:
         else:
             self.sell_orders.append(order)
 
+        self.seen_order_ids.add(order.order_id)
         self.match_orders(incoming_order=order)
     def best_bid(self):
         return max(
