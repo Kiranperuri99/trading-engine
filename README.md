@@ -171,3 +171,5 @@ order's remaining quantity while preserving its queue position. It
 returns `True` for an updated order or `False` for an unknown order.
 Invalid quantities and increases raise `ValueError`. Use cancellation
 to remove the entire remaining quantity.
+Run `python demo_order_management.py` to see a partial fill, a quantity
+reduction, and bulk cancellation in one example.
