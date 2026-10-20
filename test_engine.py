@@ -5,6 +5,15 @@ from trading_engine import Order, ChronosMatch
 
 
 class TestChronosMatch(unittest.TestCase):
+    def test_execution_summary_reports_trade_count_quantity_and_vwap(self):
+        engine = ChronosMatch(verbose=False)
+        engine.add_order(Order(1, "BUY", 101.0, 4))
+        engine.add_order(Order(2, "SELL", 100.0, 2))
+
+        self.assertEqual(
+            engine.get_execution_summary(),
+            {"trade_count": 1, "total_quantity": 2, "vwap": 100.0},
+        )
     def test_queue_lookup_rejects_invalid_ids_and_ignores_cancelled_orders(self):
         engine = ChronosMatch(verbose=False)
 

@@ -186,6 +186,12 @@ class ChronosMatch:
             if trade["buy_order_id"] == order_id
             or trade["sell_order_id"] == order_id
         )
+    def get_execution_summary(self):
+        return {
+            "trade_count": len(self.trades),
+            "total_quantity": self.total_traded_quantity(),
+            "vwap": self.get_vwap(),
+        }
     def get_queue_ahead_quantity(self, order_id):
         if type(order_id) is not int or order_id <= 0:
             raise ValueError("Order ID must be a positive integer")
