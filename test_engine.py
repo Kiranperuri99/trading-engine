@@ -13,8 +13,9 @@ class TestChronosMatch(unittest.TestCase):
         engine.add_order(Order(4, "BUY", 101.0, 2))
 
         summary = engine.get_execution_summary()
+       
 
-        self.assertEqual(summary["trade_count"], 2)
+        self.assertEqual(summary["average_trade_size"], 1.5)
         self.assertEqual(summary["total_quantity"], 3)
         self.assertAlmostEqual(summary["vwap"], (100.0 + 2 * 101.0) / 3)
     def test_execution_summary_handles_no_trades(self):
@@ -22,7 +23,7 @@ class TestChronosMatch(unittest.TestCase):
 
         self.assertEqual(
             engine.get_execution_summary(),
-            {"trade_count": 0, "total_quantity": 0, "vwap": None},
+            {"trade_count": 0, "total_quantity": 0, "vwap": None, "average_trade_size": None},
         )
     def test_execution_summary_reports_trade_count_quantity_and_vwap(self):
         engine = ChronosMatch(verbose=False)
@@ -31,7 +32,7 @@ class TestChronosMatch(unittest.TestCase):
 
         self.assertEqual(
             engine.get_execution_summary(),
-            {"trade_count": 1, "total_quantity": 2, "vwap": 101.0},
+            {"trade_count": 1, "total_quantity": 2, "vwap": 101.0, "average_trade_size": 2.0},
         )
     def test_queue_lookup_rejects_invalid_ids_and_ignores_cancelled_orders(self):
         engine = ChronosMatch(verbose=False)

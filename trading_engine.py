@@ -187,10 +187,16 @@ class ChronosMatch:
             or trade["sell_order_id"] == order_id
         )
     def get_execution_summary(self):
+        trade_count = len(self.trades)
+        total_quantity = self.total_traded_quantity()
+
         return {
-            "trade_count": len(self.trades),
-            "total_quantity": self.total_traded_quantity(),
+            "trade_count": trade_count,
+            "total_quantity": total_quantity,
             "vwap": self.get_vwap(),
+            "average_trade_size": (
+                total_quantity / trade_count if trade_count else None
+            ),
         }
     def get_queue_ahead_quantity(self, order_id):
         if type(order_id) is not int or order_id <= 0:
