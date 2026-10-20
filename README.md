@@ -180,3 +180,6 @@ the commits reached the remote repository.
 open order's ID, side, price, and remaining quantity. It returns `None`
 for a filled, cancelled, or unknown order. Invalid IDs raise `ValueError`.
 See [TESTING.md](TESTING.md) for test commands and verification examples.
+## Execution summary
+
+The result includes the trade count, total units traded, volume-weighted average price (`vwap`), and average units per trade (`average_trade_size`). When there are no trades, `vwap` and `average_trade_size` are `None`.
