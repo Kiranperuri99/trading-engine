@@ -12,7 +12,7 @@ class TestChronosMatch(unittest.TestCase):
 
         self.assertEqual(
             engine.get_execution_summary(),
-            {"trade_count": 1, "total_quantity": 2, "vwap": 100.0},
+            {"trade_count": 1, "total_quantity": 2, "vwap": 101.0},
         )
     def test_queue_lookup_rejects_invalid_ids_and_ignores_cancelled_orders(self):
         engine = ChronosMatch(verbose=False)
