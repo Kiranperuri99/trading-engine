@@ -751,5 +751,18 @@ class TestChronosMatch(unittest.TestCase):
             [order.order_id for order in engine.sell_orders],
             [2],
         )
+    def test_book_summary_counts_orders_and_quantity(self):
+        engine = ChronosMatch(verbose=False)
+        engine.add_order(Order(1, "BUY", 99.0, 3))
+        engine.add_order(Order(2, "BUY", 98.0, 4))
+        engine.add_order(Order(3, "SELL", 105.0, 2))
+
+        self.assertEqual(
+            engine.get_book_summary(),
+            {
+                "BUY": {"order_count": 2, "total_quantity": 7},
+                "SELL": {"order_count": 1, "total_quantity": 2},
+            },
+        )
 if __name__ == "__main__":
     unittest.main()

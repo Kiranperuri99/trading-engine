@@ -154,6 +154,17 @@ class ChronosMatch:
             "bids": levels(self.buy_orders, highest_first=True),
             "asks": levels(self.sell_orders, highest_first=False),
         }
+    def get_book_summary(self):
+        def summarize(orders):
+            return {
+                "order_count": len(orders),
+                "total_quantity": sum(order.quantity for order in orders),
+            }
+
+        return {
+            "BUY": summarize(self.buy_orders),
+            "SELL": summarize(self.sell_orders),
+        }
     def get_mid_price(self):
         bid = self.best_bid()
         ask = self.best_ask()
