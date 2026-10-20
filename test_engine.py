@@ -5,6 +5,13 @@ from trading_engine import Order, ChronosMatch
 
 
 class TestChronosMatch(unittest.TestCase):
+    def test_order_status_rejects_invalid_ids(self):
+        engine = ChronosMatch(verbose=False)
+
+        for order_id in (0, -1, True, 1.5, "1", None):
+            with self.subTest(order_id=order_id):
+                with self.assertRaises(ValueError):
+                    engine.get_order_status(order_id)
     def test_partially_filled_order_stays_open_until_cancelled(self):
         engine = ChronosMatch(verbose=False)
         engine.add_order(Order(1, "BUY", 100.0, 5))
