@@ -5,6 +5,15 @@ from trading_engine import Order, ChronosMatch
 
 
 class TestChronosMatch(unittest.TestCase):
+    def test_recent_trades_rejects_invalid_limits_and_handles_empty_history(self):
+        engine = ChronosMatch(verbose=False)
+
+        for limit in (0, -1, True, 1.5, "1", None):
+            with self.subTest(limit=limit):
+                with self.assertRaises(ValueError):
+                    engine.get_recent_trades(limit)
+
+        self.assertEqual(engine.get_recent_trades(2), [])
     def test_recent_trades_returns_latest_copies(self):
         engine = ChronosMatch(verbose=False)
         engine.add_order(Order(1, "SELL", 100.0, 1))
