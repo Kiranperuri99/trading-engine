@@ -5,6 +5,18 @@ from trading_engine import Order, ChronosMatch
 
 
 class TestChronosMatch(unittest.TestCase):
+    def test_partially_filled_order_stays_open_until_cancelled(self):
+        engine = ChronosMatch(verbose=False)
+        engine.add_order(Order(1, "BUY", 100.0, 5))
+        engine.add_order(Order(2, "SELL", 100.0, 2))
+
+        self.assertEqual(engine.get_filled_quantity(1), 2)
+        self.assertEqual(engine.get_remaining_quantity(1), 3)
+        self.assertEqual(engine.get_order_status(1), "OPEN")
+
+        self.assertTrue(engine.cancel_order(1))
+        self.assertEqual(engine.get_order_status(1), "CANCELLED")
+        self.assertEqual(engine.get_filled_quantity(1), 2)
     def test_order_status_tracks_open_filled_cancelled_and_unknown(self):
         engine = ChronosMatch(verbose=False)
 
