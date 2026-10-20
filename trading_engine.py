@@ -250,6 +250,11 @@ class ChronosMatch:
                 average_price += (trade["price"] - average_price) * weight
 
         return average_price
+    def get_recent_trades(self, limit=10):
+        if type(limit) is not int or limit <= 0:
+            raise ValueError("Limit must be a positive integer")
+
+        return [trade.copy() for trade in self.trades[-limit:]]
     def get_trades_for_order(self, order_id):
         if type(order_id) is not int or order_id <= 0:
             raise ValueError("Order ID must be a positive integer")

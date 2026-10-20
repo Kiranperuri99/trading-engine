@@ -5,6 +5,20 @@ from trading_engine import Order, ChronosMatch
 
 
 class TestChronosMatch(unittest.TestCase):
+    def test_recent_trades_returns_latest_copies(self):
+        engine = ChronosMatch(verbose=False)
+        engine.add_order(Order(1, "SELL", 100.0, 1))
+        engine.add_order(Order(2, "BUY", 100.0, 1))
+        engine.add_order(Order(3, "SELL", 101.0, 1))
+        engine.add_order(Order(4, "BUY", 101.0, 1))
+        engine.add_order(Order(5, "SELL", 102.0, 1))
+        engine.add_order(Order(6, "BUY", 102.0, 1))
+
+        recent = engine.get_recent_trades(2)
+
+        self.assertEqual([trade["buy_order_id"] for trade in recent], [4, 6])
+        recent[0]["quantity"] = 99
+        self.assertEqual(engine.trades[-2]["quantity"], 1)
     def test_execution_summary_excludes_open_order_quantity(self):
         engine = ChronosMatch(verbose=False)
         engine.add_order(Order(1, "BUY", 100.0, 5))
