@@ -5,6 +5,17 @@ from trading_engine import Order, ChronosMatch
 
 
 class TestChronosMatch(unittest.TestCase):
+    def test_queue_lookup_rejects_invalid_ids_and_ignores_cancelled_orders(self):
+        engine = ChronosMatch(verbose=False)
+
+        for invalid_id in (0, -1, True, 1.5, "1", None):
+            with self.subTest(order_id=invalid_id):
+                with self.assertRaises(ValueError):
+                    engine.get_queue_ahead_quantity(invalid_id)
+
+        engine.add_order(Order(1, "BUY", 100.0, 5))
+        self.assertTrue(engine.cancel_order(1))
+        self.assertIsNone(engine.get_queue_ahead_quantity(1))
     def test_queue_ahead_quantity_counts_same_price_orders(self):
         engine = ChronosMatch(verbose=False)
         engine.add_order(Order(1, "BUY", 100.0, 5))
