@@ -189,3 +189,11 @@ Use `get_recent_trades(limit=10)` to retrieve the latest trades. The returned re
 
 ```python
 recent_trades = engine.get_recent_trades(limit=5)
+
+## Order status
+
+Use `get_order_status(order_id)` to check an order's state. It returns `OPEN`, `FILLED`, `CANCELLED`, or `UNKNOWN`. A partially filled order stays `OPEN` while it has remaining quantity. Cancelling an order changes its status to `CANCELLED`; its completed trades remain in the trade history.
+
+```python
+status = engine.get_order_status(1)
+print(status)
