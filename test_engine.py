@@ -5,6 +5,18 @@ from trading_engine import Order, ChronosMatch
 
 
 class TestChronosMatch(unittest.TestCase):
+    def test_execution_summary_uses_weighted_average_for_multiple_trades(self):
+        engine = ChronosMatch(verbose=False)
+        engine.add_order(Order(1, "SELL", 100.0, 1))
+        engine.add_order(Order(2, "SELL", 101.0, 2))
+        engine.add_order(Order(3, "BUY", 100.0, 1))
+        engine.add_order(Order(4, "BUY", 101.0, 2))
+
+        summary = engine.get_execution_summary()
+
+        self.assertEqual(summary["trade_count"], 2)
+        self.assertEqual(summary["total_quantity"], 3)
+        self.assertAlmostEqual(summary["vwap"], (100.0 + 2 * 101.0) / 3)
     def test_execution_summary_handles_no_trades(self):
         engine = ChronosMatch(verbose=False)
 
