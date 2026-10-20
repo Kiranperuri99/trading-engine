@@ -5,6 +5,18 @@ from trading_engine import Order, ChronosMatch
 
 
 class TestChronosMatch(unittest.TestCase):
+    def test_order_status_counts_include_open_filled_and_cancelled(self):
+        engine = ChronosMatch(verbose=False)
+        engine.add_order(Order(1, "BUY", 100.0, 1))
+        engine.add_order(Order(2, "SELL", 100.0, 1))
+        engine.add_order(Order(3, "BUY", 99.0, 2))
+        engine.add_order(Order(4, "SELL", 101.0, 2))
+        engine.cancel_order(4)
+
+        self.assertEqual(
+            engine.get_order_status_counts(),
+            {"OPEN": 1, "FILLED": 2, "CANCELLED": 1},
+        )
     def test_cancel_all_marks_every_open_order_cancelled(self):
         engine = ChronosMatch(verbose=False)
         engine.add_order(Order(1, "BUY", 99.0, 2))

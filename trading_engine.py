@@ -215,6 +215,20 @@ class ChronosMatch:
                     )
 
         return None
+    def get_order_status_counts(self):
+        open_ids = {
+            order.order_id
+            for order in self.buy_orders + self.sell_orders
+        }
+        filled_ids = (
+            self.seen_order_ids - open_ids - self.cancelled_order_ids
+        )
+
+        return {
+            "OPEN": len(open_ids),
+            "FILLED": len(filled_ids),
+            "CANCELLED": len(self.cancelled_order_ids),
+        }
     def get_order_status(self, order_id):
         if type(order_id) is not int or order_id <= 0:
             raise ValueError("Order ID must be a positive integer")
