@@ -5,6 +5,25 @@ from trading_engine import Order, ChronosMatch
 
 
 class TestChronosMatch(unittest.TestCase):
+    def test_order_status_tracks_open_filled_cancelled_and_unknown(self):
+        engine = ChronosMatch(verbose=False)
+
+        self.assertEqual(engine.get_order_status(99), "UNKNOWN")
+
+        engine.add_order(Order(1, "BUY", 100.0, 2))
+        self.assertEqual(engine.get_order_status(1), "OPEN")
+
+        engine.add_order(Order(2, "SELL", 100.0, 2))
+        self.assertEqual(engine.get_order_status(1), "FILLED")
+        self.assertEqual(engine.get_order_status(2), "FILLED")
+
+        engine.add_order(Order(3, "BUY", 99.0, 1))
+        self.assertTrue(engine.cancel_order(3))
+        self.assertEqual(engine.get_order_status(3), "CANCELLED")
+
+        engine.add_order(Order(4, "SELL", 110.0, 1))
+        engine.cancel_all_orders(side="SELL")
+        self.assertEqual(engine.get_order_status(4), "CANCELLED") 
     def test_recent_trades_rejects_invalid_limits_and_handles_empty_history(self):
         engine = ChronosMatch(verbose=False)
 

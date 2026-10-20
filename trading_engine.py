@@ -14,6 +14,7 @@ class ChronosMatch:
     def __init__(self, verbose=True):
         self.verbose = verbose
         self.seen_order_ids = set()
+        self.cancelled_order_ids = set()
         self.buy_orders = []
         self.sell_orders = []
         self.trades = []
@@ -95,6 +96,7 @@ class ChronosMatch:
 
         cancelled_count = sum(len(book) for book in books)
         for book in books:
+            self.cancelled_order_ids.update(order.order_id for order in book)
             book.clear()
 
         return cancelled_count
@@ -121,6 +123,7 @@ class ChronosMatch:
         for orders in (self.buy_orders, self.sell_orders):
             for index, order in enumerate(orders):
                 if order.order_id == order_id:
+                    self.cancelled_order_ids.add(order_id)
                     del orders[index]
                     return True
 
@@ -212,6 +215,21 @@ class ChronosMatch:
                     )
 
         return None
+    def get_order_status(self, order_id):
+        if type(order_id) is not int or order_id <= 0:
+            raise ValueError("Order ID must be a positive integer")
+
+        for order in self.buy_orders + self.sell_orders:
+            if order.order_id == order_id:
+                return "OPEN"
+
+        if order_id in self.cancelled_order_ids:
+            return "CANCELLED"
+
+        if order_id in self.seen_order_ids:
+            return "FILLED"
+
+        return "UNKNOWN"
     def get_open_order(self, order_id):
         if type(order_id) is not int or order_id <= 0:
             raise ValueError("Order ID must be a positive integer")
