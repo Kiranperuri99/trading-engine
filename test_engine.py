@@ -5,6 +5,13 @@ from trading_engine import Order, ChronosMatch
 
 
 class TestChronosMatch(unittest.TestCase):
+    def test_execution_summary_handles_no_trades(self):
+        engine = ChronosMatch(verbose=False)
+
+        self.assertEqual(
+            engine.get_execution_summary(),
+            {"trade_count": 0, "total_quantity": 0, "vwap": None},
+        )
     def test_execution_summary_reports_trade_count_quantity_and_vwap(self):
         engine = ChronosMatch(verbose=False)
         engine.add_order(Order(1, "BUY", 101.0, 4))
