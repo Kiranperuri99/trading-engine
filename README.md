@@ -197,3 +197,8 @@ Use `get_order_status(order_id)` to check an order's state. It returns `OPEN`, `
 ```python
 status = engine.get_order_status(1)
 print(status)
+To count orders in each state, use `get_order_status_counts()`:
+
+```python
+counts = engine.get_order_status_counts()
+print(counts)
