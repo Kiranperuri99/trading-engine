@@ -5,6 +5,18 @@ from trading_engine import Order, ChronosMatch
 
 
 class TestChronosMatch(unittest.TestCase):
+    def test_queue_ahead_quantity_counts_same_price_orders(self):
+        engine = ChronosMatch(verbose=False)
+        engine.add_order(Order(1, "BUY", 100.0, 5))
+        engine.add_order(Order(2, "BUY", 99.0, 7))
+        engine.add_order(Order(3, "BUY", 100.0, 2))
+        engine.add_order(Order(4, "SELL", 101.0, 4))
+        engine.add_order(Order(5, "SELL", 102.0, 3))
+        engine.add_order(Order(6, "SELL", 101.0, 1))
+
+        self.assertEqual(engine.get_queue_ahead_quantity(3), 5)
+        self.assertEqual(engine.get_queue_ahead_quantity(6), 4)
+        self.assertIsNone(engine.get_queue_ahead_quantity(999))
     def test_open_order_snapshot_after_partial_fill(self):
         engine = ChronosMatch(verbose=False)
         engine.add_order(Order(1, "BUY", 100.0, 5))

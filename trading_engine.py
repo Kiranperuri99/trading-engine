@@ -186,6 +186,20 @@ class ChronosMatch:
             if trade["buy_order_id"] == order_id
             or trade["sell_order_id"] == order_id
         )
+    def get_queue_ahead_quantity(self, order_id):
+        if type(order_id) is not int or order_id <= 0:
+            raise ValueError("Order ID must be a positive integer")
+
+        for book in (self.buy_orders, self.sell_orders):
+            for index, order in enumerate(book):
+                if order.order_id == order_id:
+                    return sum(
+                        earlier.quantity
+                        for earlier in book[:index]
+                        if earlier.price == order.price
+                    )
+
+        return None
     def get_open_order(self, order_id):
         if type(order_id) is not int or order_id <= 0:
             raise ValueError("Order ID must be a positive integer")
