@@ -12,6 +12,7 @@ from ring_layout import HEADER_STRUCT, storage_size
 
 class TestRingBuffer(unittest.TestCase):
 
+
     def test_new_ring_is_empty_with_requested_capacity(self):
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / "ring.bin"
@@ -196,6 +197,17 @@ class TestRingBuffer(unittest.TestCase):
                 ring.put(second)
                 self.assertEqual(ring.get(), second)
                 self.assertEqual(len(ring), 0)
+    def test_open_instance_reads_order_written_by_another_instance(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "ring.bin"
+            order = Order(5, "BUY", 105.0, 2)
 
+            with RingBuffer(path, 2) as writer:
+                with RingBuffer.open_existing(path) as reader:
+                    writer.put(order)
+
+                    self.assertEqual(len(reader), 1)
+                    self.assertEqual(reader.get(), order)
+                    self.assertEqual(len(writer), 0)
 if __name__ == "__main__":
     unittest.main()
