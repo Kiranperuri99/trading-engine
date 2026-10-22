@@ -5,6 +5,17 @@ from trading_engine import Order, ChronosMatch
 
 
 class TestChronosMatch(unittest.TestCase):
+    def test_book_imbalance_handles_empty_and_one_sided_books(self):
+        empty_engine = ChronosMatch(verbose=False)
+        self.assertIsNone(empty_engine.get_book_imbalance())
+
+        buy_engine = ChronosMatch(verbose=False)
+        buy_engine.add_order(Order(1, "BUY", 100.0, 4))
+        self.assertEqual(buy_engine.get_book_imbalance(), 1.0)
+
+        sell_engine = ChronosMatch(verbose=False)
+        sell_engine.add_order(Order(2, "SELL", 101.0, 4))
+        self.assertEqual(sell_engine.get_book_imbalance(), -1.0)
     def test_book_imbalance_uses_open_buy_and_sell_quantities(self):
         engine = ChronosMatch(verbose=False)
         engine.add_order(Order(1, "BUY", 100.0, 7))
