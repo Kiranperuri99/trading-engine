@@ -190,26 +190,19 @@ class ChronosMatch:
 
         return (buy_quantity - sell_quantity) / total_quantity
     def get_micro_price(self):
-        if not self.buy_orders or not self.sell_orders:
+        best_bid = self.get_best_level("BUY")
+        best_ask = self.get_best_level("SELL")
+
+        if best_bid is None or best_ask is None:
             return None
 
-        best_bid = self.best_bid()
-        best_ask = self.best_ask()
+        bid_price = best_bid["price"]
+        ask_price = best_ask["price"]
+        bid_quantity = best_bid["quantity"]
+        ask_quantity = best_ask["quantity"]
 
-        bid_quantity = sum(
-            order.quantity
-            for order in self.buy_orders
-            if order.price == best_bid
-        )
-        ask_quantity = sum(
-            order.quantity
-            for order in self.sell_orders
-            if order.price == best_ask
-        )
-
-        total_quantity = bid_quantity + ask_quantity
-        return best_bid + (best_ask - best_bid) * (
-            bid_quantity / total_quantity
+        return bid_price + (ask_price - bid_price) * (
+            bid_quantity / (bid_quantity + ask_quantity)
         )
     def get_mid_price(self):
         bid = self.best_bid()
