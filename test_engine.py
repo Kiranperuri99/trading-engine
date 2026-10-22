@@ -5,6 +5,16 @@ from trading_engine import Order, ChronosMatch
 
 
 class TestChronosMatch(unittest.TestCase):
+    def test_best_level_handles_empty_books_and_invalid_sides(self):
+        engine = ChronosMatch(verbose=False)
+
+        self.assertIsNone(engine.get_best_level("BUY"))
+        self.assertIsNone(engine.get_best_level("SELL"))
+
+        for side in ("BID", "", None, 1):
+            with self.subTest(side=side):
+                with self.assertRaises(ValueError):
+                    engine.get_best_level(side)
     def test_best_level_aggregates_quantity_at_best_price(self):
         engine = ChronosMatch(verbose=False)
         engine.add_order(Order(1, "BUY", 100.0, 2))
