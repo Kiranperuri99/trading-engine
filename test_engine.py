@@ -5,6 +5,17 @@ from trading_engine import Order, ChronosMatch
 
 
 class TestChronosMatch(unittest.TestCase):
+    def test_micro_price_returns_none_when_book_is_incomplete(self):
+        empty_engine = ChronosMatch(verbose=False)
+        self.assertIsNone(empty_engine.get_micro_price())
+
+        buy_only_engine = ChronosMatch(verbose=False)
+        buy_only_engine.add_order(Order(1, "BUY", 100.0, 3))
+        self.assertIsNone(buy_only_engine.get_micro_price())
+
+        sell_only_engine = ChronosMatch(verbose=False)
+        sell_only_engine.add_order(Order(2, "SELL", 101.0, 3))
+        self.assertIsNone(sell_only_engine.get_micro_price())
     def test_micro_price_weights_best_prices_by_order_quantity(self):
         engine = ChronosMatch(verbose=False)
         engine.add_order(Order(1, "BUY", 100.0, 6))
