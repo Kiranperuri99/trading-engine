@@ -5,6 +5,21 @@ from trading_engine import Order, ChronosMatch
 
 
 class TestChronosMatch(unittest.TestCase):
+    def test_best_level_aggregates_quantity_at_best_price(self):
+        engine = ChronosMatch(verbose=False)
+        engine.add_order(Order(1, "BUY", 100.0, 2))
+        engine.add_order(Order(2, "BUY", 100.0, 3))
+        engine.add_order(Order(3, "BUY", 99.0, 4))
+        engine.add_order(Order(4, "SELL", 102.0, 6))
+
+        self.assertEqual(
+            engine.get_best_level("buy"),
+            {"price": 100.0, "quantity": 5},
+        )
+        self.assertEqual(
+            engine.get_best_level("SELL"),
+            {"price": 102.0, "quantity": 6},
+        )
     def test_book_imbalance_uses_remaining_quantities_after_trade(self):
         engine = ChronosMatch(verbose=False)
         engine.add_order(Order(1, "BUY", 100.0, 7))

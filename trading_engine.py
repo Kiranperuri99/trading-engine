@@ -135,6 +135,17 @@ class ChronosMatch:
             "BUY": sum(order.quantity for order in self.buy_orders),
             "SELL": sum(order.quantity for order in self.sell_orders),
         }
+    def get_best_level(self, side):
+        if not isinstance(side, str):
+            raise ValueError("Side must be BUY or SELL")
+
+        side = side.strip().upper()
+        if side not in ("BUY", "SELL"):
+            raise ValueError("Side must be BUY or SELL")
+
+        book = self.get_order_book(depth=1)
+        levels = book["bids"] if side == "BUY" else book["asks"]
+        return levels[0] if levels else None
     def get_order_book(self, depth=None):
         if depth is not None and (type(depth) is not int or depth <= 0):
             raise ValueError("Depth must be a positive integer")
