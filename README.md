@@ -212,3 +212,10 @@ GitHub Actions runs the Python test suite when changes are pushed to the `main` 
 ```python
 imbalance = engine.get_book_imbalance()
 print(imbalance)
+## Microprice
+
+`get_micro_price()` estimates the price using the quantities at the best bid and best ask. It gives more weight to the side with more quantity. It returns `None` if either side of the order book is empty.
+
+```python
+micro_price = engine.get_micro_price()
+print(micro_price)
