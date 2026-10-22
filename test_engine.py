@@ -5,6 +5,12 @@ from trading_engine import Order, ChronosMatch
 
 
 class TestChronosMatch(unittest.TestCase):
+    def test_book_imbalance_is_zero_when_quantities_are_equal(self):
+        engine = ChronosMatch(verbose=False)
+        engine.add_order(Order(1, "BUY", 100.0, 5))
+        engine.add_order(Order(2, "SELL", 101.0, 5))
+
+        self.assertEqual(engine.get_book_imbalance(), 0.0)
     def test_micro_price_equals_mid_price_when_best_quantities_match(self):
         engine = ChronosMatch(verbose=False)
         engine.add_order(Order(1, "BUY", 100.0, 4))
