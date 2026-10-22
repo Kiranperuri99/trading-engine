@@ -202,3 +202,6 @@ To count orders in each state, use `get_order_status_counts()`:
 ```python
 counts = engine.get_order_status_counts()
 print(counts)
+## Automated tests
+
+GitHub Actions runs the Python test suite when changes are pushed to the `main` branch or a pull request is opened. Open the repository's **Actions** tab on GitHub to see whether the test run passed.
