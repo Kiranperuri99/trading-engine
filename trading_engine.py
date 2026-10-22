@@ -168,6 +168,16 @@ class ChronosMatch:
             "BUY": summarize(self.buy_orders),
             "SELL": summarize(self.sell_orders),
         }
+    def get_book_imbalance(self):
+        quantities = self.pending_quantities()
+        buy_quantity = quantities["BUY"]
+        sell_quantity = quantities["SELL"]
+        total_quantity = buy_quantity + sell_quantity
+
+        if total_quantity == 0:
+            return None
+
+        return (buy_quantity - sell_quantity) / total_quantity
     def get_mid_price(self):
         bid = self.best_bid()
         ask = self.best_ask()
