@@ -40,3 +40,6 @@ python demo_order_management.py
 
 The example demonstrates a partial fill, quantity reduction, and cancellation.
 It should finish with an empty order book and two units traded.
+## GitHub Actions
+
+The workflow in `.github/workflows/python-tests.yml` runs after pushes to `main` and when a pull request is opened. It checks Python syntax and runs the unit tests across the configured Python versions and operating systems. You can also start it from the repository's **Actions** tab.
