@@ -5,6 +5,14 @@ from trading_engine import Order, ChronosMatch
 
 
 class TestChronosMatch(unittest.TestCase):
+    def test_book_imbalance_uses_remaining_quantities_after_trade(self):
+        engine = ChronosMatch(verbose=False)
+        engine.add_order(Order(1, "BUY", 100.0, 7))
+        engine.add_order(Order(2, "SELL", 101.0, 2))
+        engine.add_order(Order(3, "SELL", 100.0, 4))
+
+        self.assertEqual(engine.get_remaining_quantity(1), 3)
+        self.assertAlmostEqual(engine.get_book_imbalance(), 0.2)
     def test_book_imbalance_is_zero_when_quantities_are_equal(self):
         engine = ChronosMatch(verbose=False)
         engine.add_order(Order(1, "BUY", 100.0, 5))
