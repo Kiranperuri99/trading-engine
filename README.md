@@ -205,3 +205,10 @@ print(counts)
 ## Automated tests
 
 GitHub Actions runs the Python test suite when changes are pushed to the `main` branch or a pull request is opened. Open the repository's **Actions** tab on GitHub to see whether the test run passed.
+## Order book imbalance
+
+`get_book_imbalance()` compares total open buy quantity with total open sell quantity. The result ranges from `-1.0` (only sell quantity) to `1.0` (only buy quantity). A result of `None` means the book is empty.
+
+```python
+imbalance = engine.get_book_imbalance()
+print(imbalance)
