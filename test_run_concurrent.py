@@ -1,4 +1,7 @@
 
+import subprocess
+import sys
+from pathlib import Path
 import json
 import argparse
 import io
@@ -19,6 +22,24 @@ def stalled_worker(*args):
 
 
 class TestRunConcurrent(unittest.TestCase):
+    def test_script_prints_one_json_result(self):
+        script = Path(__file__).with_name("run_concurrent.py")
+        completed = subprocess.run(
+            [
+                sys.executable,
+                str(script),
+                "--count",
+                "0",
+                "--json",
+            ],
+            capture_output=True,
+            text=True,
+            check=True,
+            timeout=30,
+        )
+
+        result = json.loads(completed.stdout)
+        self.assertEqual(result["orders_processed"], 0)
     def test_cli_json_output_is_valid_and_preserves_summary(self):
         expected = {
             "orders_processed": 0,
