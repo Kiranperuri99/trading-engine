@@ -58,7 +58,53 @@ class TestProcessWorkers(unittest.TestCase):
                 json.loads(consumer_result.read_text(encoding="utf-8")),
                 run_simulation(count=5, seed=7),
             )
+    def test_concurrent_workers_transfer_orders_through_small_ring(self):
+        count = 20
+        seed = 42
 
+        with tempfile.TemporaryDirectory() as directory:
+            directory = Path(directory)
+            path = directory / "ring.bin"
+            producer_result = directory / "producer.json"
+            consumer_result = directory / "consumer.json"
+            context = multiprocessing.get_context("spawn")
+            lock = context.Lock()
+
+            with RingBuffer(path, 2):
+                pass
+
+            producer = context.Process(
+                target=producer_process,
+                args=(path, lock, count, seed, 10, producer_result),
+            )
+            consumer = context.Process(
+                target=consumer_process,
+                args=(path, lock, count, 10, consumer_result),
+            )
+
+            producer.start()
+            consumer.start()
+
+            for worker in (producer, consumer):
+                worker.join(timeout=10)
+
+                if worker.is_alive():
+                    for running_worker in (producer, consumer):
+                        if running_worker.is_alive():
+                            running_worker.terminate()
+                            running_worker.join()
+                    self.fail(f"{worker.name} timed out")
+
+                self.assertEqual(worker.exitcode, 0)
+
+            self.assertEqual(
+                json.loads(producer_result.read_text(encoding="utf-8")),
+                {"orders_produced": count},
+            )
+            self.assertEqual(
+                json.loads(consumer_result.read_text(encoding="utf-8")),
+                run_simulation(count=count, seed=seed),
+            )
     def test_failed_worker_does_not_write_success_result(self):
         with tempfile.TemporaryDirectory() as directory:
             directory = Path(directory)
