@@ -7,11 +7,27 @@ from contextlib import redirect_stdout
 from pathlib import Path
 import unittest
 from unittest.mock import patch
+from measure_concurrent_pipeline import main
 
 from measure_concurrent_pipeline import measure_concurrent_pipeline
 
 
 class TestMeasureConcurrentPipeline(unittest.TestCase):
+    def test_output_option_saves_json_report(self):
+        expected = {"schema_version": 1, "orders_per_second": 12.5}
+
+        with tempfile.TemporaryDirectory() as directory:
+            output_path = Path(directory) / "report.json"
+
+            with patch(
+                "measure_concurrent_pipeline.measure_concurrent_pipeline",
+                return_value=expected,
+            ):
+                with redirect_stdout(io.StringIO()):
+                    main(["--output", str(output_path)])
+
+            saved = json.loads(output_path.read_text(encoding="utf-8"))
+            self.assertEqual(saved, expected)
     def test_report_has_version_and_utc_timestamp(self):
         with patch(
             "measure_concurrent_pipeline.run_concurrent",
