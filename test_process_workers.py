@@ -17,18 +17,39 @@ class TestProcessWorkers(unittest.TestCase):
             path = directory / "ring.bin"
             producer_result = directory / "producer.json"
             consumer_result = directory / "consumer.json"
-            lock = multiprocessing.get_context("spawn").Lock()
+            context = multiprocessing.get_context("spawn")
+            lock = context.Lock()
 
             with RingBuffer(path, 5):
                 pass
 
-            producer_process(
-                path, lock, 5, 7, 10, producer_result
+            producer = context.Process(
+                target=producer_process,
+                args=(path, lock, 5, 7, 10, producer_result),
             )
-            consumer_process(
-                path, lock, 5, 10, consumer_result
-            )
+            producer.start()
+            producer.join(timeout=10)
 
+            if producer.is_alive():
+                producer.terminate()
+                producer.join()
+                self.fail("Producer process timed out")
+
+            self.assertEqual(producer.exitcode, 0)
+
+            consumer = context.Process(
+                target=consumer_process,
+                args=(path, lock, 5, 10, consumer_result),
+            )
+            consumer.start()
+            consumer.join(timeout=10)
+
+            if consumer.is_alive():
+                consumer.terminate()
+                consumer.join()
+                self.fail("Consumer process timed out")
+
+            self.assertEqual(consumer.exitcode, 0)
             self.assertEqual(
                 json.loads(producer_result.read_text(encoding="utf-8")),
                 {"orders_produced": 5},
