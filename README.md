@@ -219,3 +219,9 @@ print(imbalance)
 ```python
 micro_price = engine.get_micro_price()
 print(micro_price)
+## Concurrent pipeline benchmark
+
+Run the concurrent producer and consumer benchmark:
+
+```powershell
+python .\measure_concurrent_pipeline.py --count 1000 --seed 7 --capacity 16 --timeout 30 --output .\concurrent_report.json
