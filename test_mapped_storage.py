@@ -80,5 +80,14 @@ class TestMappedStorage(unittest.TestCase):
                 MappedStorage.open_existing(path)
 
             self.assertFalse(path.exists())
+    def test_open_existing_empty_file_is_rejected(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "empty.bin"
+            path.write_bytes(b"")
+
+            with self.assertRaises(ValueError):
+                MappedStorage.open_existing(path)
+
+            self.assertEqual(path.read_bytes(), b"")
 if __name__ == "__main__":
     unittest.main()
