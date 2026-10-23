@@ -72,5 +72,13 @@ class TestMappedStorage(unittest.TestCase):
                 storage.buffer[:4] = b"EXIT"
 
             self.assertEqual(path.read_bytes()[:4], b"EXIT")
+    def test_open_existing_missing_file_does_not_create_file(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "missing.bin"
+
+            with self.assertRaises(FileNotFoundError):
+                MappedStorage.open_existing(path)
+
+            self.assertFalse(path.exists())
 if __name__ == "__main__":
     unittest.main()
