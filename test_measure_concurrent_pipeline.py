@@ -13,6 +13,19 @@ from measure_concurrent_pipeline import measure_concurrent_pipeline
 
 
 class TestMeasureConcurrentPipeline(unittest.TestCase):
+    def test_report_includes_environment_details(self):
+        with patch(
+            "measure_concurrent_pipeline.run_concurrent",
+            return_value={"orders_processed": 0},
+        ):
+            result = measure_concurrent_pipeline(count=0)
+
+        environment = result["environment"]
+        self.assertIn("python_version", environment)
+        self.assertIn("operating_system", environment)
+        self.assertIn("machine", environment)
+        self.assertIn("pointer_bits", environment)
+        self.assertIsInstance(environment["pointer_bits"], int)
     def test_output_option_saves_json_report(self):
         expected = {"schema_version": 1, "orders_per_second": 12.5}
 

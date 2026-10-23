@@ -1,3 +1,5 @@
+import platform
+import struct
 from datetime import datetime, timezone
 from pathlib import Path
 import argparse
@@ -31,6 +33,12 @@ def measure_concurrent_pipeline(count=1000, seed=42, capacity=16, timeout=30):
         "schema_version": 1,
         "generated_at_utc": datetime.now(timezone.utc).isoformat(),
         "scope": "Concurrent run including worker startup",
+        "environment": {
+    "python_version": platform.python_version(),
+    "operating_system": platform.system(),
+    "machine": platform.machine(),
+    "pointer_bits": struct.calcsize("P") * 8,
+},
         "configuration": {
             "count": count,
             "seed": seed,
