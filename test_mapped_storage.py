@@ -64,6 +64,13 @@ class TestMappedStorage(unittest.TestCase):
                     second.buffer[4:8] = b"SELL"
                     second.buffer.flush()
                     self.assertEqual(first.buffer[4:8], b"SELL")
+    def test_context_manager_persists_data_on_exit(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "orders.bin"
 
+            with MappedStorage(path, 100) as storage:
+                storage.buffer[:4] = b"EXIT"
+
+            self.assertEqual(path.read_bytes()[:4], b"EXIT")
 if __name__ == "__main__":
     unittest.main()
