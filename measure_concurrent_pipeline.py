@@ -1,3 +1,4 @@
+from datetime import datetime, timezone
 from pathlib import Path
 import argparse
 import json
@@ -27,6 +28,8 @@ def measure_concurrent_pipeline(count=1000, seed=42, capacity=16, timeout=30):
     )
 
     return {
+        "schema_version": 1,
+        "generated_at_utc": datetime.now(timezone.utc).isoformat(),
         "scope": "Concurrent run including worker startup",
         "configuration": {
             "count": count,
