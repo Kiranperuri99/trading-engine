@@ -147,9 +147,3 @@ if __name__ == "__main__":
     main()
 
 
-if __name__ == "__main__":
-    result = run_concurrent()
-    print("ChronosMatch concurrent simulation")
-
-    for name, value in result.items():
-        print(f"{name}: {value}")
