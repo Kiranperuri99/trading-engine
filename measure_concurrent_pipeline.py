@@ -1,3 +1,4 @@
+from pathlib import Path
 import argparse
 import json
 from time import perf_counter_ns
@@ -47,6 +48,11 @@ def main(argv=None):
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--capacity", type=positive_capacity, default=16)
     parser.add_argument("--timeout", type=positive_timeout, default=30.0)
+    parser.add_argument(
+        "--output",
+        type=Path,
+        help="Save the JSON report to a file",
+    )
     args = parser.parse_args(argv)
 
     result = measure_concurrent_pipeline(
@@ -55,9 +61,13 @@ def main(argv=None):
         capacity=args.capacity,
         timeout=args.timeout,
     )
-    print(json.dumps(result, indent=2, allow_nan=False))
+    report = json.dumps(result, indent=2, allow_nan=False)
+
+    if args.output:
+        args.output.write_text(report + "\n", encoding="utf-8")
+
+    print(report)
 
 
 if __name__ == "__main__":
     main()
-    

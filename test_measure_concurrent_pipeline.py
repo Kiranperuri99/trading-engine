@@ -1,3 +1,8 @@
+import io
+import json
+import tempfile
+from contextlib import redirect_stdout
+from pathlib import Path
 import unittest
 from unittest.mock import patch
 
@@ -5,6 +10,23 @@ from measure_concurrent_pipeline import measure_concurrent_pipeline
 
 
 class TestMeasureConcurrentPipeline(unittest.TestCase):
+    def test_output_option_saves_json_report(self):
+        expected = {"orders_processed": 0}
+
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "report.json"
+            output = io.StringIO()
+
+            with patch(
+                "measure_concurrent_pipeline.measure_concurrent_pipeline",
+                return_value=expected,
+            ):
+                with redirect_stdout(output):
+                    from measure_concurrent_pipeline import main
+                    main(["--count", "0", "--output", str(path)])
+
+            self.assertEqual(json.loads(path.read_text()), expected)
+            self.assertEqual(json.loads(output.getvalue()), expected)
 
     def test_reports_elapsed_time_and_throughput(self):
         summary = {"orders_processed": 10}
