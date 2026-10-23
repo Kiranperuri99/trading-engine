@@ -56,6 +56,24 @@ class TestRingPipeline(unittest.TestCase):
                 {"BUY": 0, "SELL": 0},
             )
 
+    def test_queued_non_crossing_orders_remain_pending(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "ring.bin"
+            engine = ChronosMatch(verbose=False)
 
+            with RingBuffer(path, 2) as ring:
+                ring.put(Order(1, "BUY", 99.0, 4))
+                ring.put(Order(2, "SELL", 100.0, 3))
+
+                while len(ring):
+                    engine.add_order(ring.get())
+
+                self.assertEqual(len(ring), 0)
+
+            self.assertEqual(engine.trades, [])
+            self.assertEqual(
+                engine.pending_quantities(),
+                {"BUY": 4, "SELL": 3},
+            )
 if __name__ == "__main__":
     unittest.main()
