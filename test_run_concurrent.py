@@ -22,6 +22,15 @@ def stalled_worker(*args):
 
 
 class TestRunConcurrent(unittest.TestCase):
+    def test_concurrent_results_match_with_capacity_one(self):
+        expected = run_simulation(count=100, seed=7)
+        result = run_concurrent(
+            count=100,
+            seed=7,
+            capacity=1,
+            timeout=30,
+        )
+        self.assertEqual(result, expected)
     def test_script_prints_one_json_result(self):
         script = Path(__file__).with_name("run_concurrent.py")
         completed = subprocess.run(
