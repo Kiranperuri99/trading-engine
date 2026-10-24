@@ -64,6 +64,11 @@ def main(argv=None):
         type=Path,
         help="Save the JSON report to a file",
     )
+    parser.add_argument(
+        "--human",
+        action="store_true",
+        help="Print a readable summary instead of JSON",
+    )
     args = parser.parse_args(argv)
 
     result = measure_concurrent_pipeline(
@@ -73,12 +78,17 @@ def main(argv=None):
         timeout=args.timeout,
     )
     report = json.dumps(result, indent=2, allow_nan=False)
-
     if args.output:
         args.output.parent.mkdir(parents=True, exist_ok=True)
         args.output.write_text(report + "\n", encoding="utf-8")
 
-    print(report)
+    if args.human:
+        print("ChronosMatch concurrent benchmark")
+        print(f"Orders processed: {result['summary']['orders_processed']}")
+        print(f"Elapsed time: {result['elapsed_ns']} ns")
+        print(f"Throughput: {result['orders_per_second']} orders/second")
+    else:
+        print(report)
 
 
 if __name__ == "__main__":
