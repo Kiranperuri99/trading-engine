@@ -8,3 +8,4 @@ venv/
 
 # Local secrets
 .env
+concurrent_report.json
