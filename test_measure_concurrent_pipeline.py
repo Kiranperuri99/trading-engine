@@ -1,3 +1,7 @@
+import io
+from contextlib import redirect_stdout
+from unittest.mock import patch
+from measure_concurrent_pipeline import main
 from datetime import datetime, timezone
 from unittest.mock import patch
 import io
@@ -13,6 +17,25 @@ from measure_concurrent_pipeline import measure_concurrent_pipeline
 
 
 class TestMeasureConcurrentPipeline(unittest.TestCase):
+    def test_cli_passes_selected_settings_to_benchmark(self):
+        with patch(
+            "measure_concurrent_pipeline.measure_concurrent_pipeline",
+            return_value={"orders_processed": 50},
+        ) as benchmark:
+            with redirect_stdout(io.StringIO()):
+                main([
+                    "--count", "50",
+                    "--seed", "7",
+                    "--capacity", "4",
+                    "--timeout", "20",
+                ])
+
+        benchmark.assert_called_once_with(
+            count=50,
+            seed=7,
+            capacity=4,
+            timeout=20.0,
+        )
     def test_report_includes_environment_details(self):
         with patch(
             "measure_concurrent_pipeline.run_concurrent",
