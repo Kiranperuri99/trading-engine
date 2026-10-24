@@ -12,7 +12,7 @@ from unittest.mock import patch
 import unittest
 
 from run_concurrent import run_concurrent
-from run_simulation import run_simulation
+from run_simulation import non_negative_count, run_simulation
 def failing_producer(*args):
     raise RuntimeError("Deliberate worker failure for testing")
 
@@ -22,6 +22,11 @@ def stalled_worker(*args):
 
 
 class TestRunConcurrent(unittest.TestCase):
+    def test_cli_rejects_invalid_count(self):
+        for value in ("-1", "2.5", "hello"):
+            with self.subTest(value=value):
+                with self.assertRaises(argparse.ArgumentTypeError):
+                    non_negative_count(value)
     def test_concurrent_results_match_with_capacity_one(self):
         expected = run_simulation(count=100, seed=7)
         result = run_concurrent(
