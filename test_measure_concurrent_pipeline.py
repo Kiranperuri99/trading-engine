@@ -1,3 +1,5 @@
+import subprocess
+import sys
 import io
 from contextlib import redirect_stdout
 from unittest.mock import patch
@@ -17,6 +19,25 @@ from measure_concurrent_pipeline import measure_concurrent_pipeline
 
 
 class TestMeasureConcurrentPipeline(unittest.TestCase):
+    def test_cli_runs_and_prints_valid_json(self):
+        completed = subprocess.run(
+            [
+                sys.executable,
+                "measure_concurrent_pipeline.py",
+                "--count", "0",
+                "--seed", "7",
+                "--capacity", "1",
+                "--timeout", "30",
+            ],
+            capture_output=True,
+            text=True,
+            check=True,
+            timeout=30,
+        )
+
+        report = json.loads(completed.stdout)
+        self.assertEqual(report["summary"]["orders_processed"], 0)
+        self.assertIn("orders_per_second", report)
     def test_cli_passes_selected_settings_to_benchmark(self):
         with patch(
             "measure_concurrent_pipeline.measure_concurrent_pipeline",
