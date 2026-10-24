@@ -53,7 +53,7 @@ class TestMeasureConcurrentPipeline(unittest.TestCase):
         expected = {"schema_version": 1, "orders_per_second": 12.5}
 
         with tempfile.TemporaryDirectory() as directory:
-            output_path = Path(directory) / "report.json"
+            output_path = Path(directory) / "reports" / "nested" / "report.json"
 
             with patch(
                 "measure_concurrent_pipeline.measure_concurrent_pipeline",

@@ -75,6 +75,7 @@ def main(argv=None):
     report = json.dumps(result, indent=2, allow_nan=False)
 
     if args.output:
+        args.output.parent.mkdir(parents=True, exist_ok=True)
         args.output.write_text(report + "\n", encoding="utf-8")
 
     print(report)
