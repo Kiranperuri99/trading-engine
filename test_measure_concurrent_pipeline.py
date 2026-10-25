@@ -100,6 +100,40 @@ class TestMeasureConcurrentPipeline(unittest.TestCase):
             )
             self.assertEqual(saved_result, result)
             self.assertIn("Orders processed: 100", output.getvalue())
+    def test_human_option_shows_na_for_empty_book(self):
+        result = {
+            "scope": "Concurrent run including worker startup",
+            "configuration": {
+                "count": 0,
+                "seed": 7,
+                "capacity": 4,
+                "timeout": 30.0,
+            },
+            "summary": {
+                "orders_processed": 0,
+                "trade_count": 0,
+                "traded_quantity": 0,
+                "pending_buy_quantity": 0,
+                "pending_sell_quantity": 0,
+                "best_bid": None,
+                "best_ask": None,
+                "spread": None,
+            },
+            "elapsed_ns": 1000,
+            "orders_per_second": 0.0,
+        }
+        output = io.StringIO()
+
+        with patch(
+            "measure_concurrent_pipeline.measure_concurrent_pipeline",
+            return_value=result,
+        ):
+            with redirect_stdout(output):
+                main(["--human"])
+
+        self.assertIn("Best bid: N/A", output.getvalue())
+        self.assertIn("Best ask: N/A", output.getvalue())
+        self.assertIn("Spread: N/A", output.getvalue())
     def test_cli_runs_and_prints_valid_json(self):
         completed = subprocess.run(
             [
