@@ -95,6 +95,10 @@ def main(argv=None):
         print(f"Throughput: {result['orders_per_second']} orders/second")
         print(f"Trades: {result['summary']['trade_count']}")
         print(f"Traded quantity: {result['summary']['traded_quantity']}")
+        summary = result["summary"]
+        print(f"Best bid: {summary['best_bid']}")
+        print(f"Best ask: {summary['best_ask']}")
+        print(f"Spread: {summary['spread']}")
     else:
         print(report)
 
