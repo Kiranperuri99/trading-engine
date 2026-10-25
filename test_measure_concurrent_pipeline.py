@@ -31,6 +31,8 @@ class TestMeasureConcurrentPipeline(unittest.TestCase):
                 "timeout": 30.0,
             },
             "summary": {
+                "pending_buy_quantity": 12,
+                "pending_sell_quantity": 3,
                 "orders_processed": 100,
                 "trade_count": 60,
                 "traded_quantity": 120,
@@ -59,6 +61,8 @@ class TestMeasureConcurrentPipeline(unittest.TestCase):
         self.assertIn("Best bid: 100.31", output.getvalue())
         self.assertIn("Best ask: 100.47", output.getvalue())
         self.assertIn("Spread: 0.16", output.getvalue())
+        self.assertIn("Pending BUY quantity: 12", output.getvalue())
+        self.assertIn("Pending SELL quantity: 3", output.getvalue())
     def test_human_option_also_saves_json_report(self):
         result = {
             "scope": "Concurrent run including worker startup",

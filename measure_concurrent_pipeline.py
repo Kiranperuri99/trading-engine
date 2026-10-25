@@ -95,6 +95,14 @@ def main(argv=None):
         print(f"Throughput: {result['orders_per_second']} orders/second")
         print(f"Trades: {result['summary']['trade_count']}")
         print(f"Traded quantity: {result['summary']['traded_quantity']}")
+        print(
+            f"Pending BUY quantity: "
+            f"{summary.get('pending_buy_quantity', 0)}"
+        )
+        print(
+            f"Pending SELL quantity: "
+            f"{summary.get('pending_sell_quantity', 0)}"
+        )
         summary = result["summary"]
         best_bid = summary["best_bid"]
         best_ask = summary["best_ask"]
