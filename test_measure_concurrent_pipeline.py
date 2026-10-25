@@ -45,6 +45,37 @@ class TestMeasureConcurrentPipeline(unittest.TestCase):
         self.assertIn("Throughput: 100000.0 orders/second", output.getvalue())
         self.assertIn("Trades: 60", output.getvalue())
         self.assertIn("Traded quantity: 120", output.getvalue())
+    def test_human_option_also_saves_json_report(self):
+        result = {
+            "summary": {
+                "orders_processed": 100,
+                "trade_count": 60,
+                "traded_quantity": 120,
+            },
+            "elapsed_ns": 1000,
+            "orders_per_second": 100000.0,
+        }
+
+        with tempfile.TemporaryDirectory() as directory:
+            output_path = Path(directory) / "nested" / "report.json"
+            output = io.StringIO()
+
+            with patch(
+                "measure_concurrent_pipeline.measure_concurrent_pipeline",
+                return_value=result,
+            ):
+                with redirect_stdout(output):
+                    main([
+                        "--human",
+                        "--output",
+                        str(output_path),
+                    ])
+
+            saved_result = json.loads(
+                output_path.read_text(encoding="utf-8")
+            )
+            self.assertEqual(saved_result, result)
+            self.assertIn("Orders processed: 100", output.getvalue())
     def test_cli_runs_and_prints_valid_json(self):
         completed = subprocess.run(
             [
