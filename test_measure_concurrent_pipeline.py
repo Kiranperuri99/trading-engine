@@ -36,7 +36,7 @@ class TestMeasureConcurrentPipeline(unittest.TestCase):
                 "traded_quantity": 120,
                 "best_bid": 100.31,
                 "best_ask": 100.47,
-                "spread": 0.16,
+                "spread": 0.1599999999999966,
             },
             "elapsed_ns": 1000,
             "orders_per_second": 100000.0,

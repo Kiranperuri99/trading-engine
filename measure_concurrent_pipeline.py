@@ -99,10 +99,21 @@ def main(argv=None):
         best_bid = summary["best_bid"]
         best_ask = summary["best_ask"]
         spread = summary["spread"]
-
-        print(f"Best bid: {best_bid if best_bid is not None else 'N/A'}")
-        print(f"Best ask: {best_ask if best_ask is not None else 'N/A'}")
-        print(f"Spread: {spread if spread is not None else 'N/A'}")
+        print(
+            f"Best bid: {best_bid:.2f}"
+            if best_bid is not None
+            else "Best bid: N/A"
+        )
+        print(
+            f"Best ask: {best_ask:.2f}"
+            if best_ask is not None
+            else "Best ask: N/A"
+        )
+        print(
+            f"Spread: {spread:.2f}"
+            if spread is not None
+            else "Spread: N/A"
+        )
     else:
         print(report)
 
