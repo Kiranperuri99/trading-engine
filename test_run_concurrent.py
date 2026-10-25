@@ -22,6 +22,44 @@ def stalled_worker(*args):
 
 
 class TestRunConcurrent(unittest.TestCase):
+    def test_cli_shows_na_for_missing_market_prices(self):
+        result = {
+            "orders_processed": 0,
+            "best_bid": None,
+            "best_ask": None,
+            "spread": None,
+        }
+        output = io.StringIO()
+
+        with patch(
+            "run_concurrent.run_concurrent",
+            return_value=result,
+        ):
+            with redirect_stdout(output):
+                main(["--count", "0"])
+
+        self.assertIn("best_bid: N/A", output.getvalue())
+        self.assertIn("best_ask: N/A", output.getvalue())
+        self.assertIn("spread: N/A", output.getvalue())
+    def test_cli_formats_market_prices(self):
+        result = {
+            "orders_processed": 3,
+            "best_bid": 100.31,
+            "best_ask": 100.47,
+            "spread": 0.1599999999999966,
+        }
+        output = io.StringIO()
+
+        with patch(
+            "run_concurrent.run_concurrent",
+            return_value=result,
+        ):
+            with redirect_stdout(output):
+                main(["--count", "3"])
+
+        self.assertIn("best_bid: 100.31", output.getvalue())
+        self.assertIn("best_ask: 100.47", output.getvalue())
+        self.assertIn("spread: 0.16", output.getvalue())
     def test_help_shows_descriptions_for_options(self):
         output = io.StringIO()
 
