@@ -96,9 +96,13 @@ def main(argv=None):
         print(f"Trades: {result['summary']['trade_count']}")
         print(f"Traded quantity: {result['summary']['traded_quantity']}")
         summary = result["summary"]
-        print(f"Best bid: {summary['best_bid']}")
-        print(f"Best ask: {summary['best_ask']}")
-        print(f"Spread: {summary['spread']}")
+        best_bid = summary["best_bid"]
+        best_ask = summary["best_ask"]
+        spread = summary["spread"]
+
+        print(f"Best bid: {best_bid if best_bid is not None else 'N/A'}")
+        print(f"Best ask: {best_ask if best_ask is not None else 'N/A'}")
+        print(f"Spread: {spread if spread is not None else 'N/A'}")
     else:
         print(report)
 
