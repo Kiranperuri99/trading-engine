@@ -115,10 +115,30 @@ def build_parser():
     parser = argparse.ArgumentParser(
         description="Run the concurrent ChronosMatch simulation."
     )
-    parser.add_argument("--count", type=non_negative_count, default=100)
-    parser.add_argument("--seed", type=int, default=42)
-    parser.add_argument("--capacity", type=positive_capacity, default=16)
-    parser.add_argument("--timeout", type=positive_timeout, default=30.0)
+    parser.add_argument(
+        "--count",
+        type=non_negative_count,
+        default=100,
+        help="Number of orders to generate and process.",
+    )
+    parser.add_argument(
+        "--seed",
+        type=int,
+        default=42,
+        help="Seed used to generate repeatable orders.",
+    )
+    parser.add_argument(
+        "--capacity",
+        type=positive_capacity,
+        default=16,
+        help="Maximum number of orders held in the ring buffer.",
+    )
+    parser.add_argument(
+        "--timeout",
+        type=positive_timeout,
+        default=30.0,
+        help="Maximum time in seconds to wait for the workers.",
+    )
     parser.add_argument(
         "--json",
         action="store_true",
@@ -145,5 +165,6 @@ def main(argv=None):
 
 if __name__ == "__main__":
     main()
+
 
 
