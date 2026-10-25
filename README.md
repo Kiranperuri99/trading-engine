@@ -1,3 +1,4 @@
+[![Python tests](https://github.com/Kiranperuri99/trading-engine/actions/workflows/tests.yml/badge.svg?branch=main)](https://github.com/Kiranperuri99/trading-engine/actions/workflows/tests.yml)
 # trading-engine
 ChronosMatch is a high-performance trading engine project focused on low-latency order matching, efficient memory management, and zero-copy data processing. It aims to simulate high-frequency trading workflows with fast order execution, bid/ask order books, and optimized trade matching.
 ## Running ChronosMatch
@@ -225,3 +226,12 @@ Run the concurrent producer and consumer benchmark:
 
 ```powershell
 python .\measure_concurrent_pipeline.py --count 1000 --seed 7 --capacity 16 --timeout 30 --output .\concurrent_report.json
+## Concurrent benchmark
+
+Run a small concurrent benchmark and print a readable summary:
+
+```powershell
+python .\measure_concurrent_pipeline.py --count 10 --seed 7 --capacity 4 --timeout 30 --human
+```
+
+Add `--output .\concurrent-report.json` to save the full JSON report as well.
