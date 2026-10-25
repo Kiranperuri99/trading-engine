@@ -171,6 +171,11 @@ class TestRunConcurrent(unittest.TestCase):
                     timeout=30,
                 )
                 self.assertEqual(actual, expected)
+    def test_rejects_invalid_order_counts(self):
+        for count in (-1, True, 1.5, "5", 1 << 64):
+            with self.subTest(count=count):
+                with self.assertRaises(ValueError):
+                    run_concurrent(count=count)
     def test_empty_concurrent_simulation(self):
         result = run_concurrent(
             count=0,
