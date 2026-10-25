@@ -84,9 +84,17 @@ def main(argv=None):
 
     if args.human:
         print("ChronosMatch concurrent benchmark")
+        config = result["configuration"]
+        print(f"Scope: {result['scope']}")
+        print(f"Count: {config['count']}")
+        print(f"Seed: {config['seed']}")
+        print(f"Capacity: {config['capacity']}")
+        print(f"Timeout: {config['timeout']} seconds")
         print(f"Orders processed: {result['summary']['orders_processed']}")
         print(f"Elapsed time: {result['elapsed_ns']} ns")
         print(f"Throughput: {result['orders_per_second']} orders/second")
+        print(f"Trades: {result['summary']['trade_count']}")
+        print(f"Traded quantity: {result['summary']['traded_quantity']}")
     else:
         print(report)
 

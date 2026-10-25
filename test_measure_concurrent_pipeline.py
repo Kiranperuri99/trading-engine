@@ -23,6 +23,13 @@ from measure_concurrent_pipeline import measure_concurrent_pipeline
 class TestMeasureConcurrentPipeline(unittest.TestCase):
     def test_human_option_prints_readable_summary(self):
         result = {
+            "scope": "Concurrent run including worker startup",
+            "configuration": {
+                "count": 100,
+                "seed": 7,
+                "capacity": 4,
+                "timeout": 30.0,
+            },
             "summary": {
                 "orders_processed": 100,
                 "trade_count": 60,
@@ -39,7 +46,8 @@ class TestMeasureConcurrentPipeline(unittest.TestCase):
             ):
             with redirect_stdout(output):
                 main(["--human"])
-
+        self.assertIn("Scope: Concurrent run including worker startup", output.getvalue())
+        self.assertIn("Seed: 7", output.getvalue())
         self.assertIn("Orders processed: 100", output.getvalue())
         self.assertIn("Elapsed time: 1000 ns", output.getvalue())
         self.assertIn("Throughput: 100000.0 orders/second", output.getvalue())
@@ -47,6 +55,13 @@ class TestMeasureConcurrentPipeline(unittest.TestCase):
         self.assertIn("Traded quantity: 120", output.getvalue())
     def test_human_option_also_saves_json_report(self):
         result = {
+            "scope": "Concurrent run including worker startup",
+            "configuration": {
+                "count": 100,
+                "seed": 7,
+                "capacity": 4,
+                "timeout": 30.0,
+            },
             "summary": {
                 "orders_processed": 100,
                 "trade_count": 60,
