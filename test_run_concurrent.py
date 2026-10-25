@@ -22,6 +22,22 @@ def stalled_worker(*args):
 
 
 class TestRunConcurrent(unittest.TestCase):
+    def test_help_shows_descriptions_for_options(self):
+        output = io.StringIO()
+
+        with redirect_stdout(output):
+            with self.assertRaises(SystemExit) as result:
+                main(["--help"])
+
+        self.assertEqual(result.exception.code, 0)
+
+        for description in (
+            "Number of orders to generate and process.",
+            "Seed used to generate repeatable orders.",
+            "Maximum number of orders held in the ring buffer.",
+            "Maximum time in seconds to wait for the workers.",
+        ):
+            self.assertIn(description, output.getvalue())
     def test_rejects_invalid_timeouts(self):
         for timeout in (0, -1, float("nan"), float("inf")):
             with self.subTest(timeout=timeout):
