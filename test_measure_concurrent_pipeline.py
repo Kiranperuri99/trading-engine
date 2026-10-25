@@ -2,6 +2,8 @@ import subprocess
 import sys
 import io
 from contextlib import redirect_stdout
+from unittest import result
+from unittest import result
 from unittest.mock import patch
 from measure_concurrent_pipeline import main
 from datetime import datetime, timezone
@@ -21,22 +23,28 @@ from measure_concurrent_pipeline import measure_concurrent_pipeline
 class TestMeasureConcurrentPipeline(unittest.TestCase):
     def test_human_option_prints_readable_summary(self):
         result = {
-            "summary": {"orders_processed": 100},
+            "summary": {
+                "orders_processed": 100,
+                "trade_count": 60,
+                "traded_quantity": 120,
+            },
             "elapsed_ns": 1000,
             "orders_per_second": 100000.0,
         }
         output = io.StringIO()
 
         with patch(
-            "measure_concurrent_pipeline.measure_concurrent_pipeline",
-            return_value=result,
-        ):
+                "measure_concurrent_pipeline.measure_concurrent_pipeline",
+                return_value=result,
+            ):
             with redirect_stdout(output):
                 main(["--human"])
 
         self.assertIn("Orders processed: 100", output.getvalue())
         self.assertIn("Elapsed time: 1000 ns", output.getvalue())
         self.assertIn("Throughput: 100000.0 orders/second", output.getvalue())
+        self.assertIn("Trades: 60", output.getvalue())
+        self.assertIn("Traded quantity: 120", output.getvalue())
     def test_cli_runs_and_prints_valid_json(self):
         completed = subprocess.run(
             [
@@ -148,7 +156,6 @@ class TestMeasureConcurrentPipeline(unittest.TestCase):
                     capacity=2,
                     timeout=5,
                 )
-
         self.assertEqual(result["elapsed_ns"], 1000)
         self.assertEqual(result["orders_per_second"], 10_000_000.0)
         self.assertEqual(result["summary"], summary)
@@ -158,7 +165,6 @@ class TestMeasureConcurrentPipeline(unittest.TestCase):
             capacity=2,
             timeout=5,
         )
-
 
 if __name__ == "__main__":
     unittest.main()
