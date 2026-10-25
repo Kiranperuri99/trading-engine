@@ -160,7 +160,17 @@ class TestRunConcurrent(unittest.TestCase):
         )
 
         self.assertEqual(result, expected)
-
+    def test_results_match_sequential_with_capacity_one(self):
+        for seed in (0, 7, 42):
+            with self.subTest(seed=seed):
+                expected = run_simulation(count=25, seed=seed)
+                actual = run_concurrent(
+                    count=25,
+                    seed=seed,
+                    capacity=1,
+                    timeout=30,
+                )
+                self.assertEqual(actual, expected)
     def test_empty_concurrent_simulation(self):
         result = run_concurrent(
             count=0,
