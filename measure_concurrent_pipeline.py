@@ -83,6 +83,7 @@ def main(argv=None):
         args.output.write_text(report + "\n", encoding="utf-8")
 
     if args.human:
+        summary = result["summary"]
         print("ChronosMatch concurrent benchmark")
         config = result["configuration"]
         print(f"Scope: {result['scope']}")
