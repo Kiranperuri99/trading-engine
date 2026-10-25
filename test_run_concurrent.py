@@ -22,6 +22,11 @@ def stalled_worker(*args):
 
 
 class TestRunConcurrent(unittest.TestCase):
+    def test_rejects_invalid_timeouts(self):
+        for timeout in (0, -1, float("nan"), float("inf")):
+            with self.subTest(timeout=timeout):
+                with self.assertRaises(ValueError):
+                    run_concurrent(count=0, timeout=timeout)
     def test_rejects_invalid_ring_capacities(self):
         for capacity in (0, -1, True, 2.5, 1 << 64):
             with self.subTest(capacity=capacity):
