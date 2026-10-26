@@ -278,5 +278,16 @@ class TestRunConcurrent(unittest.TestCase):
         self.assertIn("best_bid: 100.50", text)
         self.assertIn("best_ask: N/A", text)
         self.assertIn("spread: N/A", text)
+    def test_concurrent_simulation_handles_capacity_one(self):
+        expected = run_simulation(count=25, seed=7)
+
+        result = run_concurrent(
+            count=25,
+            seed=7,
+            capacity=1,
+            timeout=30,
+        )
+
+        self.assertEqual(result, expected)
 if __name__ == "__main__":
     unittest.main()
