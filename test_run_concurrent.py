@@ -14,7 +14,7 @@ import unittest
 from run_concurrent import run_concurrent
 from run_simulation import non_negative_count, run_simulation
 def failing_producer(*args):
-    raise RuntimeError("Deliberate worker failure for testing")
+    raise SystemExit(1)
 
 
 def stalled_worker(*args):
