@@ -1,4 +1,5 @@
-﻿import tempfile
+﻿from math import isfinite
+import tempfile
 import unittest
 from pathlib import Path
 
@@ -6,6 +7,30 @@ from trade_store import SQLiteTradeStore
 
 
 class TestSQLiteTradeStore(unittest.TestCase):
+    def test_invalid_trade_is_rejected_without_saving(self):
+        valid_trade = {
+            "buy_order_id": 1,
+            "sell_order_id": 2,
+            "price": 100.0,
+            "quantity": 5,
+        }
+        invalid_trades = [
+            {**valid_trade, "buy_order_id": 0},
+            {**valid_trade, "sell_order_id": -1},
+            {**valid_trade, "price": float("nan")},
+            {**valid_trade, "quantity": 0},
+        ]
+
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "trades.db"
+
+            with SQLiteTradeStore(path) as store:
+                for trade in invalid_trades:
+                    with self.subTest(trade=trade):
+                        with self.assertRaises(ValueError):
+                            store.record_trade(trade)
+
+                self.assertEqual(store.get_trades(), [])
     def test_find_trades_for_order_on_either_side(self):
         trades = [
             {

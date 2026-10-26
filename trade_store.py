@@ -1,4 +1,6 @@
-﻿import sqlite3
+﻿
+from math import isfinite
+import sqlite3
 
 
 class SQLiteTradeStore:
@@ -18,6 +20,26 @@ class SQLiteTradeStore:
         self.connection.commit()
 
     def record_trade(self, trade):
+        required = ("buy_order_id", "sell_order_id", "price", "quantity")
+        if not isinstance(trade, dict) or any(key not in trade for key in required):
+            raise ValueError("Trade is missing required fields")
+
+        for key in ("buy_order_id", "sell_order_id", "quantity"):
+            if type(trade[key]) is not int or trade[key] <= 0:
+                raise ValueError(f"{key} must be a positive integer")
+
+        price = trade["price"]
+        if type(price) not in (int, float):
+            raise ValueError("Trade price must be a number")
+
+        try:
+            valid_price = isfinite(price) and price > 0
+        except OverflowError:
+            valid_price = False
+
+        if not valid_price:
+            raise ValueError("Trade price must be finite and greater than zero")
+
         self.connection.execute(
             """
             INSERT INTO trades (buy_order_id, sell_order_id, price, quantity)
@@ -26,12 +48,11 @@ class SQLiteTradeStore:
             (
                 trade["buy_order_id"],
                 trade["sell_order_id"],
-                trade["price"],
+                price,
                 trade["quantity"],
             ),
         )
         self.connection.commit()
-
     def get_trades(self):
         rows = self.connection.execute(
             """
