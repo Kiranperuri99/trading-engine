@@ -1,0 +1,57 @@
+{
+  "schema_version": 1,
+  "generated_at_utc": "2026-10-22T11:43:27.356237+00:00",
+  "environment": {
+    "python_version": "3.14.7",
+    "python_implementation": "CPython",
+    "operating_system": "Windows",
+    "os_release": "11",
+    "machine": "AMD64",
+    "pointer_bits": 64
+  },
+  "scope": "ChronosMatch.add_order call",
+  "configuration": {
+    "count": 1000,
+    "seed": 7,
+    "warmup": 0
+  },
+  "latency": {
+    "count": 1000,
+    "min_ns": 1800,
+    "median_ns": 27550.0,
+    "p95_ns": 154700,
+    "p99_ns": 233800,
+    "p99_9_ns": 301100,
+    "max_ns": 4548100
+  },
+  "latency_by_side": {
+    "BUY": {
+      "count": 512,
+      "min_ns": 1800,
+      "median_ns": 26600.0,
+      "p95_ns": 139200,
+      "p99_ns": 230900,
+      "p99_9_ns": 297900,
+      "max_ns": 297900
+    },
+    "SELL": {
+      "count": 488,
+      "min_ns": 5000,
+      "median_ns": 29350.0,
+      "p95_ns": 167700,
+      "p99_ns": 238100,
+      "p99_9_ns": 4548100,
+      "max_ns": 4548100
+    }
+  },
+  "summary": {
+    "orders_processed": 1000,
+    "trade_count": 687,
+    "traded_quantity": 2048,
+    "pending_buy_quantity": 682,
+    "pending_sell_quantity": 554,
+    "best_bid": 100.31,
+    "best_ask": 100.47,
+    "spread": 0.1599999999999966
+  }
+}
