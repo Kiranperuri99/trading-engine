@@ -7,6 +7,51 @@ from trade_store import SQLiteTradeStore
 
 
 class TestSQLiteTradeStore(unittest.TestCase):
+    def test_empty_database_has_empty_trade_summary(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "trades.db"
+
+            with SQLiteTradeStore(path) as store:
+                self.assertEqual(
+                    store.get_trade_summary(),
+                    {
+                        "trade_count": 0,
+                        "total_quantity": 0,
+                        "vwap": None,
+                    },
+                )
+
+    def test_trade_summary_calculates_quantity_and_vwap(self):
+        trades = [
+            {
+                "buy_order_id": 1,
+                "sell_order_id": 2,
+                "price": 100.0,
+                "quantity": 2,
+            },
+            {
+                "buy_order_id": 3,
+                "sell_order_id": 4,
+                "price": 110.0,
+                "quantity": 1,
+            },
+        ]
+
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "trades.db"
+
+            with SQLiteTradeStore(path) as store:
+                for trade in trades:
+                    store.record_trade(trade)
+
+                self.assertEqual(
+                    store.get_trade_summary(),
+                    {
+                        "trade_count": 2,
+                        "total_quantity": 3,
+                        "vwap": 310 / 3,
+                    },
+                )
     def test_invalid_trade_is_rejected_without_saving(self):
         valid_trade = {
             "buy_order_id": 1,

@@ -94,6 +94,27 @@ class SQLiteTradeStore:
             }
             for row in rows
         ]
+    def get_trade_summary(self):
+        row = self.connection.execute(
+            """
+            SELECT COUNT(*), COALESCE(SUM(quantity), 0),
+                   SUM(price * quantity)
+            FROM trades
+            """
+        ).fetchone()
+
+        trade_count, total_quantity, total_value = row
+        vwap = (
+            total_value / total_quantity
+            if total_quantity > 0
+            else None
+        )
+
+        return {
+            "trade_count": trade_count,
+            "total_quantity": total_quantity,
+            "vwap": vwap,
+        }
     def close(self):
         self.connection.close()
 
