@@ -11,7 +11,8 @@ class Order:
 
 
 class ChronosMatch:
-    def __init__(self, verbose=True):
+    def __init__(self, verbose=True, trade_store=None):
+        self.trade_store = trade_store
         self.verbose = verbose
         self.seen_order_ids = set()
         self.cancelled_order_ids = set()
@@ -352,6 +353,8 @@ class ChronosMatch:
                 "price": trade_price,
                 "quantity": quantity,
             })
+            if self.trade_store:
+                self.trade_store.record_trade(self.trades[-1])
             if self.verbose:
                 print(
                 f"MATCHED: {quantity} units at "
