@@ -294,5 +294,15 @@ class TestRunConcurrent(unittest.TestCase):
             with self.subTest(count=count):
                 with self.assertRaises(ValueError):
                     run_concurrent(count=count)
+    def test_runner_rejects_invalid_capacity_and_timeout(self):
+        for capacity in (0, -1, True, 2.5):
+            with self.subTest(capacity=capacity):
+                with self.assertRaises(ValueError):
+                    run_concurrent(count=0, capacity=capacity)
+
+        for timeout in (0, -1, float("nan"), float("inf")):
+            with self.subTest(timeout=timeout):
+                with self.assertRaises(ValueError):
+                    run_concurrent(count=0, timeout=timeout)
 if __name__ == "__main__":
     unittest.main()
