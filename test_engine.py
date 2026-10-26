@@ -1006,5 +1006,13 @@ class TestChronosMatch(unittest.TestCase):
         self.assertEqual(engine.seen_order_ids, set())
         self.assertEqual(engine.buy_orders, [])
         self.assertEqual(engine.sell_orders, [])
+    def test_normalizes_side_before_storing_order(self):
+        engine = ChronosMatch(verbose=False)
+        order = Order(1, " buy ", 100.0, 5)
+
+        engine.add_order(order)
+
+        self.assertEqual(order.side, "BUY")
+        self.assertEqual(engine.buy_orders[0].side, "BUY")
 if __name__ == "__main__":
     unittest.main()

@@ -52,6 +52,7 @@ class ChronosMatch:
 
         if side not in ("BUY", "SELL"):
             raise ValueError("Side must be BUY or SELL")
+        order.side = side
         if self.verbose:
             print(f"New order: {order}")
 
