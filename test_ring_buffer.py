@@ -84,6 +84,13 @@ class TestRingBuffer(unittest.TestCase):
                     ring.put(Order(1, "BUY", 100.0, 0))
 
                 self.assertEqual(len(ring), 0)
+
+                valid_order = Order(2, "SELL", 101.0, 3)
+                ring.put(valid_order)
+
+                self.assertEqual(len(ring), 1)
+                self.assertEqual(ring.get(), valid_order)
+                self.assertEqual(len(ring), 0)
     def test_get_returns_orders_in_arrival_order(self):
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / "ring.bin"
@@ -209,5 +216,20 @@ class TestRingBuffer(unittest.TestCase):
                     self.assertEqual(len(reader), 1)
                     self.assertEqual(reader.get(), order)
                     self.assertEqual(len(writer), 0)
+    def test_capacity_one_can_be_reused_repeatedly(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "ring.bin"
+            orders = [
+                Order(1, "BUY", 99.0, 2),
+                Order(2, "SELL", 101.0, 3),
+                Order(3, "BUY", 100.0, 4),
+            ]
+
+            with RingBuffer(path, 1) as ring:
+                for order in orders:
+                    ring.put(order)
+                    self.assertEqual(len(ring), 1)
+                    self.assertEqual(ring.get(), order)
+                    self.assertEqual(len(ring), 0)
 if __name__ == "__main__":
     unittest.main()
