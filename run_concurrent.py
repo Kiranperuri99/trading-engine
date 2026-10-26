@@ -161,6 +161,8 @@ def main(argv=None):
         print("ChronosMatch concurrent simulation")
 
         for name, value in result.items():
+            if name in ("best_bid", "best_ask", "spread"):
+                value = "N/A" if value is None else f"{value:.2f}"
             print(f"{name}: {value}")
 
 if __name__ == "__main__":
