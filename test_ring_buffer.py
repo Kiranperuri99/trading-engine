@@ -231,5 +231,27 @@ class TestRingBuffer(unittest.TestCase):
                     self.assertEqual(len(ring), 1)
                     self.assertEqual(ring.get(), order)
                     self.assertEqual(len(ring), 0)
+    def test_reopen_rejects_out_of_range_positions(self):
+        for read_pos, write_pos in ((2, 0), (0, 2)):
+            with self.subTest(read_pos=read_pos, write_pos=write_pos):
+                with tempfile.TemporaryDirectory() as directory:
+                    path = Path(directory) / "ring.bin"
+
+                    with RingBuffer(path, 2):
+                        pass
+
+                    with MappedStorage.open_existing(path) as storage:
+                        HEADER_STRUCT.pack_into(
+                            storage.buffer,
+                            0,
+                            2,
+                            read_pos,
+                            write_pos,
+                            0,
+                        )
+                        storage.buffer.flush()
+
+                    with self.assertRaises(ValueError):
+                        RingBuffer.open_existing(path)
 if __name__ == "__main__":
     unittest.main()
