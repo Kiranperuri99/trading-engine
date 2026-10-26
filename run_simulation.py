@@ -1,3 +1,4 @@
+﻿from trade_store import SQLiteTradeStore
 from engine_summary import summarize_engine
 import json
 import argparse
@@ -10,8 +11,8 @@ from ring_buffer import RingBuffer
 from trading_engine import ChronosMatch
 
 
-def run_simulation(count=100, seed=42):
-    engine = ChronosMatch(verbose=False)
+def run_simulation(count=100, seed=42, trade_store=None):
+    engine = ChronosMatch(verbose=False, trade_store=trade_store)
     processed = 0
 
     with tempfile.TemporaryDirectory() as directory:
