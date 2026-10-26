@@ -254,5 +254,29 @@ class TestRunConcurrent(unittest.TestCase):
             with self.subTest(count=count):
                 with self.assertRaises(ValueError):
                     run_concurrent(count=count)
+    def test_human_output_formats_market_prices(self):
+        result = {
+            "orders_processed": 0,
+            "trade_count": 0,
+            "traded_quantity": 0,
+            "pending_buy_quantity": 0,
+            "pending_sell_quantity": 0,
+            "best_bid": 100.5,
+            "best_ask": None,
+            "spread": None,
+        }
+        output = io.StringIO()
+
+        with patch(
+            "run_concurrent.run_concurrent",
+            return_value=result,
+        ):
+            with redirect_stdout(output):
+                main([])
+
+        text = output.getvalue()
+        self.assertIn("best_bid: 100.50", text)
+        self.assertIn("best_ask: N/A", text)
+        self.assertIn("spread: N/A", text)
 if __name__ == "__main__":
     unittest.main()
