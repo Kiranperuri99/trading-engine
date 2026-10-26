@@ -995,5 +995,16 @@ class TestChronosMatch(unittest.TestCase):
                 "SELL": {"order_count": 1, "total_quantity": 2},
             },
         )
+    def test_rejects_non_order_input(self):
+        engine = ChronosMatch(verbose=False)
+
+        for invalid_order in (None, object(), "not an order"):
+            with self.subTest(order=invalid_order):
+                with self.assertRaises(TypeError):
+                    engine.add_order(invalid_order)
+
+        self.assertEqual(engine.seen_order_ids, set())
+        self.assertEqual(engine.buy_orders, [])
+        self.assertEqual(engine.sell_orders, [])
 if __name__ == "__main__":
     unittest.main()

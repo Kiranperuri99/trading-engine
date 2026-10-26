@@ -19,6 +19,8 @@ class ChronosMatch:
         self.sell_orders = []
         self.trades = []
     def add_order(self, order):
+        if not isinstance(order, Order):
+            raise TypeError("order must be an Order")
         if type(order.order_id) is not int or order.order_id <= 0:
             raise ValueError("Order ID must be a positive integer")
         if order.order_id in self.seen_order_ids:
