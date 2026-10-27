@@ -1,4 +1,4 @@
-﻿from trade_store import SQLiteTradeStore
+from trade_store import SQLiteTradeStore
 from engine_summary import summarize_engine
 import json
 import argparse
@@ -81,11 +81,24 @@ def build_parser():
         action="store_true",
         help="Print the simulation summary as JSON",
     )
+    parser.add_argument(
+        "--database",
+        type=Path,
+        help="Save completed trades to this SQLite database file",
+    )
     
     return parser
 def main(argv=None):
     args = build_parser().parse_args(argv)
-    summary = run_simulation(count=args.count, seed=args.seed)
+    if args.database:
+        with SQLiteTradeStore(args.database) as store:
+            summary = run_simulation(
+                count=args.count,
+                seed=args.seed,
+                trade_store=store,
+            )
+    else:
+        summary = run_simulation(count=args.count, seed=args.seed)
 
     if args.json:
         print(json.dumps(summary, indent=2, allow_nan=False))

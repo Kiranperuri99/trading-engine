@@ -1,4 +1,8 @@
-﻿import tempfile
+﻿import io
+import json
+from contextlib import redirect_stdout
+from run_simulation import main, run_simulation
+import tempfile
 import unittest
 from pathlib import Path
 
@@ -7,6 +11,26 @@ from trade_store import SQLiteTradeStore
 
 
 class TestSimulationTradeStore(unittest.TestCase):
+    def test_cli_database_option_saves_trades(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "trades.db"
+            output = io.StringIO()
+
+            with redirect_stdout(output):
+                main([
+                    "--count", "100",
+                    "--seed", "7",
+                    "--database", str(path),
+                    "--json",
+                ])
+
+            summary = json.loads(output.getvalue())
+
+            with SQLiteTradeStore(path) as store:
+                self.assertEqual(
+                    len(store.get_trades()),
+                    summary["trade_count"],
+                )
     def test_simulation_saves_trades_to_sqlite(self):
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / "trades.db"
