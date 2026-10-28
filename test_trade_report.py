@@ -11,6 +11,14 @@ from trade_store import SQLiteTradeStore
 
 
 class TestTradeReport(unittest.TestCase):
+    def test_cli_rejects_missing_database(self):
+        with tempfile.TemporaryDirectory() as directory:
+            database = Path(directory) / "missing.db"
+
+            with self.assertRaises(SystemExit) as error:
+                main(["--database", str(database)])
+
+            self.assertEqual(error.exception.code, 2)
     def test_human_filter_shows_matching_trade(self):
         with tempfile.TemporaryDirectory() as directory:
             database = Path(directory) / "trades.db"
