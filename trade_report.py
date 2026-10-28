@@ -4,7 +4,20 @@ from pathlib import Path
 
 from trade_store import SQLiteTradeStore
 
+def positive_order_id(value):
+    try:
+        order_id = int(value)
+    except ValueError:
+        raise argparse.ArgumentTypeError(
+            "Order ID must be a positive whole number"
+        ) from None
 
+    if order_id <= 0:
+        raise argparse.ArgumentTypeError(
+            "Order ID must be a positive whole number"
+        )
+
+    return order_id
 def build_parser():
     parser = argparse.ArgumentParser(
         description="Show a summary of trades saved in SQLite."
@@ -19,6 +32,11 @@ def build_parser():
         "--json",
         action="store_true",
         help="Print the summary as JSON",
+    )
+    parser.add_argument(
+        "--order-id",
+        type=positive_order_id,
+        help="Show trades involving this order ID",
     )
     return parser
 
