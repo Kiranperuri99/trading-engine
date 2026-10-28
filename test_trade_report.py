@@ -1,4 +1,5 @@
-﻿import io
+﻿from trade_report import build_parser, main
+import io
 import json
 import tempfile
 import unittest
@@ -10,6 +11,16 @@ from trade_store import SQLiteTradeStore
 
 
 class TestTradeReport(unittest.TestCase):
+    def test_parser_rejects_invalid_order_ids(self):
+        parser = build_parser()
+
+        for value in ("0", "-1", "abc"):
+            with self.subTest(order_id=value):
+                with self.assertRaises(SystemExit):
+                    parser.parse_args([
+                        "--database", "trades.db",
+                        "--order-id", value,
+                    ])
     def test_json_output_can_filter_by_order_id(self):
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / "trades.db"
