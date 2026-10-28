@@ -7,6 +7,18 @@ from trade_store import SQLiteTradeStore
 
 
 class TestSQLiteTradeStore(unittest.TestCase):
+    def test_order_lookup_indexes_exist(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "trades.db"
+
+            with SQLiteTradeStore(path) as store:
+                indexes = {
+                    row[1]
+                    for row in store.connection.execute(
+                        "PRAGMA index_list(trades)"
+                    )
+                }
+
     def test_empty_database_has_empty_trade_summary(self):
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / "trades.db"
