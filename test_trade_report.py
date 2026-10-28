@@ -11,6 +11,32 @@ from trade_store import SQLiteTradeStore
 
 
 class TestTradeReport(unittest.TestCase):
+    def test_output_option_saves_trade_summary(self):
+        trade = {
+            "buy_order_id": 1,
+            "sell_order_id": 2,
+            "price": 100.0,
+            "quantity": 5,
+        }
+
+        with tempfile.TemporaryDirectory() as directory:
+            database = Path(directory) / "trades.db"
+            output_file = Path(directory) / "summary.json"
+
+            with SQLiteTradeStore(database) as store:
+                store.record_trade(trade)
+
+            with redirect_stdout(io.StringIO()):
+                main([
+                    "--database", str(database),
+                    "--output", str(output_file),
+                    "--json",
+                ])
+
+            self.assertEqual(
+                json.loads(output_file.read_text(encoding="utf-8")),
+                {"trade_count": 1, "total_quantity": 5, "vwap": 100.0},
+            )
     def test_output_option_saves_json_report(self):
         trade = {
             "buy_order_id": 1,
