@@ -69,6 +69,26 @@ class TestTradeReport(unittest.TestCase):
                 },
             )
 
+    def test_json_filter_returns_empty_list_for_unknown_order_id(self):
+        with tempfile.TemporaryDirectory() as directory:
+            database = Path(directory) / "trades.db"
 
+            with SQLiteTradeStore(database) as store:
+                store.record_trade({
+                    "buy_order_id": 1,
+                    "sell_order_id": 2,
+                    "price": 100.0,
+                    "quantity": 5,
+                })
+
+            output = io.StringIO()
+            with redirect_stdout(output):
+                main([
+                    "--database", str(database),
+                    "--order-id", "999",
+                    "--json",
+                ])
+
+            self.assertEqual(json.loads(output.getvalue()), [])
 if __name__ == "__main__":
     unittest.main()
