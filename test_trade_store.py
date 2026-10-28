@@ -7,6 +7,15 @@ from trade_store import SQLiteTradeStore
 
 
 class TestSQLiteTradeStore(unittest.TestCase):
+    def test_order_lookup_rejects_invalid_order_id(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "trades.db"
+
+            with SQLiteTradeStore(path) as store:
+                for order_id in (0, -1, 1.5, True, "1", None):
+                    with self.subTest(order_id=order_id):
+                        with self.assertRaises(ValueError):
+                            store.get_trades_for_order(order_id)
     def test_order_lookup_indexes_exist(self):
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / "trades.db"
