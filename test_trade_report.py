@@ -11,6 +11,24 @@ from trade_store import SQLiteTradeStore
 
 
 class TestTradeReport(unittest.TestCase):
+    def test_human_filter_shows_matching_trade(self):
+        with tempfile.TemporaryDirectory() as directory:
+            database = Path(directory) / "trades.db"
+
+            with SQLiteTradeStore(database) as store:
+                store.record_trade({
+                    "buy_order_id": 1,
+                    "sell_order_id": 2,
+                    "price": 100.0,
+                    "quantity": 5,
+                })
+
+            output = io.StringIO()
+            with redirect_stdout(output):
+                main(["--database", str(database), "--order-id", "1"])
+
+            self.assertIn("Trades involving order ID 1", output.getvalue())
+            self.assertIn("'sell_order_id': 2", output.getvalue())
     def test_parser_rejects_invalid_order_ids(self):
         parser = build_parser()
 
