@@ -134,6 +134,18 @@ class TestSQLiteTradeStore(unittest.TestCase):
             with SQLiteTradeStore(path) as store:
                 self.assertEqual(store.get_trades(), [trade])
 
+    def test_find_trades_for_unknown_order_returns_empty_list(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "trades.db"
 
+            with SQLiteTradeStore(path) as store:
+                store.record_trade({
+                    "buy_order_id": 1,
+                    "sell_order_id": 2,
+                    "price": 100.0,
+                    "quantity": 5,
+                })
+
+                self.assertEqual(store.get_trades_for_order(999), [])
 if __name__ == "__main__":
     unittest.main()
