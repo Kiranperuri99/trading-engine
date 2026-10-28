@@ -38,34 +38,13 @@ def build_parser():
         type=positive_order_id,
         help="Show trades involving this order ID",
     )
+    parser.add_argument(
+        "--output",
+        type=Path,
+        help="Save the report as JSON to this file",
+    )
     return parser
 
-
-def main(argv=None):
-    parser = build_parser()
-    args = parser.parse_args(argv)
-
-    if not args.database.is_file():
-        parser.error(f"Database file does not exist: {args.database}")
-
-    with SQLiteTradeStore(args.database) as store:
-        if args.order_id is None:
-            result = store.get_trade_summary()
-        else:
-            result = store.get_trades_for_order(args.order_id)
-
-    if args.json:
-        print(json.dumps(result, indent=2, allow_nan=False))
-    elif args.order_id is None:
-        print("Saved trade summary")
-        for name, value in result.items():
-            print(f"{name}: {value}")
-    else:
-        print(f"Trades for order {args.order_id}")
-        if not result:
-            print("No trades found")
-        for trade in result:
-            print(trade)
 
 def main(argv=None):
     parser = build_parser()
@@ -80,16 +59,24 @@ def main(argv=None):
         else:
             report = store.get_trade_summary()
 
+    report_json = json.dumps(report, indent=2, allow_nan=False)
+
+    if args.output:
+        args.output.parent.mkdir(parents=True, exist_ok=True)
+        args.output.write_text(report_json + "\n", encoding="utf-8")
+
     if args.json:
-        print(json.dumps(report, indent=2, allow_nan=False))
-    elif args.order_id is not None:
-        print(f"Trades involving order ID {args.order_id}")
-        for trade in report:
-            print(trade)
-    else:
+        print(report_json)
+    elif args.order_id is None:
         print("Saved trade summary")
         for name, value in report.items():
             print(f"{name}: {value}")
+    else:
+        print(f"Trades involving order ID {args.order_id}")
+        for trade in report:
+            print(trade)
+
+
 
 if __name__ == "__main__":
     main()
