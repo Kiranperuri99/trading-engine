@@ -33,7 +33,7 @@ class TestSimulationTradeStore(unittest.TestCase):
                 )
     def test_simulation_saves_trades_to_sqlite(self):
         with tempfile.TemporaryDirectory() as directory:
-            path = Path(directory) / "trades.db"
+            path = Path(directory) / "reports" / "trades.db"
 
             with SQLiteTradeStore(path) as store:
                 summary = run_simulation(

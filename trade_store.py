@@ -1,11 +1,14 @@
-﻿
+
+from pathlib import Path
 from math import isfinite
 import sqlite3
 
 
 class SQLiteTradeStore:
     def __init__(self, path):
-        self.connection = sqlite3.connect(path)
+        database_path = Path(path)
+        database_path.parent.mkdir(parents=True, exist_ok=True)
+        self.connection = sqlite3.connect(database_path)
         self.connection.execute(
             """
             CREATE TABLE IF NOT EXISTS trades (
