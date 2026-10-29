@@ -11,6 +11,35 @@ from trade_store import SQLiteTradeStore
 
 
 class TestTradeReport(unittest.TestCase):
+    def test_order_id_filter_applies_limit(self):
+        with tempfile.TemporaryDirectory() as directory:
+            database = Path(directory) / "trades.db"
+            first = {
+                "buy_order_id": 7,
+                "sell_order_id": 1,
+                "price": 100.0,
+                "quantity": 2,
+            }
+
+            with SQLiteTradeStore(database) as store:
+                store.record_trade(first)
+                store.record_trade({
+                    "buy_order_id": 2,
+                    "sell_order_id": 7,
+                    "price": 110.0,
+                    "quantity": 3,
+                })
+
+            output = io.StringIO()
+            with redirect_stdout(output):
+                main([
+                    "--database", str(database),
+                    "--order-id", "7",
+                    "--limit", "1",
+                    "--json",
+                ])
+
+            self.assertEqual(json.loads(output.getvalue()), [first])
     def test_parser_rejects_both_order_filters(self):
         parser = build_parser()
 
