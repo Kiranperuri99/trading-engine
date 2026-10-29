@@ -235,3 +235,10 @@ python .\measure_concurrent_pipeline.py --count 10 --seed 7 --capacity 4 --timeo
 ```
 
 Add `--output .\concurrent-report.json` to save the full JSON report as well.
+
+## Saving simulation trades to SQLite
+
+Run the simulator with `--database` to save completed trades in a SQLite file:
+
+```powershell
+python .\run_simulation.py --count 100 --seed 7 --database .\trades.db --json
