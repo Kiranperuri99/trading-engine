@@ -11,6 +11,17 @@ from trade_store import SQLiteTradeStore
 
 
 class TestTradeReport(unittest.TestCase):
+    def test_parser_rejects_both_order_filters(self):
+        parser = build_parser()
+
+        with self.assertRaises(SystemExit) as error:
+            parser.parse_args([
+                "--database", "trades.db",
+                "--order-id", "1",
+                "--order-summary", "1",
+            ])
+
+        self.assertEqual(error.exception.code, 2)
     def test_human_output_shows_summary_for_one_order(self):
         with tempfile.TemporaryDirectory() as directory:
             database = Path(directory) / "trades.db"
