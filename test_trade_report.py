@@ -11,6 +11,26 @@ from trade_store import SQLiteTradeStore
 
 
 class TestTradeReport(unittest.TestCase):
+    def test_parser_rejects_invalid_limits(self):
+        for value in ("0", "-1", "1.5", "bad"):
+            with self.subTest(value=value):
+                with self.assertRaises(SystemExit):
+                    build_parser().parse_args([
+                        "--database", "trades.db",
+                        "--order-id", "7",
+                        "--limit", value,
+                    ])
+
+    def test_limit_requires_order_id(self):
+        with tempfile.TemporaryDirectory() as directory:
+            database = Path(directory) / "trades.db"
+            with SQLiteTradeStore(database):
+                pass
+
+            with self.assertRaises(SystemExit) as error:
+                main(["--database", str(database), "--limit", "1"])
+
+            self.assertEqual(error.exception.code, 2)
     def test_order_id_filter_applies_limit(self):
         with tempfile.TemporaryDirectory() as directory:
             database = Path(directory) / "trades.db"
