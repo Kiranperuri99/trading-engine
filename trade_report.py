@@ -20,7 +20,20 @@ def positive_order_id(value):
 
     return order_id
 
+def positive_limit(value):
+    try:
+        limit = int(value)
+    except ValueError:
+        raise argparse.ArgumentTypeError(
+            "Limit must be a positive whole number"
+        ) from None
 
+    if limit <= 0:
+        raise argparse.ArgumentTypeError(
+            "Limit must be a positive whole number"
+        )
+
+    return limit
 def build_parser():
     parser = argparse.ArgumentParser(
         description="Show a summary of trades saved in SQLite."
@@ -35,6 +48,11 @@ def build_parser():
         "--json",
         action="store_true",
         help="Print the report as JSON",
+    )
+    parser.add_argument(
+    "--limit",
+    type=positive_limit,
+    help="Maximum trades to show; requires --order-id",
     )
 
     order_options = parser.add_mutually_exclusive_group()
@@ -58,6 +76,8 @@ def build_parser():
 def main(argv=None):
     parser = build_parser()
     args = parser.parse_args(argv)
+    if args.limit is not None and args.order_id is None:
+        parser.error("--limit requires --order-id")
 
     if not args.database.is_file():
         parser.error(f"Database file does not exist: {args.database}")
@@ -66,7 +86,7 @@ def main(argv=None):
         if args.order_summary is not None:
             report = store.get_trade_summary_for_order(args.order_summary)
         elif args.order_id is not None:
-            report = store.get_trades_for_order(args.order_id)
+            report = store.get_trades_for_order(args.order_id, limit=args.limit)
         else:
             report = store.get_trade_summary()
 
