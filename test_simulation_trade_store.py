@@ -85,5 +85,23 @@ class TestSimulationTradeStore(unittest.TestCase):
                 self.assertEqual(summary["trade_count"], 0)
                 self.assertEqual(summary["traded_quantity"], 0)
                 self.assertEqual(store.get_trades(), [])
+    def test_simulation_trades_persist_after_reopening_database(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "trades.db"
+
+            with SQLiteTradeStore(path) as store:
+                summary = run_simulation(
+                    count=100,
+                    seed=7,
+                    trade_store=store,
+                )
+
+            with SQLiteTradeStore(path) as reopened:
+                trades = reopened.get_trades()
+                self.assertEqual(len(trades), summary["trade_count"])
+                self.assertEqual(
+                    sum(trade["quantity"] for trade in trades),
+                    summary["traded_quantity"],
+                )
 if __name__ == "__main__":
     unittest.main()
