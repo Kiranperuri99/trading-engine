@@ -17,7 +17,6 @@ class TestLatencyStats(unittest.TestCase):
             "p99_9_ns":100, 
             "max_ns": 100,
         })
-
     def test_empty_samples(self):
         result = summarize_latencies([])
 
