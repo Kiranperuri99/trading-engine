@@ -8,6 +8,33 @@ from trade_store import SQLiteTradeStore
 
 
 class TestSQLiteTradeStore(unittest.TestCase):
+    def test_get_trades_for_order_respects_limit(self):
+        with SQLiteTradeStore(":memory:") as store:
+            first_trade = {
+                "buy_order_id": 7,
+                "sell_order_id": 1,
+                "price": 100.0,
+                "quantity": 2,
+            }
+            store.record_trade(first_trade)
+            store.record_trade({
+                "buy_order_id": 2,
+                "sell_order_id": 7,
+                "price": 110.0,
+                "quantity": 3,
+            })
+
+            self.assertEqual(
+                store.get_trades_for_order(7, limit=1),
+                [first_trade],
+            )
+
+    def test_get_trades_for_order_rejects_invalid_limit(self):
+        with SQLiteTradeStore(":memory:") as store:
+            for limit in (0, -1, 1.5, "1", True):
+                with self.subTest(limit=limit):
+                    with self.assertRaises(ValueError):
+                        store.get_trades_for_order(7, limit=limit)
     def test_order_summary_includes_buyer_and_seller_trades(self):
         with SQLiteTradeStore(":memory:") as store:
             store.record_trade({

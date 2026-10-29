@@ -145,19 +145,26 @@ class SQLiteTradeStore:
             }
             for row in rows
         ]
-    def get_trades_for_order(self, order_id):
+    def get_trades_for_order(self, order_id, limit=None):
         if type(order_id) is not int or order_id <= 0:
             raise ValueError("Order ID must be a positive integer")
 
-        rows = self.connection.execute(
-            """
+        if limit is not None and (type(limit) is not int or limit <= 0):
+            raise ValueError("Limit must be a positive integer")
+
+        query = """
             SELECT buy_order_id, sell_order_id, price, quantity
             FROM trades
             WHERE buy_order_id = ? OR sell_order_id = ?
             ORDER BY id
-            """,
-            (order_id, order_id),
-        ).fetchall()
+        """
+        parameters = (order_id, order_id)
+
+        if limit is not None:
+            query += " LIMIT ?"
+            parameters += (limit,)
+
+        rows = self.connection.execute(query, parameters).fetchall()
 
         return [
             {
