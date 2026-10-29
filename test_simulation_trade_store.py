@@ -52,6 +52,20 @@ class TestSimulationTradeStore(unittest.TestCase):
                     summary["traded_quantity"],
                 )
 
+    def test_zero_order_simulation_saves_no_trades(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "trades.db"
 
+            with SQLiteTradeStore(path) as store:
+                summary = run_simulation(
+                    count=0,
+                    seed=7,
+                    trade_store=store,
+                )
+
+                self.assertEqual(summary["orders_processed"], 0)
+                self.assertEqual(summary["trade_count"], 0)
+                self.assertEqual(summary["traded_quantity"], 0)
+                self.assertEqual(store.get_trades(), [])
 if __name__ == "__main__":
     unittest.main()
