@@ -1,4 +1,5 @@
 ﻿import argparse
+from html import parser
 import json
 from pathlib import Path
 
@@ -18,6 +19,8 @@ def positive_order_id(value):
         )
 
     return order_id
+
+
 def build_parser():
     parser = argparse.ArgumentParser(
         description="Show a summary of trades saved in SQLite."
@@ -31,21 +34,27 @@ def build_parser():
     parser.add_argument(
         "--json",
         action="store_true",
-        help="Print the summary as JSON",
+        help="Print the report as JSON",
     )
-    parser.add_argument(
+
+    order_options = parser.add_mutually_exclusive_group()
+    order_options.add_argument(
         "--order-id",
         type=positive_order_id,
         help="Show trades involving this order ID",
     )
+    order_options.add_argument(
+        "--order-summary",
+        type=positive_order_id,
+        help="Show a summary for this order ID",
+    )
+
     parser.add_argument(
         "--output",
         type=Path,
         help="Save the report as JSON to this file",
     )
     return parser
-
-
 def main(argv=None):
     parser = build_parser()
     args = parser.parse_args(argv)
@@ -54,7 +63,9 @@ def main(argv=None):
         parser.error(f"Database file does not exist: {args.database}")
 
     with SQLiteTradeStore(args.database) as store:
-        if args.order_id is not None:
+        if args.order_summary is not None:
+            report = store.get_trade_summary_for_order(args.order_summary)
+        elif args.order_id is not None:
             report = store.get_trades_for_order(args.order_id)
         else:
             report = store.get_trade_summary()
@@ -67,6 +78,10 @@ def main(argv=None):
 
     if args.json:
         print(report_json)
+    elif args.order_summary is not None:
+        print(f"Trade summary for order ID {args.order_summary}")
+        for name, value in report.items():
+            print(f"{name}: {value}")
     elif args.order_id is None:
         print("Saved trade summary")
         for name, value in report.items():
@@ -75,8 +90,5 @@ def main(argv=None):
         print(f"Trades involving order ID {args.order_id}")
         for trade in report:
             print(trade)
-
-
-
 if __name__ == "__main__":
     main()

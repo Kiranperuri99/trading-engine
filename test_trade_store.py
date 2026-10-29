@@ -1,4 +1,5 @@
 ﻿from math import isfinite
+import sqlite3
 import tempfile
 import unittest
 from pathlib import Path
@@ -7,6 +8,40 @@ from trade_store import SQLiteTradeStore
 
 
 class TestSQLiteTradeStore(unittest.TestCase):
+    def get_trade_summary_for_order(self, order_id):
+        if type(order_id) is not int or order_id <= 0:
+            raise ValueError("Order ID must be a positive integer")
+
+        trade_count, total_quantity, total_notional = self.connection.execute(
+            """
+            SELECT
+                COUNT(*),
+                COALESCE(SUM(quantity), 0),
+                COALESCE(SUM(price * quantity), 0)
+            FROM trades
+            WHERE buy_order_id = ? OR sell_order_id = ?
+            """,
+            (order_id, order_id),
+        ).fetchone()
+
+        vwap = total_notional / total_quantity if total_quantity else None
+        return {
+            "trade_count": trade_count,
+            "total_quantity": total_quantity,
+            "vwap": vwap,
+        }
+    def test_context_manager_closes_database_connection(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "trades.db"
+            store = SQLiteTradeStore(path)
+            connection = store.connection
+
+            with store:
+                pass
+
+            with self.assertRaises(sqlite3.ProgrammingError):
+                connection.execute("SELECT 1")
+
     def test_order_lookup_rejects_invalid_order_id(self):
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / "trades.db"

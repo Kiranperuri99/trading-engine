@@ -1,10 +1,59 @@
-
+﻿
+import sqlite3
 from pathlib import Path
 from math import isfinite
 import sqlite3
 
 
 class SQLiteTradeStore:
+    def get_trade_summary_for_order(self, order_id):
+        if type(order_id) is not int or order_id <= 0:
+            raise ValueError("Order ID must be a positive integer")
+
+        trade_count, total_quantity, total_notional = self.connection.execute(
+            """
+            SELECT COUNT(*), COALESCE(SUM(quantity), 0),
+                   COALESCE(SUM(price * quantity), 0)
+            FROM trades
+            WHERE buy_order_id = ? OR sell_order_id = ?
+            """,
+            (order_id, order_id),
+        ).fetchone()
+
+        vwap = total_notional / total_quantity if total_quantity else None
+
+        return {
+            "trade_count": trade_count,
+            "total_quantity": total_quantity,
+            "vwap": vwap,
+        }
+    def get_trade_summary_for_order(self, order_id):
+        if type(order_id) is not int or order_id <= 0:
+            raise ValueError("Order ID must be a positive integer")
+
+        trade_count, total_quantity, total_notional = self.connection.execute(
+            """
+            SELECT
+                COUNT(*),
+                COALESCE(SUM(quantity), 0),
+                COALESCE(SUM(price * quantity), 0)
+            FROM trades
+            WHERE buy_order_id = ? OR sell_order_id = ?
+            """,
+            (order_id, order_id),
+        ).fetchone()
+
+        vwap = (
+            total_notional / total_quantity
+            if total_quantity
+            else None
+        )
+
+        return {
+            "trade_count": trade_count,
+            "total_quantity": total_quantity,
+            "vwap": vwap,
+        }
     def __init__(self, path):
         database_path = Path(path)
         database_path.parent.mkdir(parents=True, exist_ok=True)
@@ -20,8 +69,14 @@ class SQLiteTradeStore:
             )
             """
         )
-        self.connection.commit()
-
+        self.connection.execute(
+            "CREATE INDEX IF NOT EXISTS idx_trades_buy_order_id "
+            "ON trades (buy_order_id)"
+        )
+        self.connection.execute(
+            "CREATE INDEX IF NOT EXISTS idx_trades_sell_order_id "
+            "ON trades (sell_order_id)"
+        )
     def record_trade(self, trade):
         required = ("buy_order_id", "sell_order_id", "price", "quantity")
         if not isinstance(trade, dict) or any(key not in trade for key in required):
@@ -98,18 +153,19 @@ class SQLiteTradeStore:
             for row in rows
         ]
     def get_trade_summary(self):
-        row = self.connection.execute(
+        trade_count, total_quantity, total_notional = self.connection.execute(
             """
-            SELECT COUNT(*), COALESCE(SUM(quantity), 0),
-                   SUM(price * quantity)
+            SELECT
+                COUNT(*),
+                COALESCE(SUM(quantity), 0),
+                COALESCE(SUM(price * quantity), 0)
             FROM trades
             """
         ).fetchone()
 
-        trade_count, total_quantity, total_value = row
         vwap = (
-            total_value / total_quantity
-            if total_quantity > 0
+            total_notional / total_quantity
+            if total_quantity
             else None
         )
 
@@ -118,6 +174,51 @@ class SQLiteTradeStore:
             "total_quantity": total_quantity,
             "vwap": vwap,
         }
+    def get_trade_summary_for_order(self, order_id):
+        if type(order_id) is not int or order_id <= 0:
+            raise ValueError("Order ID must be a positive integer")
+
+        trade_count, total_quantity, total_notional = self.connection.execute(
+            """
+            SELECT
+                COUNT(*),
+                COALESCE(SUM(quantity), 0),
+                COALESCE(SUM(price * quantity), 0)
+            FROM trades
+            WHERE buy_order_id = ? OR sell_order_id = ?
+            """,
+            (order_id, order_id),
+        ).fetchone()
+
+        vwap = total_notional / total_quantity if total_quantity else None
+        return {
+            "trade_count": trade_count,
+            "total_quantity": total_quantity,
+            "vwap": vwap,
+        }    
+    def get_trade_summary_for_order(self, order_id):
+        if type(order_id) is not int or order_id <= 0:
+            raise ValueError("Order ID must be a positive integer")
+
+        trade_count, total_quantity, total_value = self.connection.execute(
+            """
+            SELECT COUNT(*),
+                   COALESCE(SUM(quantity), 0),
+                   COALESCE(SUM(price * quantity), 0)
+            FROM trades
+            WHERE buy_order_id = ? OR sell_order_id = ?
+            """,
+            (order_id, order_id),
+        ).fetchone()
+
+        vwap = total_value / total_quantity if total_quantity else None
+
+        return {
+            "trade_count": trade_count,
+            "total_quantity": total_quantity,
+            "vwap": vwap,
+        }
+
     def close(self):
         self.connection.close()
 

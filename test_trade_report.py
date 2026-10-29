@@ -11,6 +11,36 @@ from trade_store import SQLiteTradeStore
 
 
 class TestTradeReport(unittest.TestCase):
+    def test_json_can_show_summary_for_one_order(self):
+        with tempfile.TemporaryDirectory() as directory:
+            database = Path(directory) / "trades.db"
+
+            with SQLiteTradeStore(database) as store:
+                store.record_trade({
+                    "buy_order_id": 7,
+                    "sell_order_id": 8,
+                    "price": 100.0,
+                    "quantity": 3,
+                })
+                store.record_trade({
+                    "buy_order_id": 9,
+                    "sell_order_id": 7,
+                    "price": 110.0,
+                    "quantity": 2,
+                })
+
+            output = io.StringIO()
+            with redirect_stdout(output):
+                main([
+                    "--database", str(database),
+                    "--order-summary", "7",
+                    "--json",
+                ])
+
+            self.assertEqual(
+                json.loads(output.getvalue()),
+                {"trade_count": 2, "total_quantity": 5, "vwap": 104.0},
+            )
     def test_output_option_saves_trade_summary(self):
         trade = {
             "buy_order_id": 1,
