@@ -242,3 +242,9 @@ Run the simulator with `--database` to save completed trades in a SQLite file:
 
 ```powershell
 python .\run_simulation.py --count 100 --seed 7 --database .\trades.db --json
+## Viewing saved trades
+
+Show the saved trade summary:
+
+```powershell
+python .\trade_report.py --database .\trades.db --json
