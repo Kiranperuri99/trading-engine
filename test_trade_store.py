@@ -8,6 +8,22 @@ from trade_store import SQLiteTradeStore
 
 
 class TestSQLiteTradeStore(unittest.TestCase):
+    def test_order_summary_rejects_invalid_order_ids(self):
+        with SQLiteTradeStore(":memory:") as store:
+            for order_id in (0, -1, 1.5, "1", True, None):
+                with self.subTest(order_id=order_id):
+                    with self.assertRaises(ValueError):
+                        store.get_trade_summary_for_order(order_id)
+    def test_order_summary_is_empty_when_order_has_no_trades(self):
+        with SQLiteTradeStore(":memory:") as store:
+            self.assertEqual(
+                store.get_trade_summary_for_order(999),
+                {
+                    "trade_count": 0,
+                    "total_quantity": 0,
+                    "vwap": None,
+                },
+            )
     def get_trade_summary_for_order(self, order_id):
         if type(order_id) is not int or order_id <= 0:
             raise ValueError("Order ID must be a positive integer")
