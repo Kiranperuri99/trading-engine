@@ -9,3 +9,7 @@ venv/
 # Local secrets
 .env
 concurrent_report.json
+
+# Cython build outputs
+/build/
+/cython_matcher.c
