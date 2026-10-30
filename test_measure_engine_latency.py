@@ -48,6 +48,31 @@ class TestMeasureEngineLatency(unittest.TestCase):
             )
 
         self.assertEqual(result["samples_ns"], [13])
+
+    def test_sample_callback_receives_completed_order_measurements(self):
+        orders = [
+            Order(1, "BUY", 100.0, 1),
+            Order(2, "SELL", 101.0, 1),
+        ]
+        updates = []
+
+        with patch(
+            "measure_engine_latency.generate_orders",
+            return_value=orders,
+        ), patch(
+            "measure_engine_latency.perf_counter_ns",
+            side_effect=[100, 115, 200, 230],
+        ):
+            result = measure_engine_latency(
+                count=2,
+                on_sample=lambda *update: updates.append(update),
+            )
+
+        self.assertEqual(
+            updates,
+            [(15, 1, 2, "BUY"), (30, 2, 2, "SELL")],
+        )
+        self.assertEqual(result["latency"]["count"], 2)
     def test_json_report_has_utc_timestamp(self):
         with patch(
             "measure_engine_latency.generate_orders",

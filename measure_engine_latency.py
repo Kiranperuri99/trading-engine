@@ -13,7 +13,13 @@ from latency_stats import summarize_latencies
 from market_simulator import generate_orders
 from trading_engine import ChronosMatch
 
-def measure_engine_latency(count=1000, seed=42, warmup=0, include_samples=False):
+def measure_engine_latency(
+    count=1000,
+    seed=42,
+    warmup=0,
+    include_samples=False,
+    on_sample=None,
+):
     engine = ChronosMatch(verbose=False)
     samples = []
     side_samples = {"BUY": [], "SELL": []}
@@ -23,7 +29,7 @@ def measure_engine_latency(count=1000, seed=42, warmup=0, include_samples=False)
         for warmup_order in generate_orders(warmup, seed + 1):
             warmup_engine.add_order(warmup_order)
 
-    for order in generate_orders(count, seed):
+    for completed, order in enumerate(generate_orders(count, seed), start=1):
         start = perf_counter_ns()
         engine.add_order(order)
         elapsed = perf_counter_ns() - start
@@ -31,6 +37,8 @@ def measure_engine_latency(count=1000, seed=42, warmup=0, include_samples=False)
         samples.append(elapsed)
         side = order.side.strip().upper()
         side_samples[side].append(elapsed)
+        if on_sample is not None:
+            on_sample(elapsed, completed, count, side)
 
     result = {
         "schema_version": 1,

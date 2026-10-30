@@ -140,6 +140,21 @@ Run this command from the project folder:
 
 ```powershell
 python measure_engine_latency.py --count 1000 --warmup 100 --seed 42 --json --output latency-report.json
+```
+
+## Live engine-call latency dashboard
+
+Display recent per-order engine-call latency as a live terminal graph:
+
+```powershell
+python latency_dashboard.py --count 1000 --warmup 100 --seed 42 --window 30 --refresh-every 10
+```
+
+The graph shows the most recent samples and rolling minimum, median, p95, and
+p99. Timing covers each `ChronosMatch.add_order()` call only; order generation
+and queue waiting are excluded. The display refresh runs after each measured
+call, outside that call's timed interval.
+
 ## Market data and execution summaries
 
 `get_order_book()` returns open buy and sell orders grouped by price. Pass a
@@ -151,6 +166,8 @@ mid_price = engine.get_mid_price()
 spread = engine.get_spread()
 traded_units = engine.get_total_traded_quantity()
 filled_units = engine.get_filled_quantity(order_id=1)
+```
+
 ## Cancelling all open orders
 
 Use `cancel_all_orders()` to cancel every currently open buy and sell order:
