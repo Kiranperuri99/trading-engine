@@ -114,6 +114,40 @@ class TestCythonMatchCore(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "already been used"):
             engine.add_order(Order(3, "SELL", 100.0, 1))
 
+    def test_cancel_order_matches_python_engine_for_both_sides(self):
+        python_engine = ChronosMatch(verbose=False)
+        cython_engine = CythonMatchCore(verbose=False)
+        for order in (
+            Order(1, "BUY", 100.0, 2),
+            Order(2, "BUY", 99.0, 3),
+            Order(3, "SELL", 101.0, 4),
+            Order(4, "SELL", 102.0, 5),
+        ):
+            self.submit_to_both(python_engine, cython_engine, order)
+
+        for order_id in (2, 3):
+            with self.subTest(order_id=order_id):
+                self.assertEqual(
+                    cython_engine.cancel_order(order_id),
+                    python_engine.cancel_order(order_id),
+                )
+                self.assert_engines_match(python_engine, cython_engine)
+
+        self.assertEqual(
+            [order.order_id for order in cython_engine.buy_orders],
+            [1],
+        )
+        self.assertEqual(
+            [order.order_id for order in cython_engine.sell_orders],
+            [4],
+        )
+        self.assertFalse(cython_engine.cancel_order(2))
+        with self.assertRaisesRegex(ValueError, "positive whole number"):
+            cython_engine.cancel_order(0)
+
+        with self.assertRaisesRegex(ValueError, "already been used"):
+            cython_engine.add_order(Order(2, "BUY", 98.0, 1))
+
 
 if __name__ == "__main__":
     unittest.main()

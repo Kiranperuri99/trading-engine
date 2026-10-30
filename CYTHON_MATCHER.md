@@ -8,8 +8,11 @@ The Cython core stores order IDs, prices, and remaining quantities in C structs.
 Its best-price search and fill loop run without the Python GIL. Input validation,
 updates to the caller's `Order` objects, and Python trade-dictionary creation
 still run with the GIL held. Order IDs and quantities are limited to unsigned
-64-bit values, matching the binary order format. The core is not yet a drop-in
-replacement for all `ChronosMatch` reporting, cancellation, or SQLite methods.
+64-bit values, matching the binary order format. The core supports
+`cancel_order(order_id)` for removing an unfilled order from either side of the
+book. Order IDs remain reserved after cancellation, matching the Python engine.
+It is not yet a drop-in replacement for all `ChronosMatch` reporting or SQLite
+methods.
 
 Build and test on Windows PowerShell:
 
@@ -19,8 +22,9 @@ python .\setup_cython.py build_ext --inplace
 python -m unittest test_cython_matcher -v
 ```
 
-Run the existing Python engine unchanged for reporting, cancellation, and
-SQLite features until matching parity is extended to those APIs.
+Use the Python engine for reporting and SQLite features until the Cython core
+adds parity for those APIs. The Cython core supports `cancel_order()` for open
+orders.
 
 ## Compare Python and Cython matching speed
 

@@ -126,6 +126,7 @@ cdef class CythonMatchCore:
     cdef Py_ssize_t _trade_count
     cdef Py_ssize_t _trade_capacity
     cdef object _seen_order_ids
+    cdef object _cancelled_order_ids
     cdef object _open_order_objects
     cdef object _price_by_order_id
     cdef object verbose
@@ -141,6 +142,7 @@ cdef class CythonMatchCore:
         self._trade_count = 0
         self._trade_capacity = 0
         self._seen_order_ids = set()
+        self._cancelled_order_ids = set()
         self._open_order_objects = {}
         self._price_by_order_id = {}
         self.verbose = verbose
@@ -325,6 +327,38 @@ cdef class CythonMatchCore:
                     f"MATCHED: {trade.quantity} units at "
                     f"price {self._price_by_order_id[trade.resting_order_id]}"
                 )
+
+    def cancel_order(self, order_id):
+        """Cancel an open order, preserving the Python engine's behavior."""
+        cdef uint64_t target_id
+        cdef Py_ssize_t i
+        cdef Py_ssize_t j
+
+        if type(order_id) is not int or order_id <= 0:
+            raise ValueError("Order ID must be a positive whole number")
+        if order_id > MAX_U64:
+            return False
+
+        target_id = <uint64_t>order_id
+        for i in range(self._buy_count):
+            if self._buys[i].order_id == target_id:
+                for j in range(i, self._buy_count - 1):
+                    self._buys[j] = self._buys[j + 1]
+                self._buy_count -= 1
+                self._cancelled_order_ids.add(order_id)
+                del self._open_order_objects[order_id]
+                return True
+
+        for i in range(self._sell_count):
+            if self._sells[i].order_id == target_id:
+                for j in range(i, self._sell_count - 1):
+                    self._sells[j] = self._sells[j + 1]
+                self._sell_count -= 1
+                self._cancelled_order_ids.add(order_id)
+                del self._open_order_objects[order_id]
+                return True
+
+        return False
 
     @property
     def buy_orders(self):
