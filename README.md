@@ -150,12 +150,13 @@ Display recent per-order engine-call latency as a live terminal graph:
 python latency_dashboard.py --count 1000 --warmup 100 --seed 42 --window 30 --refresh-every 10
 ```
 
-The graph shows the most recent samples and rolling minimum, median, p95, and
-p99. Timing covers each `ChronosMatch.add_order()` call only; order generation
-and queue waiting are excluded. The display refresh runs after each measured
-call, outside that call's timed interval. Add `--output latency-live.json` to
-save the final summary and measured samples; the command creates a new file
-and preserves any existing report.
+The graph shows the most recent samples, rolling minimum, median, p95, and p99,
+plus rolling median and p99 separately for BUY and SELL orders. Timing covers
+each `ChronosMatch.add_order()` call only; order generation and queue waiting
+are excluded. The display refresh runs after each measured call, outside that
+call's timed interval. Add `--output latency-live.json` to save the final
+summary and measured samples; the command creates a new file and preserves any
+existing report.
 
 ## Market data and execution summaries
 

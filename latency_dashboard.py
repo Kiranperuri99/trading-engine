@@ -20,7 +20,7 @@ def positive_integer(value):
     return number
 
 
-def render_frame(samples, completed, total, side, width=80):
+def render_frame(samples, completed, total, side, width=80, samples_by_side=None):
     values = list(samples)
     stats = summarize_latencies(values)
     max_value = max(values, default=0)
@@ -39,6 +39,16 @@ def render_frame(samples, completed, total, side, width=80):
         ),
         "Recent samples (newest at bottom):",
     ]
+
+    if samples_by_side is not None:
+        side_summaries = []
+        for side_name in ("BUY", "SELL"):
+            side_stats = summarize_latencies(samples_by_side.get(side_name, ()))
+            side_summaries.append(
+                f"{side_name} median {show(side_stats['median_ns'])} ns, "
+                f"p99 {show(side_stats['p99_ns'])} ns"
+            )
+        lines.insert(4, " | ".join(side_summaries))
 
     for value in values:
         bar_size = (
@@ -70,15 +80,28 @@ def run_live_dashboard(
 
     output = sys.stdout if output is None else output
     history = deque(maxlen=window)
+    history_by_side = {
+        "BUY": deque(maxlen=window),
+        "SELL": deque(maxlen=window),
+    }
 
     def draw(completed, total, side):
         output.write("\033[2J\033[H")
-        output.write(render_frame(history, completed, total, side))
+        output.write(
+            render_frame(
+                history,
+                completed,
+                total,
+                side,
+                samples_by_side=history_by_side,
+            )
+        )
         output.write("\n")
         output.flush()
 
     def on_sample(elapsed_ns, completed, total, side):
         history.append(elapsed_ns)
+        history_by_side[side].append(elapsed_ns)
         if completed % refresh_every == 0 or completed == total:
             draw(completed, total, side)
 

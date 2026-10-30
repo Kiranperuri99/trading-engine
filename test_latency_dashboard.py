@@ -27,6 +27,18 @@ class TestLatencyDashboard(unittest.TestCase):
         self.assertEqual(sample_lines[0], "         5 ns | #####")
         self.assertEqual(sample_lines[1], "        10 ns | ##########")
 
+    def test_render_frame_reports_buy_and_sell_window_statistics(self):
+        frame = render_frame(
+            [10, 20, 30],
+            completed=3,
+            total=3,
+            side="BUY",
+            samples_by_side={"BUY": [10, 30], "SELL": [20]},
+        )
+
+        self.assertIn("BUY median 20.0 ns, p99 30 ns", frame)
+        self.assertIn("SELL median 20 ns, p99 20 ns", frame)
+
     def test_live_run_refreshes_and_keeps_only_configured_window(self):
         output = io.StringIO()
 
@@ -54,6 +66,8 @@ class TestLatencyDashboard(unittest.TestCase):
         self.assertIn("Progress: 3/3", output.getvalue())
         self.assertIn("Window: 2", output.getvalue())
         self.assertIn("30 ns", output.getvalue())
+        self.assertIn("BUY median 20.0 ns, p99 30 ns", output.getvalue())
+        self.assertIn("SELL median 20 ns, p99 20 ns", output.getvalue())
 
     def test_parser_accepts_dashboard_options(self):
         args = build_parser().parse_args([
