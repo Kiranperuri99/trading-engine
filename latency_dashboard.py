@@ -6,6 +6,7 @@ from collections import deque
 
 from latency_stats import summarize_latencies
 from measure_engine_latency import measure_engine_latency
+from result_export import save_result
 from run_simulation import non_negative_count
 
 
@@ -60,6 +61,7 @@ def run_live_dashboard(
     window=30,
     refresh_every=10,
     output=None,
+    report_path=None,
 ):
     if type(window) is not int or window <= 0:
         raise ValueError("Window size must be a positive integer")
@@ -80,14 +82,20 @@ def run_live_dashboard(
         if completed % refresh_every == 0 or completed == total:
             draw(completed, total, side)
 
-    result = measure_engine_latency(
-        count=count,
-        seed=seed,
-        warmup=warmup,
-        on_sample=on_sample,
-    )
+    measurement_options = {
+        "count": count,
+        "seed": seed,
+        "warmup": warmup,
+        "on_sample": on_sample,
+    }
+    if report_path is not None:
+        measurement_options["include_samples"] = True
+
+    result = measure_engine_latency(**measurement_options)
     if count == 0:
         draw(0, 0, None)
+    if report_path is not None:
+        save_result(report_path, result)
     return result
 
 
@@ -110,6 +118,10 @@ def build_parser():
         default=10,
         help="Redraw after this many new orders (default: 10)",
     )
+    parser.add_argument(
+        "--output",
+        help="Save the final JSON report, including measured samples, to a new file",
+    )
     return parser
 
 
@@ -121,6 +133,7 @@ def main(argv=None):
         warmup=args.warmup,
         window=args.window,
         refresh_every=args.refresh_every,
+        report_path=args.output,
     )
 
 

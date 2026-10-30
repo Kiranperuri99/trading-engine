@@ -153,7 +153,9 @@ python latency_dashboard.py --count 1000 --warmup 100 --seed 42 --window 30 --re
 The graph shows the most recent samples and rolling minimum, median, p95, and
 p99. Timing covers each `ChronosMatch.add_order()` call only; order generation
 and queue waiting are excluded. The display refresh runs after each measured
-call, outside that call's timed interval.
+call, outside that call's timed interval. Add `--output latency-live.json` to
+save the final summary and measured samples; the command creates a new file
+and preserves any existing report.
 
 ## Market data and execution summaries
 

@@ -1,5 +1,8 @@
 import io
+import json
+import tempfile
 import unittest
+from pathlib import Path
 from unittest.mock import patch
 
 from latency_dashboard import (
@@ -58,12 +61,59 @@ class TestLatencyDashboard(unittest.TestCase):
             "--warmup", "5",
             "--window", "8",
             "--refresh-every", "2",
+            "--output", "latency-live.json",
         ])
 
         self.assertEqual(args.count, 20)
         self.assertEqual(args.warmup, 5)
         self.assertEqual(args.window, 8)
         self.assertEqual(args.refresh_every, 2)
+        self.assertEqual(args.output, "latency-live.json")
+
+    def test_output_option_saves_final_json_with_raw_samples(self):
+        with tempfile.TemporaryDirectory() as directory:
+            report_path = Path(directory) / "latency-live.json"
+
+            def fake_measure(count, seed, warmup, on_sample, include_samples):
+                on_sample(12, 1, 1, "BUY")
+                return {
+                    "scope": "ChronosMatch.add_order call",
+                    "latency": {"count": 1, "median_ns": 12},
+                    "samples_ns": [12] if include_samples else None,
+                }
+
+            with patch(
+                "latency_dashboard.measure_engine_latency",
+                side_effect=fake_measure,
+            ):
+                result = run_live_dashboard(
+                    count=1,
+                    refresh_every=1,
+                    output=io.StringIO(),
+                    report_path=report_path,
+                )
+
+            saved = json.loads(report_path.read_text(encoding="utf-8"))
+            self.assertEqual(saved, result)
+            self.assertEqual(saved["samples_ns"], [12])
+
+    def test_output_option_does_not_overwrite_existing_file(self):
+        with tempfile.TemporaryDirectory() as directory:
+            report_path = Path(directory) / "latency-live.json"
+            report_path.write_text("keep", encoding="utf-8")
+
+            with patch(
+                "latency_dashboard.measure_engine_latency",
+                return_value={"latency": {"count": 0}},
+            ):
+                with self.assertRaises(FileExistsError):
+                    run_live_dashboard(
+                        count=0,
+                        output=io.StringIO(),
+                        report_path=report_path,
+                    )
+
+            self.assertEqual(report_path.read_text(encoding="utf-8"), "keep")
 
 
 if __name__ == "__main__":
