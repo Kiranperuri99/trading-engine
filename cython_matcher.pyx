@@ -360,6 +360,20 @@ cdef class CythonMatchCore:
 
         return False
 
+    def get_order_status(self, order_id):
+        """Return OPEN, FILLED, CANCELLED, or UNKNOWN for an order ID."""
+        if type(order_id) is not int or order_id <= 0:
+            raise ValueError("Order ID must be a positive integer")
+        if order_id > MAX_U64:
+            return "UNKNOWN"
+        if order_id in self._open_order_objects:
+            return "OPEN"
+        if order_id in self._cancelled_order_ids:
+            return "CANCELLED"
+        if order_id in self._seen_order_ids:
+            return "FILLED"
+        return "UNKNOWN"
+
     @property
     def buy_orders(self):
         return [

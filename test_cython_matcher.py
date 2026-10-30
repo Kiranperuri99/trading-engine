@@ -148,6 +148,49 @@ class TestCythonMatchCore(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "already been used"):
             cython_engine.add_order(Order(2, "BUY", 98.0, 1))
 
+    def test_order_status_matches_python_engine_lifecycle(self):
+        python_engine = ChronosMatch(verbose=False)
+        cython_engine = CythonMatchCore(verbose=False)
+
+        for order_id in (99, 2**64):
+            self.assertEqual(
+                cython_engine.get_order_status(order_id),
+                python_engine.get_order_status(order_id),
+            )
+
+        self.submit_to_both(
+            python_engine,
+            cython_engine,
+            Order(1, "BUY", 100.0, 3),
+        )
+        self.assertEqual(cython_engine.get_order_status(1), "OPEN")
+
+        self.submit_to_both(
+            python_engine,
+            cython_engine,
+            Order(2, "SELL", 100.0, 3),
+        )
+        for order_id in (1, 2):
+            self.assertEqual(
+                cython_engine.get_order_status(order_id),
+                python_engine.get_order_status(order_id),
+            )
+            self.assertEqual(cython_engine.get_order_status(order_id), "FILLED")
+
+        self.submit_to_both(
+            python_engine,
+            cython_engine,
+            Order(3, "BUY", 99.0, 2),
+        )
+        self.assertTrue(python_engine.cancel_order(3))
+        self.assertTrue(cython_engine.cancel_order(3))
+        self.assertEqual(cython_engine.get_order_status(3), "CANCELLED")
+
+        for invalid_id in (0, -1, True, 1.5, "1", None):
+            with self.subTest(order_id=invalid_id):
+                with self.assertRaises(ValueError):
+                    cython_engine.get_order_status(invalid_id)
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -10,9 +10,10 @@ updates to the caller's `Order` objects, and Python trade-dictionary creation
 still run with the GIL held. Order IDs and quantities are limited to unsigned
 64-bit values, matching the binary order format. The core supports
 `cancel_order(order_id)` for removing an unfilled order from either side of the
-book. Order IDs remain reserved after cancellation, matching the Python engine.
-It is not yet a drop-in replacement for all `ChronosMatch` reporting or SQLite
-methods.
+book, and `get_order_status(order_id)` for checking whether an order is open,
+filled, cancelled, or unknown. Order IDs remain reserved after cancellation,
+matching the Python engine. It is not yet a drop-in replacement for all
+`ChronosMatch` reporting or SQLite methods.
 
 Build and test on Windows PowerShell:
 
