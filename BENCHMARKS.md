@@ -56,7 +56,7 @@ until they have been measured using an appropriate workload.
 - Per-order latency with explicitly defined start and end points.
 - Median, p95, and p99 latency.
 - Larger workloads and multiple queue capacities.
-- Python versus Cython matching performance.
+- See [CYTHON_MATCHER.md](CYTHON_MATCHER.md) for a repeatable Python-versus-Cython matcher comparison.
 ## Per-order engine latency
 
 Run this command to measure how long each `ChronosMatch.add_order()` call takes:

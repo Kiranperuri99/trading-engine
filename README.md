@@ -30,14 +30,15 @@ The sample matches 5 units and leaves a buy order with 5 units remaining.
 - Reports best bid, best ask, spread, and pending quantities.
 - Calculates total traded quantity.
 - Supports quiet mode with `ChronosMatch(verbose=False)`.
+- Includes an experimental standalone Cython matching core; see [CYTHON_MATCHER.md](CYTHON_MATCHER.md).
 
 ## Development Status
 
-This is a Python prototype using in-memory lists.
+The primary engine is a Python prototype using in-memory lists.
 Trades execute at the price of the order already waiting in the book.
 
-Shared-memory IPC, the Cython engine, market simulator, latency
-benchmarks, and terminal dashboard are planned.
+The Cython matcher is experimental and is not wired into the main simulation.
+Simulation and benchmark tools are available; a terminal dashboard is planned.
 Performance targets have not yet been verified.
 ## Simulation
 
