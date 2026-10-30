@@ -191,6 +191,41 @@ class TestCythonMatchCore(unittest.TestCase):
                 with self.assertRaises(ValueError):
                     cython_engine.get_order_status(invalid_id)
 
+    def test_top_of_book_reports_best_prices_sizes_and_spread(self):
+        engine = CythonMatchCore(verbose=False)
+        empty_book = {
+            "best_bid": None,
+            "bid_quantity": 0,
+            "best_ask": None,
+            "ask_quantity": 0,
+            "spread": None,
+        }
+        self.assertEqual(engine.get_top_of_book(), empty_book)
+
+        for order in (
+            Order(1, "BUY", 100.0, 3),
+            Order(2, "BUY", 99.0, 7),
+            Order(3, "BUY", 100.0, 2),
+            Order(4, "SELL", 103.0, 4),
+            Order(5, "SELL", 104.0, 6),
+            Order(6, "SELL", 103.0, 1),
+        ):
+            engine.add_order(order)
+
+        self.assertEqual(
+            engine.get_top_of_book(),
+            {
+                "best_bid": 100.0,
+                "bid_quantity": 5,
+                "best_ask": 103.0,
+                "ask_quantity": 5,
+                "spread": 3.0,
+            },
+        )
+
+        engine.cancel_order(3)
+        self.assertEqual(engine.get_top_of_book()["bid_quantity"], 3)
+
 
 if __name__ == "__main__":
     unittest.main()

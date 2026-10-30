@@ -15,6 +15,10 @@ filled, cancelled, or unknown. Order IDs remain reserved after cancellation,
 matching the Python engine. It is not yet a drop-in replacement for all
 `ChronosMatch` reporting or SQLite methods.
 
+`get_top_of_book()` returns the best bid and ask, the total remaining quantity
+at each best price, and the spread. A missing side has a `None` price and a
+zero displayed quantity; the spread is `None` until both sides are present.
+
 Build and test on Windows PowerShell:
 
 ```powershell

@@ -374,6 +374,42 @@ cdef class CythonMatchCore:
             return "FILLED"
         return "UNKNOWN"
 
+    def get_top_of_book(self):
+        """Return the best bid/ask prices, displayed sizes, and spread."""
+        cdef Py_ssize_t best_index
+        cdef Py_ssize_t i
+        cdef object best_bid = None
+        cdef object best_ask = None
+        cdef object bid_quantity = 0
+        cdef object ask_quantity = 0
+
+        if self._buy_count:
+            best_index = _best_buy(self._buys, self._buy_count)
+            best_bid = self._buys[best_index].price
+            for i in range(self._buy_count):
+                if self._buys[i].price == self._buys[best_index].price:
+                    bid_quantity += self._buys[i].quantity
+
+        if self._sell_count:
+            best_index = _best_sell(self._sells, self._sell_count)
+            best_ask = self._sells[best_index].price
+            for i in range(self._sell_count):
+                if self._sells[i].price == self._sells[best_index].price:
+                    ask_quantity += self._sells[i].quantity
+
+        spread = (
+            best_ask - best_bid
+            if best_bid is not None and best_ask is not None
+            else None
+        )
+        return {
+            "best_bid": best_bid,
+            "bid_quantity": bid_quantity,
+            "best_ask": best_ask,
+            "ask_quantity": ask_quantity,
+            "spread": spread,
+        }
+
     @property
     def buy_orders(self):
         return [
