@@ -9,7 +9,7 @@ from run_simulation import non_negative_count
 from time import perf_counter_ns
 
 from engine_summary import summarize_engine
-from latency_stats import summarize_latencies
+from latency_stats import histogram_latencies, summarize_latencies
 from market_simulator import generate_orders
 from trading_engine import ChronosMatch
 
@@ -70,6 +70,11 @@ def measure_engine_latency(
         "latency": summarize_latencies(samples),
         "latency_by_side": {
             side: summarize_latencies(side_samples[side])
+            for side in ("BUY", "SELL")
+        },
+        "latency_histogram": histogram_latencies(samples),
+        "latency_histogram_by_side": {
+            side: histogram_latencies(side_samples[side])
             for side in ("BUY", "SELL")
         },
         "throughput": summarize_throughput(samples),
@@ -151,6 +156,11 @@ def main(argv=None):
             print(f"{side} order latency:")
             for name, value in stats.items():
                 print(f"  {name}: {value}")
+
+        if "latency_histogram" in result:
+            print("Latency histogram (sample count by nanosecond range):")
+            for bucket, count in result["latency_histogram"].items():
+                print(f"  {bucket}: {count}")
 
         if "throughput" in result:
             print("Engine-call throughput (sum of timed add_order calls):")

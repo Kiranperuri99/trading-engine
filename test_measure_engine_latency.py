@@ -223,6 +223,10 @@ class TestMeasureEngineLatency(unittest.TestCase):
         self.assertEqual(result["summary"]["orders_processed"], 2)
         self.assertEqual(result["throughput"]["measured_call_time_ns"], 40)
         self.assertEqual(result["throughput"]["orders_per_second"], 50_000_000)
+        self.assertEqual(result["latency_histogram"]["<=1000"], 2)
+        self.assertEqual(
+            result["latency_histogram_by_side"]["BUY"]["<=1000"], 1
+        )
         self.assertEqual(
             sum(
                 stats["measured_call_time_ns"]
@@ -294,6 +298,7 @@ class TestMeasureEngineLatency(unittest.TestCase):
         self.assertEqual(result["summary"]["orders_processed"], 0)
         self.assertEqual(result["throughput"]["measured_call_time_ns"], 0)
         self.assertIsNone(result["throughput"]["orders_per_second"])
+        self.assertEqual(result["latency_histogram"]["<=1000"], 0)
 
     def test_human_output_includes_engine_call_throughput(self):
         output = io.StringIO()

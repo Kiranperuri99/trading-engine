@@ -144,7 +144,9 @@ python measure_engine_latency.py --count 1000 --warmup 100 --seed 42 --json --ou
 
 The report includes engine-call throughput overall and by order side. It is
 calculated from the sum of measured `add_order()` call times, excluding order
-generation and callbacks. For a zero-order run, throughput is `null`.
+generation and callbacks. For a zero-order run, throughput is `null`. It also
+includes latency histogram counts overall and by side in fixed nanosecond
+ranges.
 
 ## Live engine-call latency dashboard
 

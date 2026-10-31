@@ -1,9 +1,46 @@
 import unittest
 
-from latency_stats import summarize_latencies
+from latency_stats import histogram_latencies, summarize_latencies
 
 
 class TestLatencyStats(unittest.TestCase):
+
+    def test_histogram_counts_samples_in_inclusive_latency_buckets(self):
+        samples = [
+            0, 1000, 1001, 5000, 5001, 10000,
+            10001, 50000, 50001, 100000, 100001,
+        ]
+
+        self.assertEqual(
+            histogram_latencies(samples),
+            {
+                "<=1000": 2,
+                "1001-5000": 2,
+                "5001-10000": 2,
+                "10001-50000": 2,
+                "50001-100000": 2,
+                ">100000": 1,
+            },
+        )
+
+    def test_empty_histogram_contains_zero_counts_for_all_buckets(self):
+        self.assertEqual(
+            histogram_latencies([]),
+            {
+                "<=1000": 0,
+                "1001-5000": 0,
+                "5001-10000": 0,
+                "10001-50000": 0,
+                "50001-100000": 0,
+                ">100000": 0,
+            },
+        )
+
+    def test_histogram_rejects_invalid_samples(self):
+        for sample in (-1, True, 1.5, "10", None):
+            with self.subTest(sample=sample):
+                with self.assertRaises(ValueError):
+                    histogram_latencies([sample])
 
     def test_known_percentiles(self):
         result = summarize_latencies(range(1, 101))
