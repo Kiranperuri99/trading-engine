@@ -20,6 +20,19 @@ def positive_integer(value):
     return number
 
 
+def _budget_result(measured_ns, limit_ns):
+    return {
+        "limit_ns": limit_ns,
+        "measured_ns": measured_ns,
+        "within_budget": (
+            None if measured_ns is None else measured_ns <= limit_ns
+        ),
+        "utilization_percent": (
+            None if measured_ns is None else round(measured_ns / limit_ns * 100, 1)
+        ),
+    }
+
+
 def render_frame(
     samples,
     completed,
@@ -54,9 +67,15 @@ def render_frame(
         if p99_ns is None:
             budget_status = "waiting for samples"
         elif p99_ns <= p99_budget_ns:
-            budget_status = f"within budget (p99 {p99_ns} ns)"
+            utilization = round(p99_ns / p99_budget_ns * 100, 1)
+            budget_status = (
+                f"within budget (p99 {p99_ns} ns) | {utilization:.1f}% used"
+            )
         else:
-            budget_status = f"OVER BUDGET (p99 {p99_ns} ns)"
+            utilization = round(p99_ns / p99_budget_ns * 100, 1)
+            budget_status = (
+                f"OVER BUDGET (p99 {p99_ns} ns) | {utilization:.1f}% used"
+            )
         lines.insert(
             4,
             f"P99 budget: {p99_budget_ns} ns | {budget_status}",
@@ -82,6 +101,9 @@ def render_frame(
                 else:
                     side_status = "OVER BUDGET"
                 side_summary += f" | budget {side_status}"
+                if side_p99 is not None:
+                    utilization = round(side_p99 / side_budget_ns * 100, 1)
+                    side_summary += f" ({utilization:.1f}% used)"
             side_summaries.append(
                 side_summary
             )
@@ -178,11 +200,7 @@ def run_live_dashboard(
         draw(0, 0, None)
     if p99_budget_ns is not None:
         p99_ns = result["latency"]["p99_ns"]
-        result["p99_budget"] = {
-            "limit_ns": p99_budget_ns,
-            "measured_ns": p99_ns,
-            "within_budget": None if p99_ns is None else p99_ns <= p99_budget_ns,
-        }
+        result["p99_budget"] = _budget_result(p99_ns, p99_budget_ns)
     configured_side_budgets = {
         side_name: budget
         for side_name, budget in side_p99_budgets.items()
@@ -194,13 +212,9 @@ def run_live_dashboard(
             side_p99 = result.get("latency_by_side", {}).get(side_name, {}).get(
                 "p99_ns"
             )
-            result["p99_budget_by_side"][side_name] = {
-                "limit_ns": side_budget,
-                "measured_ns": side_p99,
-                "within_budget": (
-                    None if side_p99 is None else side_p99 <= side_budget
-                ),
-            }
+            result["p99_budget_by_side"][side_name] = _budget_result(
+                side_p99, side_budget
+            )
     if report_path is not None:
         save_result(report_path, result)
     return result

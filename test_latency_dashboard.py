@@ -35,6 +35,8 @@ class TestLatencyDashboard(unittest.TestCase):
         self.assertIn("P99 budget: 20 ns | within budget (p99 20 ns)", within)
         self.assertIn("P99 budget: 19 ns | OVER BUDGET (p99 20 ns)", exceeded)
         self.assertIn("P99 budget: 20 ns | waiting for samples", waiting)
+        self.assertIn("100.0% used", within)
+        self.assertIn("105.3% used", exceeded)
 
     def test_live_dashboard_rejects_non_positive_p99_budget(self):
         for budget in (0, -1, 1.5, True):
@@ -145,6 +147,8 @@ class TestLatencyDashboard(unittest.TestCase):
 
         self.assertIn("BUY median 12.5 ns, p99 15 ns | budget OVER BUDGET", frame)
         self.assertIn("SELL median 30 ns, p99 30 ns | budget within budget", frame)
+        self.assertIn("107.1% used", frame)
+        self.assertIn("75.0% used", frame)
 
     def test_live_run_refreshes_and_keeps_only_configured_window(self):
         output = io.StringIO()
@@ -266,6 +270,9 @@ class TestLatencyDashboard(unittest.TestCase):
                         "limit_ns": budget,
                         "measured_ns": 20 if count else None,
                         "within_budget": expected,
+                        "utilization_percent": (
+                            round(20 / budget * 100, 1) if count else None
+                        ),
                     }
                     self.assertEqual(result["p99_budget"], expected_budget)
                     self.assertEqual(
@@ -276,6 +283,7 @@ class TestLatencyDashboard(unittest.TestCase):
                                 "limit_ns": budget,
                                 "measured_ns": None,
                                 "within_budget": None,
+                                "utilization_percent": None,
                             },
                         },
                     )
@@ -314,11 +322,13 @@ class TestLatencyDashboard(unittest.TestCase):
                     "limit_ns": 40,
                     "measured_ns": 45,
                     "within_budget": False,
+                    "utilization_percent": 112.5,
                 },
                 "SELL": {
                     "limit_ns": 30,
                     "measured_ns": 35,
                     "within_budget": False,
+                    "utilization_percent": 116.7,
                 },
             },
         )

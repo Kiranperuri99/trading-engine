@@ -164,6 +164,8 @@ When you also save a report with `--output`, its `p99_budget` object records
 the limit, measured p99, and whether the budget was met (`null` when no samples
 were measured). The `p99_budget_by_side` object reports the same result
 separately for BUY and SELL orders.
+Both the live display and JSON report also show p99 budget utilization as a
+percentage; values above 100% indicate a breached limit.
 Add `--fail-on-budget-exceeded` to return exit status 1 when the overall p99
 exceeds a configured limit or when no samples were measured. This option
 requires at least one p99 budget and is useful in automated checks.
