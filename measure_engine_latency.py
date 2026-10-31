@@ -189,6 +189,11 @@ def build_parser():
 def main(argv=None):
     parser = build_parser()
     args = parser.parse_args(argv)
+    if args.output and args.csv_output is not None:
+        json_path = Path(args.output).resolve()
+        csv_path = args.csv_output.resolve()
+        if json_path == csv_path:
+            parser.error("--output and --csv-output must use different file paths")
     if args.fail_on_budget_exceeded and not any((
         args.p95_budget_ns,
         args.p99_budget_ns,

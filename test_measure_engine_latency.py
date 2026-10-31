@@ -18,6 +18,22 @@ from run_simulation import run_simulation
 
 
 class TestMeasureEngineLatency(unittest.TestCase):
+    def test_json_and_csv_output_reject_the_same_file(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "latency-report.json"
+            error_output = StringIO()
+
+            with patch("sys.stderr", error_output):
+                with self.assertRaises(SystemExit) as raised:
+                    main([
+                        "--count", "0",
+                        "--output", str(path),
+                        "--csv-output", str(path),
+                    ])
+
+        self.assertEqual(raised.exception.code, 2)
+        self.assertIn("must use different file paths", error_output.getvalue())
+        self.assertFalse(path.exists())
     def test_include_samples_cli_adds_samples_to_json(self):
         orders = [Order(1, "BUY", 100.0, 1)]
 
