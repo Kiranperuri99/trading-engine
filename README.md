@@ -158,6 +158,9 @@ call's timed interval. Add `--output latency-live.json` to save the final
 summary and measured samples; the command creates a new file and preserves any
 existing report.
 
+To mark whether the rolling p99 stays within a latency target, pass a budget in
+nanoseconds, for example `--p99-budget-ns 50000`.
+
 ## Market data and execution summaries
 
 `get_order_book()` returns open buy and sell orders grouped by price. Pass a

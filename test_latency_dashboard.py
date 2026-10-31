@@ -20,6 +20,27 @@ class TestLatencyDashboard(unittest.TestCase):
         self.assertIn("Waiting for the first measurement", frame)
         self.assertIn("median n/a", frame)
 
+    def test_render_frame_reports_p99_budget_state(self):
+        within = render_frame(
+            [10, 20], completed=2, total=2, side="BUY", p99_budget_ns=20
+        )
+        exceeded = render_frame(
+            [10, 20], completed=2, total=2, side="BUY", p99_budget_ns=19
+        )
+        waiting = render_frame(
+            [], completed=0, total=0, side=None, p99_budget_ns=20
+        )
+
+        self.assertIn("P99 budget: 20 ns | within budget (p99 20 ns)", within)
+        self.assertIn("P99 budget: 19 ns | OVER BUDGET (p99 20 ns)", exceeded)
+        self.assertIn("P99 budget: 20 ns | waiting for samples", waiting)
+
+    def test_live_dashboard_rejects_non_positive_p99_budget(self):
+        for budget in (0, -1, 1.5, True):
+            with self.subTest(budget=budget):
+                with self.assertRaisesRegex(ValueError, "P99 budget"):
+                    run_live_dashboard(p99_budget_ns=budget)
+
     def test_render_graph_scales_bars_to_window_maximum(self):
         frame = render_frame([5, 10], completed=2, total=2, side="SELL", width=34)
         sample_lines = frame.splitlines()[-2:]
@@ -75,6 +96,7 @@ class TestLatencyDashboard(unittest.TestCase):
             "--warmup", "5",
             "--window", "8",
             "--refresh-every", "2",
+            "--p99-budget-ns", "50000",
             "--output", "latency-live.json",
         ])
 
@@ -82,6 +104,7 @@ class TestLatencyDashboard(unittest.TestCase):
         self.assertEqual(args.warmup, 5)
         self.assertEqual(args.window, 8)
         self.assertEqual(args.refresh_every, 2)
+        self.assertEqual(args.p99_budget_ns, 50000)
         self.assertEqual(args.output, "latency-live.json")
 
     def test_output_option_saves_final_json_with_raw_samples(self):

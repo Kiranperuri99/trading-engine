@@ -20,7 +20,15 @@ def positive_integer(value):
     return number
 
 
-def render_frame(samples, completed, total, side, width=80, samples_by_side=None):
+def render_frame(
+    samples,
+    completed,
+    total,
+    side,
+    width=80,
+    samples_by_side=None,
+    p99_budget_ns=None,
+):
     values = list(samples)
     stats = summarize_latencies(values)
     max_value = max(values, default=0)
@@ -39,6 +47,19 @@ def render_frame(samples, completed, total, side, width=80, samples_by_side=None
         ),
         "Recent samples (newest at bottom):",
     ]
+
+    if p99_budget_ns is not None:
+        p99_ns = stats["p99_ns"]
+        if p99_ns is None:
+            budget_status = "waiting for samples"
+        elif p99_ns <= p99_budget_ns:
+            budget_status = f"within budget (p99 {p99_ns} ns)"
+        else:
+            budget_status = f"OVER BUDGET (p99 {p99_ns} ns)"
+        lines.insert(
+            4,
+            f"P99 budget: {p99_budget_ns} ns | {budget_status}",
+        )
 
     if samples_by_side is not None:
         side_summaries = []
@@ -72,11 +93,16 @@ def run_live_dashboard(
     refresh_every=10,
     output=None,
     report_path=None,
+    p99_budget_ns=None,
 ):
     if type(window) is not int or window <= 0:
         raise ValueError("Window size must be a positive integer")
     if type(refresh_every) is not int or refresh_every <= 0:
         raise ValueError("Refresh interval must be a positive integer")
+    if p99_budget_ns is not None and (
+        type(p99_budget_ns) is not int or p99_budget_ns <= 0
+    ):
+        raise ValueError("P99 budget must be a positive integer")
 
     output = sys.stdout if output is None else output
     history = deque(maxlen=window)
@@ -94,6 +120,7 @@ def run_live_dashboard(
                 total,
                 side,
                 samples_by_side=history_by_side,
+                p99_budget_ns=p99_budget_ns,
             )
         )
         output.write("\n")
@@ -142,6 +169,11 @@ def build_parser():
         help="Redraw after this many new orders (default: 10)",
     )
     parser.add_argument(
+        "--p99-budget-ns",
+        type=positive_integer,
+        help="Show whether the rolling p99 latency stays within this nanosecond budget",
+    )
+    parser.add_argument(
         "--output",
         help="Save the final JSON report, including measured samples, to a new file",
     )
@@ -157,6 +189,7 @@ def main(argv=None):
         window=args.window,
         refresh_every=args.refresh_every,
         report_path=args.output,
+        p99_budget_ns=args.p99_budget_ns,
     )
 
 
