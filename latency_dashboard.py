@@ -144,6 +144,13 @@ def run_live_dashboard(
     result = measure_engine_latency(**measurement_options)
     if count == 0:
         draw(0, 0, None)
+    if p99_budget_ns is not None:
+        p99_ns = result["latency"]["p99_ns"]
+        result["p99_budget"] = {
+            "limit_ns": p99_budget_ns,
+            "measured_ns": p99_ns,
+            "within_budget": None if p99_ns is None else p99_ns <= p99_budget_ns,
+        }
     if report_path is not None:
         save_result(report_path, result)
     return result

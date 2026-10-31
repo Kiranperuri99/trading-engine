@@ -134,6 +134,47 @@ class TestLatencyDashboard(unittest.TestCase):
             self.assertEqual(saved, result)
             self.assertEqual(saved["samples_ns"], [12])
 
+    def test_saved_json_includes_p99_budget_outcome(self):
+        with tempfile.TemporaryDirectory() as directory:
+            for count, budget, expected in (
+                (1, 20, True),
+                (1, 19, False),
+                (0, 20, None),
+            ):
+                with self.subTest(count=count, budget=budget):
+                    report_path = Path(directory) / f"report-{count}-{budget}.json"
+
+                    def fake_measure(
+                        count, seed, warmup, on_sample, include_samples
+                    ):
+                        if count:
+                            on_sample(20, 1, 1, "BUY")
+                        p99_ns = 20 if count else None
+                        return {
+                            "latency": {"count": count, "p99_ns": p99_ns},
+                            "samples_ns": [20] if include_samples and count else [],
+                        }
+
+                    with patch(
+                        "latency_dashboard.measure_engine_latency",
+                        side_effect=fake_measure,
+                    ):
+                        result = run_live_dashboard(
+                            count=count,
+                            output=io.StringIO(),
+                            report_path=report_path,
+                            p99_budget_ns=budget,
+                        )
+
+                    expected_budget = {
+                        "limit_ns": budget,
+                        "measured_ns": 20 if count else None,
+                        "within_budget": expected,
+                    }
+                    self.assertEqual(result["p99_budget"], expected_budget)
+                    saved = json.loads(report_path.read_text(encoding="utf-8"))
+                    self.assertEqual(saved["p99_budget"], expected_budget)
+
     def test_output_option_does_not_overwrite_existing_file(self):
         with tempfile.TemporaryDirectory() as directory:
             report_path = Path(directory) / "latency-live.json"

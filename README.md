@@ -160,6 +160,9 @@ existing report.
 
 To mark whether the rolling p99 stays within a latency target, pass a budget in
 nanoseconds, for example `--p99-budget-ns 50000`.
+When you also save a report with `--output`, its `p99_budget` object records
+the limit, measured p99, and whether the budget was met (`null` when no samples
+were measured).
 
 ## Market data and execution summaries
 
