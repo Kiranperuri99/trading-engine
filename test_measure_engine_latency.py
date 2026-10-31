@@ -1,5 +1,5 @@
-import csv
 from datetime import datetime
+import csv
 import json
 from contextlib import redirect_stdout
 from io import StringIO
@@ -18,22 +18,6 @@ from run_simulation import run_simulation
 
 
 class TestMeasureEngineLatency(unittest.TestCase):
-    def test_json_and_csv_output_reject_the_same_file(self):
-        with tempfile.TemporaryDirectory() as directory:
-            path = Path(directory) / "latency-report.json"
-            error_output = StringIO()
-
-            with patch("sys.stderr", error_output):
-                with self.assertRaises(SystemExit) as raised:
-                    main([
-                        "--count", "0",
-                        "--output", str(path),
-                        "--csv-output", str(path),
-                    ])
-
-        self.assertEqual(raised.exception.code, 2)
-        self.assertIn("must use different file paths", error_output.getvalue())
-        self.assertFalse(path.exists())
     def test_include_samples_cli_adds_samples_to_json(self):
         orders = [Order(1, "BUY", 100.0, 1)]
 
@@ -114,6 +98,7 @@ class TestMeasureEngineLatency(unittest.TestCase):
             updates,
             [(15, 1, 2, "BUY", 51), (30, 2, 2, "SELL", 72)],
         )
+
     def test_csv_output_writes_order_samples_with_utc_timestamps(self):
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / "engine-samples.csv"
@@ -145,6 +130,23 @@ class TestMeasureEngineLatency(unittest.TestCase):
             self.assertIsNotNone(timestamp.tzinfo)
             self.assertEqual(timestamp.utcoffset().total_seconds(), 0)
 
+    def test_json_and_csv_output_reject_the_same_file(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "latency-report.json"
+            error_output = StringIO()
+
+            with patch("sys.stderr", error_output):
+                with self.assertRaises(SystemExit) as raised:
+                    main([
+                        "--count", "0",
+                        "--output", str(path),
+                        "--csv-output", str(path),
+                    ])
+
+        self.assertEqual(raised.exception.code, 2)
+        self.assertIn("must use different file paths", error_output.getvalue())
+        self.assertFalse(path.exists())
+
     def test_csv_output_does_not_overwrite_existing_file(self):
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / "engine-samples.csv"
@@ -158,6 +160,7 @@ class TestMeasureEngineLatency(unittest.TestCase):
                     main(["--count", "0", "--csv-output", str(path)])
 
             self.assertEqual(path.read_text(encoding="utf-8"), "keep this")
+
     def test_json_report_has_utc_timestamp(self):
         with patch(
             "measure_engine_latency.generate_orders",
@@ -503,7 +506,7 @@ class TestMeasureEngineLatency(unittest.TestCase):
                 main(["--fail-on-budget-exceeded"])
 
         self.assertEqual(raised.exception.code, 2)
-        self.assertIn("requires a p95 or p99 budget", error_output.getvalue())
+        self.assertIn("requires a configured latency budget", error_output.getvalue())
 
     def test_fail_flag_exits_nonzero_for_missed_or_unavailable_budget(self):
         measurements = (
@@ -525,7 +528,13 @@ class TestMeasureEngineLatency(unittest.TestCase):
                 self.assertEqual(raised.exception.code, 1)
 
     def test_fail_flag_returns_normally_when_budget_is_met(self):
-        measurement = {"latency": {"p95_ns": 95, "p99_ns": 99}}
+        measurement = {
+            "latency": {"p95_ns": 95, "p99_ns": 99},
+            "latency_by_side": {
+                "BUY": {"p95_ns": 90, "p99_ns": 95},
+                "SELL": {"p95_ns": 92, "p99_ns": 98},
+            },
+        }
         with patch(
             "measure_engine_latency.measure_engine_latency",
             return_value=measurement,
@@ -538,8 +547,151 @@ class TestMeasureEngineLatency(unittest.TestCase):
         self.assertIs(result, measurement)
         self.assertTrue(result["p95_budget"]["within_budget"])
 
+    def test_side_specific_budgets_override_global_budgets_in_json(self):
+        measurement = {
+            "latency": {"p95_ns": 96, "p99_ns": 110},
+            "latency_by_side": {
+                "BUY": {"p95_ns": 110, "p99_ns": 100},
+                "SELL": {"p95_ns": 95, "p99_ns": 130},
+            },
+        }
+        output = StringIO()
+
+        with patch(
+            "measure_engine_latency.measure_engine_latency",
+            return_value=measurement,
+        ), redirect_stdout(output):
+            main([
+                "--p95-budget-ns", "100",
+                "--buy-p95-budget-ns", "105",
+                "--p99-budget-ns", "120",
+                "--sell-p99-budget-ns", "125",
+                "--json",
+            ])
+
+        report = json.loads(output.getvalue())
+        self.assertTrue(report["p95_budget"]["within_budget"])
+        self.assertFalse(report["p95_budget_by_side"]["BUY"]["within_budget"])
+        self.assertEqual(report["p95_budget_by_side"]["BUY"]["limit_ns"], 105)
+        self.assertTrue(report["p95_budget_by_side"]["SELL"]["within_budget"])
+        self.assertEqual(report["p95_budget_by_side"]["SELL"]["limit_ns"], 100)
+        self.assertTrue(report["p99_budget"]["within_budget"])
+        self.assertTrue(report["p99_budget_by_side"]["BUY"]["within_budget"])
+        self.assertFalse(report["p99_budget_by_side"]["SELL"]["within_budget"])
+        self.assertEqual(report["p99_budget_by_side"]["SELL"]["limit_ns"], 125)
+
+    def test_p99_9_budget_supports_global_and_side_limits(self):
+        measurement = {
+            "latency": {"p99_9_ns": 125},
+            "latency_by_side": {
+                "BUY": {"p99_9_ns": 130},
+                "SELL": {"p99_9_ns": 110},
+            },
+        }
+        output = StringIO()
+
+        with patch(
+            "measure_engine_latency.measure_engine_latency",
+            return_value=measurement,
+        ), redirect_stdout(output):
+            result = main([
+                "--p99-9-budget-ns", "120",
+                "--buy-p99-9-budget-ns", "135",
+                "--sell-p99-9-budget-ns", "100",
+                "--json",
+            ])
+
+        self.assertFalse(result["p99_9_budget"]["within_budget"])
+        self.assertTrue(result["p99_9_budget_by_side"]["BUY"]["within_budget"])
+        self.assertFalse(result["p99_9_budget_by_side"]["SELL"]["within_budget"])
+        self.assertEqual(result["p99_9_budget_by_side"]["BUY"]["limit_ns"], 135)
+        self.assertEqual(result["p99_9_budget_by_side"]["SELL"]["limit_ns"], 100)
+
+    def test_fail_flag_accepts_p99_9_budget(self):
+        measurement = {
+            "latency": {"p99_9_ns": 900},
+            "latency_by_side": {
+                "BUY": {"p99_9_ns": 850},
+                "SELL": {"p99_9_ns": 875},
+            },
+        }
+
+        with patch(
+            "measure_engine_latency.measure_engine_latency",
+            return_value=measurement,
+        ), redirect_stdout(StringIO()):
+            result = main([
+                "--p99-9-budget-ns", "1000",
+                "--fail-on-budget-exceeded",
+            ])
+
+        self.assertTrue(result["p99_9_budget"]["within_budget"])
+
+    def test_human_output_labels_p99_9_budget(self):
+        measurement = {
+            "latency": {"p99_9_ns": 125},
+            "latency_by_side": {},
+            "summary": {},
+        }
+        output = StringIO()
+
+        with patch(
+            "measure_engine_latency.measure_engine_latency",
+            return_value=measurement,
+        ), redirect_stdout(output):
+            main(["--p99-9-budget-ns", "120"])
+
+        self.assertIn(
+            "P99.9 budget: 120 ns | measured 125 ns | OVER BUDGET",
+            output.getvalue(),
+        )
+
+    def test_side_only_budget_is_checked_by_fail_flag(self):
+        measurement = {
+            "latency": {"p95_ns": 80, "p99_ns": 90},
+            "latency_by_side": {
+                "BUY": {"p95_ns": 101, "p99_ns": 110},
+                "SELL": {"p95_ns": 50, "p99_ns": 70},
+            },
+        }
+        with patch(
+            "measure_engine_latency.measure_engine_latency",
+            return_value=measurement,
+        ), redirect_stdout(StringIO()):
+            with self.assertRaises(SystemExit) as raised:
+                main([
+                    "--buy-p95-budget-ns", "100",
+                    "--fail-on-budget-exceeded",
+                ])
+
+        self.assertEqual(raised.exception.code, 1)
+
+    def test_human_output_reports_side_budget_status(self):
+        measurement = {
+            "latency": {"p95_ns": 80, "p99_ns": 90},
+            "latency_by_side": {
+                "BUY": {"p95_ns": 101, "p99_ns": 110},
+                "SELL": {"p95_ns": 50, "p99_ns": 70},
+            },
+        }
+        output = StringIO()
+        with patch(
+            "measure_engine_latency.measure_engine_latency",
+            return_value=measurement,
+        ), redirect_stdout(output):
+            main(["--buy-p95-budget-ns", "100"])
+
+        self.assertIn("BUY P95 budget: 100 ns | measured 101 ns | OVER BUDGET", output.getvalue())
+
     def test_parser_rejects_non_positive_latency_budgets(self):
-        for option, value in (("--p95-budget-ns", "0"), ("--p99-budget-ns", "-1")):
+        for option, value in (
+            ("--p95-budget-ns", "0"),
+            ("--p99-budget-ns", "-1"),
+            ("--buy-p95-budget-ns", "0"),
+            ("--sell-p99-budget-ns", "-1"),
+            ("--p99-9-budget-ns", "0"),
+            ("--buy-p99-9-budget-ns", "-1"),
+        ):
             with self.subTest(option=option, value=value):
                 error_output = StringIO()
                 with patch("sys.stderr", error_output):

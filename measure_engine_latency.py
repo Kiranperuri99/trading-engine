@@ -179,6 +179,41 @@ def build_parser():
         help="Set a maximum p99 engine-call latency in nanoseconds",
     )
     parser.add_argument(
+        "--p99-9-budget-ns",
+        type=positive_integer,
+        help="Set a maximum p99.9 engine-call latency in nanoseconds",
+    )
+    parser.add_argument(
+        "--buy-p95-budget-ns",
+        type=positive_integer,
+        help="Override the p95 latency budget for BUY orders",
+    )
+    parser.add_argument(
+        "--sell-p95-budget-ns",
+        type=positive_integer,
+        help="Override the p95 latency budget for SELL orders",
+    )
+    parser.add_argument(
+        "--buy-p99-budget-ns",
+        type=positive_integer,
+        help="Override the p99 latency budget for BUY orders",
+    )
+    parser.add_argument(
+        "--sell-p99-budget-ns",
+        type=positive_integer,
+        help="Override the p99 latency budget for SELL orders",
+    )
+    parser.add_argument(
+        "--buy-p99-9-budget-ns",
+        type=positive_integer,
+        help="Override the p99.9 latency budget for BUY orders",
+    )
+    parser.add_argument(
+        "--sell-p99-9-budget-ns",
+        type=positive_integer,
+        help="Override the p99.9 latency budget for SELL orders",
+    )
+    parser.add_argument(
         "--fail-on-budget-exceeded",
         action="store_true",
         help="Exit with status 1 when a configured latency budget is missed or unavailable",
@@ -189,6 +224,7 @@ def build_parser():
 def main(argv=None):
     parser = build_parser()
     args = parser.parse_args(argv)
+
     if args.output and args.csv_output is not None:
         json_path = Path(args.output).resolve()
         csv_path = args.csv_output.resolve()
@@ -197,8 +233,17 @@ def main(argv=None):
     if args.fail_on_budget_exceeded and not any((
         args.p95_budget_ns,
         args.p99_budget_ns,
+        args.buy_p95_budget_ns,
+        args.sell_p95_budget_ns,
+        args.buy_p99_budget_ns,
+        args.sell_p99_budget_ns,
+        args.p99_9_budget_ns,
+        args.buy_p99_9_budget_ns,
+        args.sell_p99_9_budget_ns,
     )):
-        parser.error("--fail-on-budget-exceeded requires a p95 or p99 budget")
+        parser.error(
+            "--fail-on-budget-exceeded requires a configured latency budget"
+        )
 
     csv_samples = []
 
@@ -224,13 +269,45 @@ def main(argv=None):
 
     result = measure_engine_latency(**measurement_options)
     budget_statuses = []
-    for percentile in ("p95", "p99"):
+    for percentile in ("p95", "p99", "p99_9"):
         limit_ns = getattr(args, f"{percentile}_budget_ns")
         if limit_ns is None:
             continue
         budget = _budget_result(result["latency"][f"{percentile}_ns"], limit_ns)
         result[f"{percentile}_budget"] = budget
         budget_statuses.append(budget["within_budget"])
+
+        for side in ("BUY", "SELL"):
+            side_limit = getattr(args, f"{side.lower()}_{percentile}_budget_ns")
+            if side_limit is None:
+                side_limit = limit_ns
+            if side_limit is None:
+                continue
+            side_latency = (
+                result.get("latency_by_side", {})
+                .get(side, {})
+                .get(f"{percentile}_ns")
+            )
+            side_budget = _budget_result(side_latency, side_limit)
+            result.setdefault(f"{percentile}_budget_by_side", {})[side] = side_budget
+            budget_statuses.append(side_budget["within_budget"])
+
+    # A side-specific limit also works when no global limit was provided.
+    for percentile in ("p95", "p99", "p99_9"):
+        if getattr(args, f"{percentile}_budget_ns") is not None:
+            continue
+        for side in ("BUY", "SELL"):
+            side_limit = getattr(args, f"{side.lower()}_{percentile}_budget_ns")
+            if side_limit is None:
+                continue
+            side_latency = (
+                result.get("latency_by_side", {})
+                .get(side, {})
+                .get(f"{percentile}_ns")
+            )
+            side_budget = _budget_result(side_latency, side_limit)
+            result.setdefault(f"{percentile}_budget_by_side", {})[side] = side_budget
+            budget_statuses.append(side_budget["within_budget"])
 
     if args.output:
         save_result(args.output, result)
@@ -266,10 +343,17 @@ def main(argv=None):
                 for name, value in stats.items():
                     print(f"  {name}: {value}")
 
-        for percentile in ("p95", "p99"):
-            budget = result.get(f"{percentile}_budget")
-            if budget is None:
-                continue
+        budget_lines = []
+        for percentile in ("p95", "p99", "p99_9"):
+            global_budget = result.get(f"{percentile}_budget")
+            if global_budget is not None:
+                budget_lines.append((percentile.upper().replace("_", "."), global_budget))
+            for side, budget in result.get(
+                f"{percentile}_budget_by_side", {}
+            ).items():
+                budget_lines.append((f"{side} {percentile.upper().replace('_', '.')}", budget))
+
+        for label, budget in budget_lines:
             measured_ns = budget["measured_ns"]
             if measured_ns is None:
                 status = "waiting for samples"
@@ -279,7 +363,7 @@ def main(argv=None):
                 status = f"OVER BUDGET | {budget['utilization_percent']:.1f}% used"
             measured_text = "n/a" if measured_ns is None else str(measured_ns)
             print(
-                f"{percentile.upper()} budget: {budget['limit_ns']} ns | "
+                f"{label} budget: {budget['limit_ns']} ns | "
                 f"measured {measured_text} ns | {status}"
             )
 
