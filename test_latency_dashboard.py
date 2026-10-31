@@ -3,6 +3,7 @@ import csv
 import json
 import tempfile
 import unittest
+from datetime import datetime
 from pathlib import Path
 from unittest.mock import patch
 
@@ -230,13 +231,14 @@ class TestLatencyDashboard(unittest.TestCase):
                 rows = list(csv.reader(input_file))
 
         self.assertEqual(
-            rows,
-            [
-                ["order_number", "side", "latency_ns"],
-                ["1", "BUY", "12"],
-                ["2", "SELL", "18"],
-            ],
+            rows[0],
+            ["order_number", "side", "latency_ns", "recorded_at_utc"],
         )
+        self.assertEqual(rows[1][:3], ["1", "BUY", "12"])
+        self.assertEqual(rows[2][:3], ["2", "SELL", "18"])
+        for row in rows[1:]:
+            timestamp = datetime.fromisoformat(row[3])
+            self.assertIsNotNone(timestamp.tzinfo)
 
     def test_csv_output_does_not_overwrite_existing_file(self):
         with tempfile.TemporaryDirectory() as directory:

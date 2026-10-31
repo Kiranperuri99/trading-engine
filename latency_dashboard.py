@@ -4,6 +4,7 @@ import argparse
 import csv
 import sys
 from collections import deque
+from datetime import datetime, timezone
 from pathlib import Path
 
 from latency_stats import summarize_latencies
@@ -38,7 +39,7 @@ def _budget_result(measured_ns, limit_ns):
 def save_samples_csv(path, samples):
     with Path(path).open("x", newline="", encoding="utf-8") as output_file:
         writer = csv.writer(output_file)
-        writer.writerow(("order_number", "side", "latency_ns"))
+        writer.writerow(("order_number", "side", "latency_ns", "recorded_at_utc"))
         writer.writerows(samples)
 
 
@@ -194,7 +195,9 @@ def run_live_dashboard(
     def on_sample(elapsed_ns, completed, total, side):
         history.append(elapsed_ns)
         history_by_side[side].append(elapsed_ns)
-        csv_samples.append((completed, side, elapsed_ns))
+        csv_samples.append(
+            (completed, side, elapsed_ns, datetime.now(timezone.utc).isoformat())
+        )
         if completed % refresh_every == 0 or completed == total:
             draw(completed, total, side)
 
