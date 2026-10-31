@@ -142,6 +142,10 @@ Run this command from the project folder:
 python measure_engine_latency.py --count 1000 --warmup 100 --seed 42 --json --output latency-report.json
 ```
 
+The report includes engine-call throughput overall and by order side. It is
+calculated from the sum of measured `add_order()` call times, excluding order
+generation and callbacks. For a zero-order run, throughput is `null`.
+
 ## Live engine-call latency dashboard
 
 Display recent per-order engine-call latency as a live terminal graph:

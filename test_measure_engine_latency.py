@@ -221,6 +221,15 @@ class TestMeasureEngineLatency(unittest.TestCase):
         self.assertEqual(result["latency"]["median_ns"], 20.0)
         self.assertEqual(result["latency"]["p95_ns"], 30)
         self.assertEqual(result["summary"]["orders_processed"], 2)
+        self.assertEqual(result["throughput"]["measured_call_time_ns"], 40)
+        self.assertEqual(result["throughput"]["orders_per_second"], 50_000_000)
+        self.assertEqual(
+            sum(
+                stats["measured_call_time_ns"]
+                for stats in result["throughput_by_side"].values()
+            ),
+            40,
+        )
 
     def test_empty_json_output_has_null_latency_values(self):
         output = io.StringIO()
@@ -283,6 +292,21 @@ class TestMeasureEngineLatency(unittest.TestCase):
         self.assertEqual(result["latency"]["count"], 0)
         self.assertIsNone(result["latency"]["median_ns"])
         self.assertEqual(result["summary"]["orders_processed"], 0)
+        self.assertEqual(result["throughput"]["measured_call_time_ns"], 0)
+        self.assertIsNone(result["throughput"]["orders_per_second"])
+
+    def test_human_output_includes_engine_call_throughput(self):
+        output = io.StringIO()
+        with patch(
+            "measure_engine_latency.perf_counter_ns",
+            side_effect=[100, 120],
+        ):
+            with redirect_stdout(output):
+                result = main(["--count", "1", "--seed", "7"])
+
+        self.assertEqual(result["throughput"]["orders_per_second"], 50_000_000)
+        self.assertIn("Engine-call throughput", output.getvalue())
+        self.assertIn("orders_per_second: 50000000.0", output.getvalue())
     def test_latency_is_reported_separately_for_each_side(self):
         orders = [
             Order(1, "BUY", 100.0, 1),
@@ -302,6 +326,19 @@ class TestMeasureEngineLatency(unittest.TestCase):
         self.assertEqual(result["latency_by_side"]["BUY"]["min_ns"], 10)
         self.assertEqual(result["latency_by_side"]["SELL"]["count"], 1)
         self.assertEqual(result["latency_by_side"]["SELL"]["min_ns"], 30)
+        self.assertEqual(
+            result["throughput_by_side"]["BUY"]["measured_call_time_ns"], 10
+        )
+        self.assertEqual(
+            result["throughput_by_side"]["BUY"]["orders_per_second"], 100_000_000
+        )
+        self.assertEqual(
+            result["throughput_by_side"]["SELL"]["measured_call_time_ns"], 30
+        )
+        self.assertAlmostEqual(
+            result["throughput_by_side"]["SELL"]["orders_per_second"],
+            1_000_000_000 / 30,
+        )
     def test_human_output_includes_latency_by_side(self):
         result = {
             "scope": "ChronosMatch.add_order call",

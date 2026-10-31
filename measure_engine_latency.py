@@ -13,6 +13,20 @@ from latency_stats import summarize_latencies
 from market_simulator import generate_orders
 from trading_engine import ChronosMatch
 
+
+def summarize_throughput(samples):
+    measured_call_time_ns = sum(samples)
+    orders_per_second = (
+        len(samples) * 1_000_000_000 / measured_call_time_ns
+        if measured_call_time_ns > 0
+        else None
+    )
+    return {
+        "measured_call_time_ns": measured_call_time_ns,
+        "orders_per_second": orders_per_second,
+    }
+
+
 def measure_engine_latency(
     count=1000,
     seed=42,
@@ -56,6 +70,11 @@ def measure_engine_latency(
         "latency": summarize_latencies(samples),
         "latency_by_side": {
             side: summarize_latencies(side_samples[side])
+            for side in ("BUY", "SELL")
+        },
+        "throughput": summarize_throughput(samples),
+        "throughput_by_side": {
+            side: summarize_throughput(side_samples[side])
             for side in ("BUY", "SELL")
         },
         "summary": summarize_engine(engine, len(samples)),
@@ -132,6 +151,15 @@ def main(argv=None):
             print(f"{side} order latency:")
             for name, value in stats.items():
                 print(f"  {name}: {value}")
+
+        if "throughput" in result:
+            print("Engine-call throughput (sum of timed add_order calls):")
+            for name, value in result["throughput"].items():
+                print(f"  {name}: {value}")
+            for side, stats in result.get("throughput_by_side", {}).items():
+                print(f"{side} order throughput:")
+                for name, value in stats.items():
+                    print(f"  {name}: {value}")
 
         if result.get("summary"):
             print("Engine summary:")
