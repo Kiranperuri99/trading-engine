@@ -164,6 +164,9 @@ When you also save a report with `--output`, its `p99_budget` object records
 the limit, measured p99, and whether the budget was met (`null` when no samples
 were measured). The `p99_budget_by_side` object reports the same result
 separately for BUY and SELL orders.
+Add `--fail-on-budget-exceeded` to return exit status 1 when the overall p99
+exceeds the budget or when no samples were measured. This option requires
+`--p99-budget-ns` and is useful in automated checks.
 
 ## Market data and execution summaries
 

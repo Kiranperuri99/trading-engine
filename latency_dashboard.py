@@ -203,6 +203,11 @@ def build_parser():
         help="Show whether the rolling p99 latency stays within this nanosecond budget",
     )
     parser.add_argument(
+        "--fail-on-budget-exceeded",
+        action="store_true",
+        help="Exit with status 1 if the p99 budget is exceeded or no samples are measured",
+    )
+    parser.add_argument(
         "--output",
         help="Save the final JSON report, including measured samples, to a new file",
     )
@@ -210,8 +215,12 @@ def build_parser():
 
 
 def main(argv=None):
-    args = build_parser().parse_args(argv)
-    return run_live_dashboard(
+    parser = build_parser()
+    args = parser.parse_args(argv)
+    if args.fail_on_budget_exceeded and args.p99_budget_ns is None:
+        parser.error("--fail-on-budget-exceeded requires --p99-budget-ns")
+
+    result = run_live_dashboard(
         count=args.count,
         seed=args.seed,
         warmup=args.warmup,
@@ -220,6 +229,12 @@ def main(argv=None):
         report_path=args.output,
         p99_budget_ns=args.p99_budget_ns,
     )
+    if (
+        args.fail_on_budget_exceeded
+        and result["p99_budget"]["within_budget"] is not True
+    ):
+        raise SystemExit(1)
+    return result
 
 
 if __name__ == "__main__":

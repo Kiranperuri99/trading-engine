@@ -7,6 +7,7 @@ from unittest.mock import patch
 
 from latency_dashboard import (
     build_parser,
+    main,
     render_frame,
     run_live_dashboard,
 )
@@ -40,6 +41,43 @@ class TestLatencyDashboard(unittest.TestCase):
             with self.subTest(budget=budget):
                 with self.assertRaisesRegex(ValueError, "P99 budget"):
                     run_live_dashboard(p99_budget_ns=budget)
+
+    def test_fail_flag_requires_a_p99_budget(self):
+        error_output = io.StringIO()
+        with patch("sys.stderr", error_output):
+            with self.assertRaises(SystemExit) as raised:
+                main(["--fail-on-budget-exceeded"])
+
+        self.assertEqual(raised.exception.code, 2)
+        self.assertIn("requires --p99-budget-ns", error_output.getvalue())
+
+    def test_fail_flag_exits_nonzero_when_budget_is_missed_or_unavailable(self):
+        for within_budget in (False, None):
+            with self.subTest(within_budget=within_budget):
+                with patch(
+                    "latency_dashboard.run_live_dashboard",
+                    return_value={"p99_budget": {"within_budget": within_budget}},
+                ):
+                    with self.assertRaises(SystemExit) as raised:
+                        main([
+                            "--p99-budget-ns", "50000",
+                            "--fail-on-budget-exceeded",
+                        ])
+
+                self.assertEqual(raised.exception.code, 1)
+
+    def test_fail_flag_returns_normally_when_budget_is_met(self):
+        expected = {"p99_budget": {"within_budget": True}}
+        with patch(
+            "latency_dashboard.run_live_dashboard",
+            return_value=expected,
+        ):
+            result = main([
+                "--p99-budget-ns", "50000",
+                "--fail-on-budget-exceeded",
+            ])
+
+        self.assertIs(result, expected)
 
     def test_render_graph_scales_bars_to_window_maximum(self):
         frame = render_frame([5, 10], completed=2, total=2, side="SELL", width=34)
@@ -110,6 +148,7 @@ class TestLatencyDashboard(unittest.TestCase):
             "--window", "8",
             "--refresh-every", "2",
             "--p99-budget-ns", "50000",
+            "--fail-on-budget-exceeded",
             "--output", "latency-live.json",
         ])
 
@@ -118,6 +157,7 @@ class TestLatencyDashboard(unittest.TestCase):
         self.assertEqual(args.window, 8)
         self.assertEqual(args.refresh_every, 2)
         self.assertEqual(args.p99_budget_ns, 50000)
+        self.assertTrue(args.fail_on_budget_exceeded)
         self.assertEqual(args.output, "latency-live.json")
 
     def test_output_option_saves_final_json_with_raw_samples(self):
