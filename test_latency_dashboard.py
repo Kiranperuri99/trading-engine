@@ -120,8 +120,21 @@ class TestLatencyDashboard(unittest.TestCase):
             samples_by_side={"BUY": [10, 30], "SELL": [20]},
         )
 
-        self.assertIn("BUY median 20.0 ns, p99 30 ns", frame)
-        self.assertIn("SELL median 20 ns, p99 20 ns", frame)
+        self.assertIn("BUY median 20.0 ns, p95 30 ns, p99 30 ns", frame)
+        self.assertIn("SELL median 20 ns, p95 20 ns, p99 20 ns", frame)
+
+    def test_render_frame_reports_side_p95_separately_from_p99(self):
+        samples = list(range(1, 101))
+        frame = render_frame(
+            samples,
+            completed=100,
+            total=100,
+            side="BUY",
+            samples_by_side={"BUY": samples, "SELL": []},
+        )
+
+        self.assertIn("BUY median 50.5 ns, p95 95 ns, p99 99 ns", frame)
+        self.assertIn("SELL median n/a ns, p95 n/a ns, p99 n/a ns", frame)
 
     def test_render_frame_reports_per_side_budget_state(self):
         frame = render_frame(
@@ -133,8 +146,8 @@ class TestLatencyDashboard(unittest.TestCase):
             p99_budget_ns=20,
         )
 
-        self.assertIn("BUY median 12.5 ns, p99 15 ns | budget within budget", frame)
-        self.assertIn("SELL median 30 ns, p99 30 ns | budget OVER BUDGET", frame)
+        self.assertIn("BUY median 12.5 ns, p95 15 ns, p99 15 ns | budget within budget", frame)
+        self.assertIn("SELL median 30 ns, p95 30 ns, p99 30 ns | budget OVER BUDGET", frame)
 
     def test_side_specific_budgets_override_the_shared_budget_in_display(self):
         frame = render_frame(
@@ -147,8 +160,8 @@ class TestLatencyDashboard(unittest.TestCase):
             side_p99_budgets={"BUY": 14, "SELL": 40},
         )
 
-        self.assertIn("BUY median 12.5 ns, p99 15 ns | budget OVER BUDGET", frame)
-        self.assertIn("SELL median 30 ns, p99 30 ns | budget within budget", frame)
+        self.assertIn("BUY median 12.5 ns, p95 15 ns, p99 15 ns | budget OVER BUDGET", frame)
+        self.assertIn("SELL median 30 ns, p95 30 ns, p99 30 ns | budget within budget", frame)
         self.assertIn("107.1% used", frame)
         self.assertIn("75.0% used", frame)
 
@@ -179,8 +192,8 @@ class TestLatencyDashboard(unittest.TestCase):
         self.assertIn("Progress: 3/3", output.getvalue())
         self.assertIn("Window: 2", output.getvalue())
         self.assertIn("30 ns", output.getvalue())
-        self.assertIn("BUY median 20.0 ns, p99 30 ns", output.getvalue())
-        self.assertIn("SELL median 20 ns, p99 20 ns", output.getvalue())
+        self.assertIn("BUY median 20.0 ns, p95 30 ns, p99 30 ns", output.getvalue())
+        self.assertIn("SELL median 20 ns, p95 20 ns, p99 20 ns", output.getvalue())
 
     def test_parser_accepts_dashboard_options(self):
         args = build_parser().parse_args([

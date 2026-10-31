@@ -102,6 +102,7 @@ def render_frame(
             )
             side_summary = (
                 f"{side_name} median {show(side_stats['median_ns'])} ns, "
+                f"p95 {show(side_stats['p95_ns'])} ns, "
                 f"p99 {show(side_stats['p99_ns'])} ns"
             )
             if side_budget_ns is not None:
