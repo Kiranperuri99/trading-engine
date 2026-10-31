@@ -28,6 +28,7 @@ def render_frame(
     width=80,
     samples_by_side=None,
     p99_budget_ns=None,
+    side_p99_budgets=None,
 ):
     values = list(samples)
     stats = summarize_latencies(values)
@@ -65,15 +66,18 @@ def render_frame(
         side_summaries = []
         for side_name in ("BUY", "SELL"):
             side_stats = summarize_latencies(samples_by_side.get(side_name, ()))
+            side_budget_ns = (side_p99_budgets or {}).get(
+                side_name, p99_budget_ns
+            )
             side_summary = (
                 f"{side_name} median {show(side_stats['median_ns'])} ns, "
                 f"p99 {show(side_stats['p99_ns'])} ns"
             )
-            if p99_budget_ns is not None:
+            if side_budget_ns is not None:
                 side_p99 = side_stats["p99_ns"]
                 if side_p99 is None:
                     side_status = "waiting for samples"
-                elif side_p99 <= p99_budget_ns:
+                elif side_p99 <= side_budget_ns:
                     side_status = "within budget"
                 else:
                     side_status = "OVER BUDGET"
@@ -106,6 +110,8 @@ def run_live_dashboard(
     output=None,
     report_path=None,
     p99_budget_ns=None,
+    buy_p99_budget_ns=None,
+    sell_p99_budget_ns=None,
 ):
     if type(window) is not int or window <= 0:
         raise ValueError("Window size must be a positive integer")
@@ -115,6 +121,19 @@ def run_live_dashboard(
         type(p99_budget_ns) is not int or p99_budget_ns <= 0
     ):
         raise ValueError("P99 budget must be a positive integer")
+    for side_name, side_budget in (
+        ("BUY", buy_p99_budget_ns),
+        ("SELL", sell_p99_budget_ns),
+    ):
+        if side_budget is not None and (
+            type(side_budget) is not int or side_budget <= 0
+        ):
+            raise ValueError(f"{side_name} p99 budget must be a positive integer")
+
+    side_p99_budgets = {
+        "BUY": buy_p99_budget_ns if buy_p99_budget_ns is not None else p99_budget_ns,
+        "SELL": sell_p99_budget_ns if sell_p99_budget_ns is not None else p99_budget_ns,
+    }
 
     output = sys.stdout if output is None else output
     history = deque(maxlen=window)
@@ -133,6 +152,7 @@ def run_live_dashboard(
                 side,
                 samples_by_side=history_by_side,
                 p99_budget_ns=p99_budget_ns,
+                side_p99_budgets=side_p99_budgets,
             )
         )
         output.write("\n")
@@ -163,14 +183,22 @@ def run_live_dashboard(
             "measured_ns": p99_ns,
             "within_budget": None if p99_ns is None else p99_ns <= p99_budget_ns,
         }
+    configured_side_budgets = {
+        side_name: budget
+        for side_name, budget in side_p99_budgets.items()
+        if budget is not None
+    }
+    if configured_side_budgets:
         result["p99_budget_by_side"] = {}
-        for side_name in ("BUY", "SELL"):
-            side_p99 = result.get("latency_by_side", {}).get(side_name, {}).get("p99_ns")
+        for side_name, side_budget in configured_side_budgets.items():
+            side_p99 = result.get("latency_by_side", {}).get(side_name, {}).get(
+                "p99_ns"
+            )
             result["p99_budget_by_side"][side_name] = {
-                "limit_ns": p99_budget_ns,
+                "limit_ns": side_budget,
                 "measured_ns": side_p99,
                 "within_budget": (
-                    None if side_p99 is None else side_p99 <= p99_budget_ns
+                    None if side_p99 is None else side_p99 <= side_budget
                 ),
             }
     if report_path is not None:
@@ -203,6 +231,16 @@ def build_parser():
         help="Show whether the rolling p99 latency stays within this nanosecond budget",
     )
     parser.add_argument(
+        "--buy-p99-budget-ns",
+        type=positive_integer,
+        help="Override the p99 latency budget for BUY orders",
+    )
+    parser.add_argument(
+        "--sell-p99-budget-ns",
+        type=positive_integer,
+        help="Override the p99 latency budget for SELL orders",
+    )
+    parser.add_argument(
         "--fail-on-budget-exceeded",
         action="store_true",
         help="Exit with status 1 if the p99 budget is exceeded or no samples are measured",
@@ -217,8 +255,12 @@ def build_parser():
 def main(argv=None):
     parser = build_parser()
     args = parser.parse_args(argv)
-    if args.fail_on_budget_exceeded and args.p99_budget_ns is None:
-        parser.error("--fail-on-budget-exceeded requires --p99-budget-ns")
+    if args.fail_on_budget_exceeded and not any((
+        args.p99_budget_ns,
+        args.buy_p99_budget_ns,
+        args.sell_p99_budget_ns,
+    )):
+        parser.error("--fail-on-budget-exceeded requires at least one p99 budget")
 
     result = run_live_dashboard(
         count=args.count,
@@ -228,10 +270,18 @@ def main(argv=None):
         refresh_every=args.refresh_every,
         report_path=args.output,
         p99_budget_ns=args.p99_budget_ns,
+        buy_p99_budget_ns=args.buy_p99_budget_ns,
+        sell_p99_budget_ns=args.sell_p99_budget_ns,
     )
-    if (
-        args.fail_on_budget_exceeded
-        and result["p99_budget"]["within_budget"] is not True
+    budget_results = []
+    if "p99_budget" in result:
+        budget_results.append(result["p99_budget"]["within_budget"])
+    budget_results.extend(
+        side_result["within_budget"]
+        for side_result in result.get("p99_budget_by_side", {}).values()
+    )
+    if args.fail_on_budget_exceeded and any(
+        status is not True for status in budget_results
     ):
         raise SystemExit(1)
     return result
