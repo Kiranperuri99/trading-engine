@@ -1,8 +1,10 @@
 """Live terminal graph for ChronosMatch engine-call latency."""
 
 import argparse
+import csv
 import sys
 from collections import deque
+from pathlib import Path
 
 from latency_stats import summarize_latencies
 from measure_engine_latency import measure_engine_latency
@@ -31,6 +33,13 @@ def _budget_result(measured_ns, limit_ns):
             None if measured_ns is None else round(measured_ns / limit_ns * 100, 1)
         ),
     }
+
+
+def save_samples_csv(path, samples):
+    with Path(path).open("x", newline="", encoding="utf-8") as output_file:
+        writer = csv.writer(output_file)
+        writer.writerow(("order_number", "side", "latency_ns"))
+        writer.writerows(samples)
 
 
 def render_frame(
@@ -131,6 +140,7 @@ def run_live_dashboard(
     refresh_every=10,
     output=None,
     report_path=None,
+    csv_path=None,
     p99_budget_ns=None,
     buy_p99_budget_ns=None,
     sell_p99_budget_ns=None,
@@ -163,6 +173,7 @@ def run_live_dashboard(
         "BUY": deque(maxlen=window),
         "SELL": deque(maxlen=window),
     }
+    csv_samples = []
 
     def draw(completed, total, side):
         output.write("\033[2J\033[H")
@@ -183,6 +194,7 @@ def run_live_dashboard(
     def on_sample(elapsed_ns, completed, total, side):
         history.append(elapsed_ns)
         history_by_side[side].append(elapsed_ns)
+        csv_samples.append((completed, side, elapsed_ns))
         if completed % refresh_every == 0 or completed == total:
             draw(completed, total, side)
 
@@ -217,6 +229,8 @@ def run_live_dashboard(
             )
     if report_path is not None:
         save_result(report_path, result)
+    if csv_path is not None:
+        save_samples_csv(csv_path, csv_samples)
     return result
 
 
@@ -263,6 +277,10 @@ def build_parser():
         "--output",
         help="Save the final JSON report, including measured samples, to a new file",
     )
+    parser.add_argument(
+        "--csv-output",
+        help="Save each measured order latency as a CSV row in a new file",
+    )
     return parser
 
 
@@ -283,6 +301,7 @@ def main(argv=None):
         window=args.window,
         refresh_every=args.refresh_every,
         report_path=args.output,
+        csv_path=args.csv_output,
         p99_budget_ns=args.p99_budget_ns,
         buy_p99_budget_ns=args.buy_p99_budget_ns,
         sell_p99_budget_ns=args.sell_p99_budget_ns,

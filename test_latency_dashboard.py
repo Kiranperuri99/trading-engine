@@ -1,4 +1,5 @@
 import io
+import csv
 import json
 import tempfile
 import unittest
@@ -191,6 +192,7 @@ class TestLatencyDashboard(unittest.TestCase):
             "--sell-p99-budget-ns", "60000",
             "--fail-on-budget-exceeded",
             "--output", "latency-live.json",
+            "--csv-output", "latency-samples.csv",
         ])
 
         self.assertEqual(args.count, 20)
@@ -202,6 +204,57 @@ class TestLatencyDashboard(unittest.TestCase):
         self.assertEqual(args.sell_p99_budget_ns, 60000)
         self.assertTrue(args.fail_on_budget_exceeded)
         self.assertEqual(args.output, "latency-live.json")
+        self.assertEqual(args.csv_output, "latency-samples.csv")
+
+    def test_csv_output_saves_one_row_per_measured_order(self):
+        with tempfile.TemporaryDirectory() as directory:
+            csv_path = Path(directory) / "latency-samples.csv"
+
+            def fake_measure(count, seed, warmup, on_sample):
+                on_sample(12, 1, 2, "BUY")
+                on_sample(18, 2, 2, "SELL")
+                return {"latency": {"count": 2}}
+
+            with patch(
+                "latency_dashboard.measure_engine_latency",
+                side_effect=fake_measure,
+            ):
+                run_live_dashboard(
+                    count=2,
+                    refresh_every=2,
+                    output=io.StringIO(),
+                    csv_path=csv_path,
+                )
+
+            with csv_path.open(newline="", encoding="utf-8") as input_file:
+                rows = list(csv.reader(input_file))
+
+        self.assertEqual(
+            rows,
+            [
+                ["order_number", "side", "latency_ns"],
+                ["1", "BUY", "12"],
+                ["2", "SELL", "18"],
+            ],
+        )
+
+    def test_csv_output_does_not_overwrite_existing_file(self):
+        with tempfile.TemporaryDirectory() as directory:
+            csv_path = Path(directory) / "latency-samples.csv"
+            csv_path.write_text("keep", encoding="utf-8")
+
+            with patch(
+                "latency_dashboard.measure_engine_latency",
+                return_value={"latency": {"count": 0}},
+            ):
+                with self.assertRaises(FileExistsError):
+                    run_live_dashboard(
+                        count=0,
+                        output=io.StringIO(),
+                        csv_path=csv_path,
+                    )
+
+            self.assertEqual(csv_path.read_text(encoding="utf-8"), "keep")
 
     def test_output_option_saves_final_json_with_raw_samples(self):
         with tempfile.TemporaryDirectory() as directory:

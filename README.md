@@ -166,6 +166,9 @@ were measured). The `p99_budget_by_side` object reports the same result
 separately for BUY and SELL orders.
 Both the live display and JSON report also show p99 budget utilization as a
 percentage; values above 100% indicate a breached limit.
+Add `--csv-output latency-samples.csv` to save one row per measured order with
+its order number, side, and latency in nanoseconds. CSV output creates a new
+file and does not overwrite an existing file.
 Add `--fail-on-budget-exceeded` to return exit status 1 when the overall p99
 exceeds a configured limit or when no samples were measured. This option
 requires at least one p99 budget and is useful in automated checks.
