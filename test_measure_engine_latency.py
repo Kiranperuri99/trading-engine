@@ -1,3 +1,4 @@
+import csv
 from datetime import datetime
 import json
 from contextlib import redirect_stdout
@@ -97,6 +98,50 @@ class TestMeasureEngineLatency(unittest.TestCase):
             updates,
             [(15, 1, 2, "BUY", 51), (30, 2, 2, "SELL", 72)],
         )
+    def test_csv_output_writes_order_samples_with_utc_timestamps(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "engine-samples.csv"
+            measurement = {"latency": {"count": 2}}
+
+            def fake_measurement(**options):
+                callback = options["on_order_sample"]
+                callback(12, 1, 2, "BUY", 501)
+                callback(18, 2, 2, "SELL", 502)
+                return measurement
+
+            with patch(
+                "measure_engine_latency.measure_engine_latency",
+                side_effect=fake_measurement,
+            ), redirect_stdout(StringIO()):
+                main(["--count", "2", "--csv-output", str(path)])
+
+            with path.open(newline="", encoding="utf-8") as input_file:
+                rows = list(csv.reader(input_file))
+
+        self.assertEqual(
+            rows[0],
+            ["order_number", "order_id", "side", "latency_ns", "recorded_at_utc"],
+        )
+        self.assertEqual(rows[1][:4], ["1", "501", "BUY", "12"])
+        self.assertEqual(rows[2][:4], ["2", "502", "SELL", "18"])
+        for row in rows[1:]:
+            timestamp = datetime.fromisoformat(row[4])
+            self.assertIsNotNone(timestamp.tzinfo)
+            self.assertEqual(timestamp.utcoffset().total_seconds(), 0)
+
+    def test_csv_output_does_not_overwrite_existing_file(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "engine-samples.csv"
+            path.write_text("keep this", encoding="utf-8")
+
+            with patch(
+                "measure_engine_latency.measure_engine_latency",
+                return_value={"latency": {"count": 0}},
+            ), redirect_stdout(StringIO()):
+                with self.assertRaises(FileExistsError):
+                    main(["--count", "0", "--csv-output", str(path)])
+
+            self.assertEqual(path.read_text(encoding="utf-8"), "keep this")
     def test_json_report_has_utc_timestamp(self):
         with patch(
             "measure_engine_latency.generate_orders",

@@ -1,3 +1,4 @@
+import csv
 from datetime import datetime, timezone
 from unittest import result
 from unittest import result
@@ -5,6 +6,7 @@ from result_export import save_result
 from benchmark_environment import benchmark_environment
 import json
 import argparse
+from pathlib import Path
 from run_simulation import non_negative_count
 from time import perf_counter_ns
 
@@ -25,6 +27,15 @@ def summarize_throughput(samples):
         "measured_call_time_ns": measured_call_time_ns,
         "orders_per_second": orders_per_second,
     }
+
+
+def save_samples_csv(path, samples):
+    with Path(path).open("x", newline="", encoding="utf-8") as output_file:
+        writer = csv.writer(output_file)
+        writer.writerow(
+            ("order_number", "order_id", "side", "latency_ns", "recorded_at_utc")
+        )
+        writer.writerows(samples)
 
 
 def measure_engine_latency(
@@ -153,6 +164,11 @@ def build_parser():
         help="Include each order's latency in the report",
     )
     parser.add_argument(
+        "--csv-output",
+        type=Path,
+        help="Save one row per measured order to a new CSV file",
+    )
+    parser.add_argument(
         "--p95-budget-ns",
         type=positive_integer,
         help="Set a maximum p95 engine-call latency in nanoseconds",
@@ -179,12 +195,29 @@ def main(argv=None):
     )):
         parser.error("--fail-on-budget-exceeded requires a p95 or p99 budget")
 
-    result = measure_engine_latency(
-        count=args.count,
-        seed=args.seed,
-        warmup=args.warmup,
-        include_samples=args.include_samples,
-    )
+    csv_samples = []
+
+    def record_order_sample(elapsed_ns, completed, total, side, order_id):
+        csv_samples.append(
+            (
+                completed,
+                order_id,
+                side,
+                elapsed_ns,
+                datetime.now(timezone.utc).isoformat(),
+            )
+        )
+
+    measurement_options = {
+        "count": args.count,
+        "seed": args.seed,
+        "warmup": args.warmup,
+        "include_samples": args.include_samples,
+    }
+    if args.csv_output is not None:
+        measurement_options["on_order_sample"] = record_order_sample
+
+    result = measure_engine_latency(**measurement_options)
     budget_statuses = []
     for percentile in ("p95", "p99"):
         limit_ns = getattr(args, f"{percentile}_budget_ns")
@@ -196,6 +229,8 @@ def main(argv=None):
 
     if args.output:
         save_result(args.output, result)
+    if args.csv_output is not None:
+        save_samples_csv(args.csv_output, csv_samples)
 
     if args.json:
         print(json.dumps(result, indent=2, allow_nan=False))
