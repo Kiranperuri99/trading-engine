@@ -91,6 +91,31 @@ def measure_engine_latency(
     return result
 
 
+def positive_integer(value):
+    try:
+        number = int(value)
+    except ValueError as error:
+        raise argparse.ArgumentTypeError(
+            "Value must be a positive integer"
+        ) from error
+    if number <= 0:
+        raise argparse.ArgumentTypeError("Value must be a positive integer")
+    return number
+
+
+def _budget_result(measured_ns, limit_ns):
+    return {
+        "limit_ns": limit_ns,
+        "measured_ns": measured_ns,
+        "within_budget": (
+            None if measured_ns is None else measured_ns <= limit_ns
+        ),
+        "utilization_percent": (
+            None if measured_ns is None else round(measured_ns / limit_ns * 100, 1)
+        ),
+    }
+
+
 def build_parser():
     parser = argparse.ArgumentParser(
         description="Measure individual matching-engine calls."
@@ -127,18 +152,48 @@ def build_parser():
         action="store_true",
         help="Include each order's latency in the report",
     )
+    parser.add_argument(
+        "--p95-budget-ns",
+        type=positive_integer,
+        help="Set a maximum p95 engine-call latency in nanoseconds",
+    )
+    parser.add_argument(
+        "--p99-budget-ns",
+        type=positive_integer,
+        help="Set a maximum p99 engine-call latency in nanoseconds",
+    )
+    parser.add_argument(
+        "--fail-on-budget-exceeded",
+        action="store_true",
+        help="Exit with status 1 when a configured latency budget is missed or unavailable",
+    )
     return parser
 
 
 def main(argv=None):
     parser = build_parser()
     args = parser.parse_args(argv)
+    if args.fail_on_budget_exceeded and not any((
+        args.p95_budget_ns,
+        args.p99_budget_ns,
+    )):
+        parser.error("--fail-on-budget-exceeded requires a p95 or p99 budget")
+
     result = measure_engine_latency(
         count=args.count,
         seed=args.seed,
         warmup=args.warmup,
         include_samples=args.include_samples,
     )
+    budget_statuses = []
+    for percentile in ("p95", "p99"):
+        limit_ns = getattr(args, f"{percentile}_budget_ns")
+        if limit_ns is None:
+            continue
+        budget = _budget_result(result["latency"][f"{percentile}_ns"], limit_ns)
+        result[f"{percentile}_budget"] = budget
+        budget_statuses.append(budget["within_budget"])
+
     if args.output:
         save_result(args.output, result)
 
@@ -171,11 +226,33 @@ def main(argv=None):
                 for name, value in stats.items():
                     print(f"  {name}: {value}")
 
+        for percentile in ("p95", "p99"):
+            budget = result.get(f"{percentile}_budget")
+            if budget is None:
+                continue
+            measured_ns = budget["measured_ns"]
+            if measured_ns is None:
+                status = "waiting for samples"
+            elif budget["within_budget"]:
+                status = f"within budget | {budget['utilization_percent']:.1f}% used"
+            else:
+                status = f"OVER BUDGET | {budget['utilization_percent']:.1f}% used"
+            measured_text = "n/a" if measured_ns is None else str(measured_ns)
+            print(
+                f"{percentile.upper()} budget: {budget['limit_ns']} ns | "
+                f"measured {measured_text} ns | {status}"
+            )
+
         if result.get("summary"):
             print("Engine summary:")
             for name, value in result["summary"].items():
                 print(f" {name}: {value}")
         
+
+    if args.fail_on_budget_exceeded and any(
+        status is not True for status in budget_statuses
+    ):
+        raise SystemExit(1)
 
     return result
     

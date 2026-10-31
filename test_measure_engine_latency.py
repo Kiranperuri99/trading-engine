@@ -385,5 +385,108 @@ class TestMeasureEngineLatency(unittest.TestCase):
         generate.assert_any_call(1, 8)
         generate.assert_any_call(1, 7)
 
+    def test_cli_budgets_are_in_json_and_saved_report(self):
+        with tempfile.TemporaryDirectory() as directory:
+            report_path = Path(directory) / "budget-report.json"
+            measurement = {
+                "latency": {"count": 100, "p95_ns": 95, "p99_ns": 99},
+                "throughput": {},
+                "latency_by_side": {},
+                "summary": {},
+            }
+            output = StringIO()
+
+            with patch(
+                "measure_engine_latency.measure_engine_latency",
+                return_value=measurement,
+            ), redirect_stdout(output):
+                result = main([
+                    "--p95-budget-ns", "100",
+                    "--p99-budget-ns", "98",
+                    "--json",
+                    "--output", str(report_path),
+                ])
+
+            printed = json.loads(output.getvalue())
+            saved = json.loads(report_path.read_text(encoding="utf-8"))
+
+        self.assertEqual(result, printed)
+        self.assertEqual(saved, printed)
+        self.assertEqual(printed["p95_budget"]["within_budget"], True)
+        self.assertEqual(printed["p95_budget"]["utilization_percent"], 95.0)
+        self.assertEqual(printed["p99_budget"]["within_budget"], False)
+        self.assertEqual(printed["p99_budget"]["utilization_percent"], 101.0)
+
+    def test_human_output_reports_budget_status(self):
+        measurement = {
+            "latency": {"count": 100, "p95_ns": 101, "p99_ns": 120},
+            "latency_by_side": {},
+            "throughput": {},
+            "summary": {},
+        }
+        output = StringIO()
+
+        with patch(
+            "measure_engine_latency.measure_engine_latency",
+            return_value=measurement,
+        ), redirect_stdout(output):
+            main(["--p95-budget-ns", "100", "--p99-budget-ns", "110"])
+
+        self.assertIn("P95 budget: 100 ns | measured 101 ns | OVER BUDGET", output.getvalue())
+        self.assertIn("P99 budget: 110 ns | measured 120 ns | OVER BUDGET", output.getvalue())
+
+    def test_fail_flag_requires_at_least_one_budget(self):
+        error_output = StringIO()
+        with patch("sys.stderr", error_output):
+            with self.assertRaises(SystemExit) as raised:
+                main(["--fail-on-budget-exceeded"])
+
+        self.assertEqual(raised.exception.code, 2)
+        self.assertIn("requires a p95 or p99 budget", error_output.getvalue())
+
+    def test_fail_flag_exits_nonzero_for_missed_or_unavailable_budget(self):
+        measurements = (
+            {"p95_ns": 101, "p99_ns": 100},
+            {"p95_ns": None, "p99_ns": None},
+        )
+        for latency in measurements:
+            with self.subTest(latency=latency):
+                with patch(
+                    "measure_engine_latency.measure_engine_latency",
+                    return_value={"latency": latency},
+                ), redirect_stdout(StringIO()):
+                    with self.assertRaises(SystemExit) as raised:
+                        main([
+                            "--p95-budget-ns", "100",
+                            "--fail-on-budget-exceeded",
+                        ])
+
+                self.assertEqual(raised.exception.code, 1)
+
+    def test_fail_flag_returns_normally_when_budget_is_met(self):
+        measurement = {"latency": {"p95_ns": 95, "p99_ns": 99}}
+        with patch(
+            "measure_engine_latency.measure_engine_latency",
+            return_value=measurement,
+        ), redirect_stdout(StringIO()):
+            result = main([
+                "--p95-budget-ns", "100",
+                "--fail-on-budget-exceeded",
+            ])
+
+        self.assertIs(result, measurement)
+        self.assertTrue(result["p95_budget"]["within_budget"])
+
+    def test_parser_rejects_non_positive_latency_budgets(self):
+        for option, value in (("--p95-budget-ns", "0"), ("--p99-budget-ns", "-1")):
+            with self.subTest(option=option, value=value):
+                error_output = StringIO()
+                with patch("sys.stderr", error_output):
+                    with self.assertRaises(SystemExit) as raised:
+                        build_parser().parse_args([option, value])
+
+                self.assertEqual(raised.exception.code, 2)
+                self.assertIn("positive integer", error_output.getvalue())
+
 if __name__ == "__main__":
     unittest.main()
