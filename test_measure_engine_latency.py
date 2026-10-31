@@ -645,7 +645,26 @@ class TestMeasureEngineLatency(unittest.TestCase):
             "P99.9 budget: 120 ns | measured 125 ns | OVER BUDGET",
             output.getvalue(),
         )
+    def test_side_only_p99_9_budget_fails_when_missed(self):
+        measurement = {
+            "latency": {"p99_9_ns": 90},
+            "latency_by_side": {
+                "BUY": {"p99_9_ns": 105},
+                "SELL": {"p99_9_ns": 80},
+            },
+        }
 
+        with patch(
+            "measure_engine_latency.measure_engine_latency",
+            return_value=measurement,
+        ), redirect_stdout(StringIO()):
+            with self.assertRaises(SystemExit) as raised:
+                main([
+                    "--buy-p99-9-budget-ns", "100",
+                    "--fail-on-budget-exceeded",
+                ])
+
+        self.assertEqual(raised.exception.code, 1)
     def test_side_only_budget_is_checked_by_fail_flag(self):
         measurement = {
             "latency": {"p95_ns": 80, "p99_ns": 90},
