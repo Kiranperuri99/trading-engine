@@ -19,6 +19,7 @@ def measure_engine_latency(
     warmup=0,
     include_samples=False,
     on_sample=None,
+    on_order_sample=None,
 ):
     engine = ChronosMatch(verbose=False)
     samples = []
@@ -39,6 +40,8 @@ def measure_engine_latency(
         side_samples[side].append(elapsed)
         if on_sample is not None:
             on_sample(elapsed, completed, count, side)
+        if on_order_sample is not None:
+            on_order_sample(elapsed, completed, count, side, order.order_id)
 
     result = {
         "schema_version": 1,

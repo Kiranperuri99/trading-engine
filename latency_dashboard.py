@@ -39,7 +39,9 @@ def _budget_result(measured_ns, limit_ns):
 def save_samples_csv(path, samples):
     with Path(path).open("x", newline="", encoding="utf-8") as output_file:
         writer = csv.writer(output_file)
-        writer.writerow(("order_number", "side", "latency_ns", "recorded_at_utc"))
+        writer.writerow(
+            ("order_number", "order_id", "side", "latency_ns", "recorded_at_utc")
+        )
         writer.writerows(samples)
 
 
@@ -195,11 +197,19 @@ def run_live_dashboard(
     def on_sample(elapsed_ns, completed, total, side):
         history.append(elapsed_ns)
         history_by_side[side].append(elapsed_ns)
-        csv_samples.append(
-            (completed, side, elapsed_ns, datetime.now(timezone.utc).isoformat())
-        )
         if completed % refresh_every == 0 or completed == total:
             draw(completed, total, side)
+
+    def on_order_sample(elapsed_ns, completed, total, side, order_id):
+        csv_samples.append(
+            (
+                completed,
+                order_id,
+                side,
+                elapsed_ns,
+                datetime.now(timezone.utc).isoformat(),
+            )
+        )
 
     measurement_options = {
         "count": count,
@@ -209,6 +219,8 @@ def run_live_dashboard(
     }
     if report_path is not None:
         measurement_options["include_samples"] = True
+    if csv_path is not None:
+        measurement_options["on_order_sample"] = on_order_sample
 
     result = measure_engine_latency(**measurement_options)
     if count == 0:

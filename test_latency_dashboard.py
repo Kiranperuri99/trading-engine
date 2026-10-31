@@ -211,9 +211,11 @@ class TestLatencyDashboard(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             csv_path = Path(directory) / "latency-samples.csv"
 
-            def fake_measure(count, seed, warmup, on_sample):
+            def fake_measure(count, seed, warmup, on_sample, on_order_sample):
                 on_sample(12, 1, 2, "BUY")
                 on_sample(18, 2, 2, "SELL")
+                on_order_sample(12, 1, 2, "BUY", 501)
+                on_order_sample(18, 2, 2, "SELL", 502)
                 return {"latency": {"count": 2}}
 
             with patch(
@@ -232,12 +234,12 @@ class TestLatencyDashboard(unittest.TestCase):
 
         self.assertEqual(
             rows[0],
-            ["order_number", "side", "latency_ns", "recorded_at_utc"],
+            ["order_number", "order_id", "side", "latency_ns", "recorded_at_utc"],
         )
-        self.assertEqual(rows[1][:3], ["1", "BUY", "12"])
-        self.assertEqual(rows[2][:3], ["2", "SELL", "18"])
+        self.assertEqual(rows[1][:4], ["1", "501", "BUY", "12"])
+        self.assertEqual(rows[2][:4], ["2", "502", "SELL", "18"])
         for row in rows[1:]:
-            timestamp = datetime.fromisoformat(row[3])
+            timestamp = datetime.fromisoformat(row[4])
             self.assertIsNotNone(timestamp.tzinfo)
 
     def test_csv_output_does_not_overwrite_existing_file(self):

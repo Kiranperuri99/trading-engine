@@ -73,6 +73,30 @@ class TestMeasureEngineLatency(unittest.TestCase):
             [(15, 1, 2, "BUY"), (30, 2, 2, "SELL")],
         )
         self.assertEqual(result["latency"]["count"], 2)
+
+    def test_order_sample_callback_includes_order_id(self):
+        orders = [
+            Order(51, "BUY", 100.0, 1),
+            Order(72, "SELL", 101.0, 1),
+        ]
+        updates = []
+
+        with patch(
+            "measure_engine_latency.generate_orders",
+            return_value=orders,
+        ), patch(
+            "measure_engine_latency.perf_counter_ns",
+            side_effect=[100, 115, 200, 230],
+        ):
+            measure_engine_latency(
+                count=2,
+                on_order_sample=lambda *update: updates.append(update),
+            )
+
+        self.assertEqual(
+            updates,
+            [(15, 1, 2, "BUY", 51), (30, 2, 2, "SELL", 72)],
+        )
     def test_json_report_has_utc_timestamp(self):
         with patch(
             "measure_engine_latency.generate_orders",
