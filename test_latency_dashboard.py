@@ -40,6 +40,40 @@ class TestLatencyDashboard(unittest.TestCase):
         self.assertIn("100.0% used", within)
         self.assertIn("105.3% used", exceeded)
 
+    def test_render_frame_reports_p95_budget_state(self):
+        samples = list(range(1, 101))
+        within = render_frame(
+            samples, completed=100, total=100, side="BUY", p95_budget_ns=95
+        )
+        exceeded = render_frame(
+            samples, completed=100, total=100, side="BUY", p95_budget_ns=94
+        )
+        waiting = render_frame([], completed=0, total=0, side=None, p95_budget_ns=95)
+        side_frame = render_frame(
+            samples,
+            completed=100,
+            total=100,
+            side="BUY",
+            samples_by_side={"BUY": samples, "SELL": []},
+            p95_budget_ns=95,
+            side_p95_budgets={"BUY": 90},
+        )
+
+        self.assertIn("P95 budget: 95 ns | within budget (p95 95 ns)", within)
+        self.assertIn("P95 budget: 94 ns | OVER BUDGET (p95 95 ns)", exceeded)
+        self.assertIn("P95 budget: 95 ns | waiting for samples", waiting)
+        self.assertIn("p95 budget OVER BUDGET (105.6% used)", side_frame)
+
+    def test_live_dashboard_rejects_non_positive_p95_budgets(self):
+        for budget in (0, -1, 1.5, True):
+            with self.subTest(budget=budget):
+                with self.assertRaisesRegex(ValueError, "P95 budget"):
+                    run_live_dashboard(p95_budget_ns=budget)
+        for side_budget in (0, -1, 1.5, True):
+            with self.subTest(side_budget=side_budget):
+                with self.assertRaisesRegex(ValueError, "p95 budget"):
+                    run_live_dashboard(sell_p95_budget_ns=side_budget)
+
     def test_live_dashboard_rejects_non_positive_p99_budget(self):
         for budget in (0, -1, 1.5, True):
             with self.subTest(budget=budget):
@@ -57,7 +91,7 @@ class TestLatencyDashboard(unittest.TestCase):
                 main(["--fail-on-budget-exceeded"])
 
         self.assertEqual(raised.exception.code, 2)
-        self.assertIn("requires at least one p99 budget", error_output.getvalue())
+        self.assertIn("requires at least one p95 or p99 budget", error_output.getvalue())
 
     def test_fail_flag_exits_nonzero_when_budget_is_missed_or_unavailable(self):
         for within_budget in (False, None):
@@ -73,6 +107,16 @@ class TestLatencyDashboard(unittest.TestCase):
                         ])
 
                 self.assertEqual(raised.exception.code, 1)
+
+    def test_fail_flag_exits_nonzero_when_p95_budget_is_missed(self):
+        with patch(
+            "latency_dashboard.run_live_dashboard",
+            return_value={"p95_budget": {"within_budget": False}},
+        ):
+            with self.assertRaises(SystemExit) as raised:
+                main(["--p95-budget-ns", "50000", "--fail-on-budget-exceeded"])
+
+        self.assertEqual(raised.exception.code, 1)
 
     def test_fail_flag_returns_normally_when_budget_is_met(self):
         expected = {"p99_budget": {"within_budget": True}}
@@ -202,8 +246,11 @@ class TestLatencyDashboard(unittest.TestCase):
             "--window", "8",
             "--refresh-every", "2",
             "--p99-budget-ns", "50000",
-                            "--buy-p99-budget-ns", "45000",
+            "--buy-p99-budget-ns", "45000",
             "--sell-p99-budget-ns", "60000",
+            "--p95-budget-ns", "40000",
+            "--buy-p95-budget-ns", "35000",
+            "--sell-p95-budget-ns", "45000",
             "--fail-on-budget-exceeded",
             "--output", "latency-live.json",
             "--csv-output", "latency-samples.csv",
@@ -216,6 +263,9 @@ class TestLatencyDashboard(unittest.TestCase):
         self.assertEqual(args.p99_budget_ns, 50000)
         self.assertEqual(args.buy_p99_budget_ns, 45000)
         self.assertEqual(args.sell_p99_budget_ns, 60000)
+        self.assertEqual(args.p95_budget_ns, 40000)
+        self.assertEqual(args.buy_p95_budget_ns, 35000)
+        self.assertEqual(args.sell_p95_budget_ns, 45000)
         self.assertTrue(args.fail_on_budget_exceeded)
         self.assertEqual(args.output, "latency-live.json")
         self.assertEqual(args.csv_output, "latency-samples.csv")
@@ -363,6 +413,46 @@ class TestLatencyDashboard(unittest.TestCase):
                         saved["p99_budget_by_side"],
                         result["p99_budget_by_side"],
                     )
+
+    def test_saved_json_includes_global_and_side_p95_budget_outcomes(self):
+        with tempfile.TemporaryDirectory() as directory:
+            report_path = Path(directory) / "p95-report.json"
+
+            def fake_measure(count, seed, warmup, on_sample, include_samples):
+                return {
+                    "latency": {"count": 2, "p95_ns": 20},
+                    "latency_by_side": {
+                        "BUY": {"p95_ns": 20},
+                        "SELL": {"p95_ns": 20},
+                    },
+                }
+
+            with patch(
+                "latency_dashboard.measure_engine_latency",
+                side_effect=fake_measure,
+            ):
+                result = run_live_dashboard(
+                    output=io.StringIO(),
+                    report_path=report_path,
+                    p95_budget_ns=15,
+                    buy_p95_budget_ns=25,
+                )
+
+            self.assertEqual(
+                result["p95_budget"],
+                {
+                    "limit_ns": 15,
+                    "measured_ns": 20,
+                    "within_budget": False,
+                    "utilization_percent": 133.3,
+                },
+            )
+            self.assertTrue(result["p95_budget_by_side"]["BUY"]["within_budget"])
+            self.assertFalse(result["p95_budget_by_side"]["SELL"]["within_budget"])
+            self.assertEqual(
+                json.loads(report_path.read_text(encoding="utf-8")),
+                result,
+            )
 
     def test_side_specific_json_budgets_override_the_shared_budget(self):
         def fake_measure(count, seed, warmup, on_sample, include_samples=False):
