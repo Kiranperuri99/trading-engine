@@ -60,6 +60,19 @@ class TestLatencyDashboard(unittest.TestCase):
         self.assertIn("BUY median 20.0 ns, p99 30 ns", frame)
         self.assertIn("SELL median 20 ns, p99 20 ns", frame)
 
+    def test_render_frame_reports_per_side_budget_state(self):
+        frame = render_frame(
+            [10, 15, 30],
+            completed=3,
+            total=3,
+            side="SELL",
+            samples_by_side={"BUY": [10, 15], "SELL": [30]},
+            p99_budget_ns=20,
+        )
+
+        self.assertIn("BUY median 12.5 ns, p99 15 ns | budget within budget", frame)
+        self.assertIn("SELL median 30 ns, p99 30 ns | budget OVER BUDGET", frame)
+
     def test_live_run_refreshes_and_keeps_only_configured_window(self):
         output = io.StringIO()
 
@@ -152,6 +165,10 @@ class TestLatencyDashboard(unittest.TestCase):
                         p99_ns = 20 if count else None
                         return {
                             "latency": {"count": count, "p99_ns": p99_ns},
+                            "latency_by_side": {
+                                "BUY": {"p99_ns": p99_ns},
+                                "SELL": {"p99_ns": None},
+                            },
                             "samples_ns": [20] if include_samples and count else [],
                         }
 
@@ -172,8 +189,23 @@ class TestLatencyDashboard(unittest.TestCase):
                         "within_budget": expected,
                     }
                     self.assertEqual(result["p99_budget"], expected_budget)
+                    self.assertEqual(
+                        result["p99_budget_by_side"],
+                        {
+                            "BUY": expected_budget,
+                            "SELL": {
+                                "limit_ns": budget,
+                                "measured_ns": None,
+                                "within_budget": None,
+                            },
+                        },
+                    )
                     saved = json.loads(report_path.read_text(encoding="utf-8"))
                     self.assertEqual(saved["p99_budget"], expected_budget)
+                    self.assertEqual(
+                        saved["p99_budget_by_side"],
+                        result["p99_budget_by_side"],
+                    )
 
     def test_output_option_does_not_overwrite_existing_file(self):
         with tempfile.TemporaryDirectory() as directory:

@@ -65,9 +65,21 @@ def render_frame(
         side_summaries = []
         for side_name in ("BUY", "SELL"):
             side_stats = summarize_latencies(samples_by_side.get(side_name, ()))
-            side_summaries.append(
+            side_summary = (
                 f"{side_name} median {show(side_stats['median_ns'])} ns, "
                 f"p99 {show(side_stats['p99_ns'])} ns"
+            )
+            if p99_budget_ns is not None:
+                side_p99 = side_stats["p99_ns"]
+                if side_p99 is None:
+                    side_status = "waiting for samples"
+                elif side_p99 <= p99_budget_ns:
+                    side_status = "within budget"
+                else:
+                    side_status = "OVER BUDGET"
+                side_summary += f" | budget {side_status}"
+            side_summaries.append(
+                side_summary
             )
         lines.insert(4, " | ".join(side_summaries))
 
@@ -151,6 +163,16 @@ def run_live_dashboard(
             "measured_ns": p99_ns,
             "within_budget": None if p99_ns is None else p99_ns <= p99_budget_ns,
         }
+        result["p99_budget_by_side"] = {}
+        for side_name in ("BUY", "SELL"):
+            side_p99 = result.get("latency_by_side", {}).get(side_name, {}).get("p99_ns")
+            result["p99_budget_by_side"][side_name] = {
+                "limit_ns": p99_budget_ns,
+                "measured_ns": side_p99,
+                "within_budget": (
+                    None if side_p99 is None else side_p99 <= p99_budget_ns
+                ),
+            }
     if report_path is not None:
         save_result(report_path, result)
     return result
