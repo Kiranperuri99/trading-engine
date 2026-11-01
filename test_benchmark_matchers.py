@@ -45,6 +45,7 @@ class TestBenchmarkMatchers(unittest.TestCase):
         self.assertEqual(result["results"]["cython"]["median_elapsed_ns"], 30)
         self.assertEqual(result["results"]["cython"]["max_elapsed_ns"], 30)
         self.assertEqual(result["median_time_difference_ns"], -5)
+        self.assertEqual(result["schema_version"], 1)
         self.assertAlmostEqual(result["cython_speedup_ratio"], 25 / 30)
 
     def test_benchmark_rejects_non_positive_workload_values(self):
@@ -102,6 +103,7 @@ class TestBenchmarkMatchers(unittest.TestCase):
 
     def test_json_output_saves_complete_report_to_file(self):
         result = {
+            "schema_version": 1,
             "configuration": {"count": 1},
             "environment": {},
             "results": {},
@@ -133,6 +135,7 @@ class TestBenchmarkMatchers(unittest.TestCase):
 
     def test_csv_output_saves_each_measured_matcher_run(self):
         result = {
+            "schema_version": 1,
             "configuration": {
                 "count": 100,
                 "seed": 7,
@@ -175,6 +178,7 @@ class TestBenchmarkMatchers(unittest.TestCase):
 
         self.assertEqual(rows, [
             [
+                "schema_version",
                 "matcher",
                 "run_number",
                 "elapsed_ns",
@@ -197,7 +201,7 @@ class TestBenchmarkMatchers(unittest.TestCase):
                 "pending_sell_quantity",
             ],
             [
-                "python", "1", "100", "1000000000.0",
+                "1", "python", "1", "100", "1000000000.0",
                 "2.0",
                 "2026-11-01T12:00:00+00:00",
                 "3.14.7", "CPython", "Windows", "11", "AMD64", "64",
@@ -205,7 +209,7 @@ class TestBenchmarkMatchers(unittest.TestCase):
                 "3", "25", "4", "5",
             ],
             [
-                "python", "2", "0", "",
+                "1", "python", "2", "0", "",
                 "0.0",
                 "2026-11-01T12:00:00+00:00",
                 "3.14.7", "CPython", "Windows", "11", "AMD64", "64",
@@ -213,7 +217,7 @@ class TestBenchmarkMatchers(unittest.TestCase):
                 "3", "25", "4", "5",
             ],
             [
-                "cython", "1", "50", "2000000000.0",
+                "1", "cython", "1", "50", "2000000000.0",
                 "2.0",
                 "2026-11-01T12:00:00+00:00",
                 "3.14.7", "CPython", "Windows", "11", "AMD64", "64",
@@ -221,7 +225,7 @@ class TestBenchmarkMatchers(unittest.TestCase):
                 "3", "25", "4", "5",
             ],
             [
-                "cython", "2", "100", "1000000000.0",
+                "1", "cython", "2", "100", "1000000000.0",
                 "0.0",
                 "2026-11-01T12:00:00+00:00",
                 "3.14.7", "CPython", "Windows", "11", "AMD64", "64",

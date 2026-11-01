@@ -126,12 +126,13 @@ benchmark does not measure the latency of individual orders. The reports also
 include `median_time_difference_ns`, calculated as Python median time minus
 Cython median time. A positive value means the Cython median was faster.
 
-The JSON report includes a UTC generation timestamp. The CSV includes that
-timestamp alongside the matcher name, run number, elapsed nanoseconds, order
-count, per-run orders per second, seed, measured repeat count, warm-up count,
-Python version and implementation, operating system and release, machine, and
-pointer width. It also records each matcher’s trade count, traded quantity,
-and remaining BUY and SELL quantities. Each row also includes the paired-run
+The JSON report includes schema version 1 and a UTC generation timestamp. The
+CSV includes the schema version and timestamp alongside the matcher name, run
+number, elapsed nanoseconds, order count, per-run orders per second, seed,
+measured repeat count, warm-up count, Python version and implementation,
+operating system and release, machine, and pointer width. It also records each
+matcher’s trade count, traded quantity, and remaining BUY and SELL quantities.
+Each row also includes the paired-run
 speedup ratio, calculated as Python elapsed time divided by Cython elapsed
 time for that repeat. Each row therefore keeps its report time, workload
 settings, runtime environment, outcome summary, and paired comparison. The

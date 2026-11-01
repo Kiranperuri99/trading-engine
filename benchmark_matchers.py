@@ -14,6 +14,8 @@ from result_export import save_result
 from run_simulation import non_negative_count
 from trading_engine import ChronosMatch, Order
 
+MATCHER_REPORT_SCHEMA_VERSION = 1
+
 try:
     from cython_matcher import CythonMatchCore
 except ImportError:
@@ -115,6 +117,7 @@ def save_matcher_samples_csv(path, result):
     with Path(path).open("x", newline="", encoding="utf-8") as output_file:
         writer = csv.writer(output_file)
         writer.writerow((
+            "schema_version",
             "matcher",
             "run_number",
             "elapsed_ns",
@@ -156,6 +159,7 @@ def save_matcher_samples_csv(path, result):
                     else None
                 )
                 writer.writerow((
+                    result["schema_version"],
                     matcher,
                     run_number,
                     elapsed_ns,
@@ -238,6 +242,7 @@ def benchmark_matchers(count=1000, seed=42, repeats=5, warmup=1):
     median_time_difference_ns = python_median - cython_median
 
     return {
+        "schema_version": MATCHER_REPORT_SCHEMA_VERSION,
         "generated_at_utc": datetime.now(timezone.utc).isoformat(),
         "configuration": {
             "mode": "matching-core",
