@@ -122,7 +122,9 @@ python benchmark_matchers.py --count 1000 --seed 42 --repeats 5 --warmup 1 --csv
 
 The text and JSON reports include minimum, median, and maximum elapsed batch
 times for each matcher. These values summarize full workload runs; the
-benchmark does not measure the latency of individual orders.
+benchmark does not measure the latency of individual orders. The reports also
+include `median_time_difference_ns`, calculated as Python median time minus
+Cython median time. A positive value means the Cython median was faster.
 
 The JSON report includes a UTC generation timestamp. The CSV includes that
 timestamp alongside the matcher name, run number, elapsed nanoseconds, order

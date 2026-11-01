@@ -235,6 +235,7 @@ def benchmark_matchers(count=1000, seed=42, repeats=5, warmup=1):
     }
     python_median = results["python"]["median_elapsed_ns"]
     cython_median = results["cython"]["median_elapsed_ns"]
+    median_time_difference_ns = python_median - cython_median
 
     return {
         "generated_at_utc": datetime.now(timezone.utc).isoformat(),
@@ -247,6 +248,7 @@ def benchmark_matchers(count=1000, seed=42, repeats=5, warmup=1):
         },
         "environment": benchmark_environment(),
         "results": results,
+        "median_time_difference_ns": median_time_difference_ns,
         "cython_speedup_ratio": (
             python_median / cython_median if cython_median > 0 else None
         ),
@@ -337,6 +339,7 @@ def main(argv=None):
         print(f"{name}: max_elapsed_ns={values['max_elapsed_ns']}")
         print(f"{name}: orders_per_second={values['orders_per_second']}")
         print(f"{name}: median_ns_per_order={values['median_ns_per_order']}")
+    print(f"python_minus_cython_median_ns: {result['median_time_difference_ns']}")
     print(f"cython_speedup_ratio: {result['cython_speedup_ratio']}")
 
 

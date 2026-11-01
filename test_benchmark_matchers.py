@@ -44,6 +44,7 @@ class TestBenchmarkMatchers(unittest.TestCase):
         self.assertEqual(result["results"]["cython"]["min_elapsed_ns"], 30)
         self.assertEqual(result["results"]["cython"]["median_elapsed_ns"], 30)
         self.assertEqual(result["results"]["cython"]["max_elapsed_ns"], 30)
+        self.assertEqual(result["median_time_difference_ns"], -5)
         self.assertAlmostEqual(result["cython_speedup_ratio"], 25 / 30)
 
     def test_benchmark_rejects_non_positive_workload_values(self):
@@ -104,6 +105,7 @@ class TestBenchmarkMatchers(unittest.TestCase):
             "configuration": {"count": 1},
             "environment": {},
             "results": {},
+            "median_time_difference_ns": 0,
             "cython_speedup_ratio": 1.0,
         }
         with tempfile.TemporaryDirectory() as directory:
@@ -286,6 +288,7 @@ class TestBenchmarkMatchers(unittest.TestCase):
                     "median_ns_per_order": 0.5,
                 },
             },
+            "median_time_difference_ns": -2,
             "cython_speedup_ratio": 2.0,
         }
         output = io.StringIO()
@@ -297,6 +300,7 @@ class TestBenchmarkMatchers(unittest.TestCase):
         self.assertIn("python: max_elapsed_ns=20", output.getvalue())
         self.assertIn("cython: min_elapsed_ns=5", output.getvalue())
         self.assertIn("cython: max_elapsed_ns=12", output.getvalue())
+        self.assertIn("python_minus_cython_median_ns: -2", output.getvalue())
 
     @unittest.skipIf(
         CythonMatchCore is None,
