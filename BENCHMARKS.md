@@ -102,6 +102,7 @@ The dashboard can also use `--p95-budget-ns`, `--buy-p95-budget-ns`, and
 `--sell-p95-budget-ns`, along with the equivalent p99 and p99.9 options.
 `--output` saves the final JSON report; `--csv-output`
 saves one CSV row per measured order. Both output paths must be new files. The
+JSON and CSV paths must also be different from each other. The
 JSON report records the rolling `window` and `refresh_every` settings under
 `dashboard`. Add `--json` to print the final report to stdout while the live
 progress display is sent to stderr.
@@ -112,3 +113,12 @@ Use `python latency_dashboard.py --help` to see all available options.
 
 For a repeatable Python-versus-Cython matcher comparison, see
 [CYTHON_MATCHER.md](CYTHON_MATCHER.md).
+
+Export each measured run from that comparison to CSV with:
+
+```powershell
+python benchmark_matchers.py --count 1000 --seed 42 --repeats 5 --warmup 1 --csv-output matcher-timings.csv
+```
+
+The CSV includes the matcher name, run number, and elapsed nanoseconds. Its
+output path must be new; existing files are not overwritten.

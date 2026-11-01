@@ -1,6 +1,9 @@
+import csv
 import io
+import tempfile
 import unittest
 from contextlib import redirect_stdout
+from pathlib import Path
 from unittest.mock import patch
 
 from benchmark_matchers import (
@@ -70,6 +73,60 @@ class TestBenchmarkMatchers(unittest.TestCase):
         self.assertEqual(selected.repeats, 3)
         self.assertEqual(selected.warmup, 0)
         self.assertTrue(selected.json)
+
+    def test_parser_accepts_csv_output(self):
+        args = build_parser().parse_args([
+            "--csv-output", "matcher-timings.csv",
+        ])
+
+        self.assertEqual(args.csv_output, Path("matcher-timings.csv"))
+
+    def test_csv_output_saves_each_measured_matcher_run(self):
+        result = {
+            "configuration": {},
+            "environment": {},
+            "results": {
+                "python": {"samples_ns": [100, 120]},
+                "cython": {"samples_ns": [50, 60]},
+            },
+            "cython_speedup_ratio": 2.0,
+        }
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "matcher-timings.csv"
+            with patch("benchmark_matchers.benchmark_matchers", return_value=result):
+                with redirect_stdout(io.StringIO()):
+                    main(["--csv-output", str(path), "--json"])
+
+            with path.open(newline="", encoding="utf-8") as input_file:
+                rows = list(csv.reader(input_file))
+
+        self.assertEqual(rows, [
+            ["matcher", "run_number", "elapsed_ns"],
+            ["python", "1", "100"],
+            ["python", "2", "120"],
+            ["cython", "1", "50"],
+            ["cython", "2", "60"],
+        ])
+
+    def test_csv_output_does_not_overwrite_existing_file(self):
+        result = {
+            "configuration": {},
+            "environment": {},
+            "results": {
+                "python": {"samples_ns": [100]},
+                "cython": {"samples_ns": [50]},
+            },
+            "cython_speedup_ratio": 2.0,
+        }
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "matcher-timings.csv"
+            path.write_text("keep", encoding="utf-8")
+            with patch("benchmark_matchers.benchmark_matchers", return_value=result):
+                with redirect_stdout(io.StringIO()):
+                    with self.assertRaises(FileExistsError):
+                        main(["--csv-output", str(path)])
+
+            self.assertEqual(path.read_text(encoding="utf-8"), "keep")
 
     def test_json_output_is_valid(self):
         output = io.StringIO()

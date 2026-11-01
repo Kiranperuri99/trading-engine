@@ -1,7 +1,9 @@
 """Compare the Python and Cython matching cores on identical order streams."""
 
 import argparse
+import csv
 import json
+from pathlib import Path
 from statistics import median
 from time import perf_counter_ns
 
@@ -101,6 +103,18 @@ def _summarize(samples_ns, count, snapshot):
         "traded_quantity": snapshot["total_traded_quantity"],
         "pending_quantities": snapshot["pending_quantities"],
     }
+
+
+def save_matcher_samples_csv(path, result):
+    with Path(path).open("x", newline="", encoding="utf-8") as output_file:
+        writer = csv.writer(output_file)
+        writer.writerow(("matcher", "run_number", "elapsed_ns"))
+        for matcher in ("python", "cython"):
+            samples = result["results"][matcher]["samples_ns"]
+            writer.writerows(
+                (matcher, run_number, elapsed_ns)
+                for run_number, elapsed_ns in enumerate(samples, start=1)
+            )
 
 
 def benchmark_matchers(count=1000, seed=42, repeats=5, warmup=1):
@@ -209,6 +223,11 @@ def build_parser():
         action="store_true",
         help="Print the benchmark report as JSON",
     )
+    parser.add_argument(
+        "--csv-output",
+        type=Path,
+        help="Save each measured matcher timing to a new CSV file",
+    )
     return parser
 
 
@@ -225,6 +244,9 @@ def main(argv=None):
         )
     except RuntimeError as error:
         parser.error(str(error))
+
+    if args.csv_output is not None:
+        save_matcher_samples_csv(args.csv_output, result)
 
     if args.json:
         print(json.dumps(result, indent=2, allow_nan=False))
