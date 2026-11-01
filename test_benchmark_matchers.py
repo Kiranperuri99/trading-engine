@@ -177,6 +177,7 @@ class TestBenchmarkMatchers(unittest.TestCase):
                 "run_number",
                 "elapsed_ns",
                 "orders_per_second",
+                "paired_speedup_ratio",
                 "generated_at_utc",
                 "python_version",
                 "python_implementation",
@@ -195,6 +196,7 @@ class TestBenchmarkMatchers(unittest.TestCase):
             ],
             [
                 "python", "1", "100", "1000000000.0",
+                "2.0",
                 "2026-11-01T12:00:00+00:00",
                 "3.14.7", "CPython", "Windows", "11", "AMD64", "64",
                 "100", "7", "2", "1",
@@ -202,6 +204,7 @@ class TestBenchmarkMatchers(unittest.TestCase):
             ],
             [
                 "python", "2", "0", "",
+                "0.0",
                 "2026-11-01T12:00:00+00:00",
                 "3.14.7", "CPython", "Windows", "11", "AMD64", "64",
                 "100", "7", "2", "1",
@@ -209,6 +212,7 @@ class TestBenchmarkMatchers(unittest.TestCase):
             ],
             [
                 "cython", "1", "50", "2000000000.0",
+                "2.0",
                 "2026-11-01T12:00:00+00:00",
                 "3.14.7", "CPython", "Windows", "11", "AMD64", "64",
                 "100", "7", "2", "1",
@@ -216,6 +220,7 @@ class TestBenchmarkMatchers(unittest.TestCase):
             ],
             [
                 "cython", "2", "100", "1000000000.0",
+                "0.0",
                 "2026-11-01T12:00:00+00:00",
                 "3.14.7", "CPython", "Windows", "11", "AMD64", "64",
                 "100", "7", "2", "1",

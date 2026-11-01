@@ -119,6 +119,7 @@ def save_matcher_samples_csv(path, result):
             "run_number",
             "elapsed_ns",
             "orders_per_second",
+            "paired_speedup_ratio",
             "generated_at_utc",
             "python_version",
             "python_implementation",
@@ -135,6 +136,8 @@ def save_matcher_samples_csv(path, result):
             "pending_buy_quantity",
             "pending_sell_quantity",
         ))
+        python_samples = result["results"]["python"]["samples_ns"]
+        cython_samples = result["results"]["cython"]["samples_ns"]
         for matcher in ("python", "cython"):
             matcher_result = result["results"][matcher]
             samples = matcher_result["samples_ns"]
@@ -145,11 +148,19 @@ def save_matcher_samples_csv(path, result):
                     if elapsed_ns > 0
                     else None
                 )
+                python_elapsed_ns = python_samples[run_number - 1]
+                cython_elapsed_ns = cython_samples[run_number - 1]
+                paired_speedup_ratio = (
+                    python_elapsed_ns / cython_elapsed_ns
+                    if cython_elapsed_ns > 0
+                    else None
+                )
                 writer.writerow((
                     matcher,
                     run_number,
                     elapsed_ns,
                     orders_per_second,
+                    paired_speedup_ratio,
                     result["generated_at_utc"],
                     environment["python_version"],
                     environment["python_implementation"],
