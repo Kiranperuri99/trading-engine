@@ -264,6 +264,9 @@ def run_live_dashboard(
     buy_p95_budget_ns=None,
     sell_p95_budget_ns=None,
 ):
+    if report_path is not None and csv_path is not None:
+        if Path(report_path).resolve() == Path(csv_path).resolve():
+            raise ValueError("JSON and CSV output paths must be different")
     if type(window) is not int or window <= 0:
         raise ValueError("Window size must be a positive integer")
     if type(refresh_every) is not int or refresh_every <= 0:
@@ -530,6 +533,9 @@ def build_parser():
 def main(argv=None):
     parser = build_parser()
     args = parser.parse_args(argv)
+    if args.output is not None and args.csv_output is not None:
+        if Path(args.output).resolve() == Path(args.csv_output).resolve():
+            parser.error("--output and --csv-output must use different file paths")
     if args.fail_on_budget_exceeded and not any((
         args.p95_budget_ns,
         args.buy_p95_budget_ns,

@@ -467,6 +467,38 @@ class TestLatencyDashboard(unittest.TestCase):
 
             self.assertEqual(csv_path.read_text(encoding="utf-8"), "keep")
 
+    def test_json_and_csv_outputs_reject_the_same_path(self):
+        with tempfile.TemporaryDirectory() as directory:
+            report_path = Path(directory) / "combined-output.json"
+            alias_path = Path(directory) / "." / "combined-output.json"
+            error_output = io.StringIO()
+
+            with patch("sys.stderr", error_output):
+                with self.assertRaises(SystemExit) as raised:
+                    main([
+                        "--count", "0",
+                        "--output", str(report_path),
+                        "--csv-output", str(alias_path),
+                    ])
+
+        self.assertEqual(raised.exception.code, 2)
+        self.assertIn("must use different file paths", error_output.getvalue())
+        self.assertFalse(report_path.exists())
+
+    def test_dashboard_api_rejects_same_json_and_csv_path(self):
+        with tempfile.TemporaryDirectory() as directory:
+            output_path = Path(directory) / "combined-output.json"
+
+            with self.assertRaisesRegex(ValueError, "paths must be different"):
+                run_live_dashboard(
+                    count=0,
+                    output=io.StringIO(),
+                    report_path=output_path,
+                    csv_path=output_path,
+                )
+
+            self.assertFalse(output_path.exists())
+
     def test_output_option_saves_final_json_with_raw_samples(self):
         with tempfile.TemporaryDirectory() as directory:
             report_path = Path(directory) / "latency-live.json"
