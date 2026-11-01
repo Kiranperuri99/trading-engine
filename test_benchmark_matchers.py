@@ -143,8 +143,18 @@ class TestBenchmarkMatchers(unittest.TestCase):
                 "pointer_bits": 64,
             },
             "results": {
-                "python": {"samples_ns": [100, 0]},
-                "cython": {"samples_ns": [50, 100]},
+                "python": {
+                    "samples_ns": [100, 0],
+                    "trade_count": 3,
+                    "traded_quantity": 25,
+                    "pending_quantities": {"BUY": 4, "SELL": 5},
+                },
+                "cython": {
+                    "samples_ns": [50, 100],
+                    "trade_count": 3,
+                    "traded_quantity": 25,
+                    "pending_quantities": {"BUY": 4, "SELL": 5},
+                },
             },
             "cython_speedup_ratio": 2.0,
         }
@@ -174,30 +184,38 @@ class TestBenchmarkMatchers(unittest.TestCase):
                 "seed",
                 "measured_repeats",
                 "warmup_runs",
+                "trade_count",
+                "traded_quantity",
+                "pending_buy_quantity",
+                "pending_sell_quantity",
             ],
             [
                 "python", "1", "100", "1000000000.0",
                 "2026-11-01T12:00:00+00:00",
                 "3.14.7", "CPython", "Windows", "11", "AMD64", "64",
                 "100", "7", "2", "1",
+                "3", "25", "4", "5",
             ],
             [
                 "python", "2", "0", "",
                 "2026-11-01T12:00:00+00:00",
                 "3.14.7", "CPython", "Windows", "11", "AMD64", "64",
                 "100", "7", "2", "1",
+                "3", "25", "4", "5",
             ],
             [
                 "cython", "1", "50", "2000000000.0",
                 "2026-11-01T12:00:00+00:00",
                 "3.14.7", "CPython", "Windows", "11", "AMD64", "64",
                 "100", "7", "2", "1",
+                "3", "25", "4", "5",
             ],
             [
                 "cython", "2", "100", "1000000000.0",
                 "2026-11-01T12:00:00+00:00",
                 "3.14.7", "CPython", "Windows", "11", "AMD64", "64",
                 "100", "7", "2", "1",
+                "3", "25", "4", "5",
             ],
         ])
 

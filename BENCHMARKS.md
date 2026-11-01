@@ -124,7 +124,8 @@ The JSON report includes a UTC generation timestamp. The CSV includes that
 timestamp alongside the matcher name, run number, elapsed nanoseconds, order
 count, per-run orders per second, seed, measured repeat count, warm-up count,
 Python version and implementation, operating system and release, machine, and
-pointer width. Each row therefore keeps its report time, workload settings,
-and runtime environment. The CSV output path must be new; existing files are
-not overwritten. `--output` saves the full JSON report, and its path must be
-new and different from the CSV path.
+pointer width. It also records each matcher’s trade count, traded quantity,
+and remaining BUY and SELL quantities. Each row therefore keeps its report
+time, workload settings, runtime environment, and outcome summary. The CSV
+output path must be new; existing files are not overwritten. `--output` saves
+the full JSON report, and its path must be new and different from the CSV path.

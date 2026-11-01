@@ -128,9 +128,15 @@ def save_matcher_samples_csv(path, result):
             "seed",
             "measured_repeats",
             "warmup_runs",
+            "trade_count",
+            "traded_quantity",
+            "pending_buy_quantity",
+            "pending_sell_quantity",
         ))
         for matcher in ("python", "cython"):
-            samples = result["results"][matcher]["samples_ns"]
+            matcher_result = result["results"][matcher]
+            samples = matcher_result["samples_ns"]
+            pending_quantities = matcher_result["pending_quantities"]
             for run_number, elapsed_ns in enumerate(samples, start=1):
                 orders_per_second = (
                     configuration["count"] * 1_000_000_000 / elapsed_ns
@@ -153,6 +159,10 @@ def save_matcher_samples_csv(path, result):
                     configuration["seed"],
                     configuration["repeats"],
                     configuration["warmup"],
+                    matcher_result["trade_count"],
+                    matcher_result["traded_quantity"],
+                    pending_quantities["BUY"],
+                    pending_quantities["SELL"],
                 ))
 
 
