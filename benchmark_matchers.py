@@ -94,7 +94,9 @@ def _summarize(samples_ns, count, snapshot):
     median_elapsed_ns = median(samples_ns)
     return {
         "samples_ns": samples_ns,
+        "min_elapsed_ns": min(samples_ns),
         "median_elapsed_ns": median_elapsed_ns,
+        "max_elapsed_ns": max(samples_ns),
         "orders_per_second": (
             count * 1_000_000_000 / median_elapsed_ns
             if median_elapsed_ns > 0
@@ -319,7 +321,9 @@ def main(argv=None):
     )
     print("Timing covers add_order calls, not order generation or engine setup.")
     for name, values in result["results"].items():
+        print(f"{name}: min_elapsed_ns={values['min_elapsed_ns']}")
         print(f"{name}: median_ns={values['median_elapsed_ns']}")
+        print(f"{name}: max_elapsed_ns={values['max_elapsed_ns']}")
         print(f"{name}: orders_per_second={values['orders_per_second']}")
         print(f"{name}: median_ns_per_order={values['median_ns_per_order']}")
     print(f"cython_speedup_ratio: {result['cython_speedup_ratio']}")

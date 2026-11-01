@@ -37,9 +37,13 @@ class TestBenchmarkMatchers(unittest.TestCase):
             "warmup": 0,
         })
         self.assertEqual(result["results"]["python"]["samples_ns"], [10, 40])
+        self.assertEqual(result["results"]["python"]["min_elapsed_ns"], 10)
         self.assertEqual(result["results"]["python"]["median_elapsed_ns"], 25)
+        self.assertEqual(result["results"]["python"]["max_elapsed_ns"], 40)
         self.assertEqual(result["results"]["cython"]["samples_ns"], [30, 30])
+        self.assertEqual(result["results"]["cython"]["min_elapsed_ns"], 30)
         self.assertEqual(result["results"]["cython"]["median_elapsed_ns"], 30)
+        self.assertEqual(result["results"]["cython"]["max_elapsed_ns"], 30)
         self.assertAlmostEqual(result["cython_speedup_ratio"], 25 / 30)
 
     def test_benchmark_rejects_non_positive_workload_values(self):
@@ -258,6 +262,36 @@ class TestBenchmarkMatchers(unittest.TestCase):
                 main(["--json"])
 
         self.assertIn('"cython_speedup_ratio": 1.0', output.getvalue())
+
+    def test_text_report_includes_minimum_and_maximum_elapsed_times(self):
+        result = {
+            "results": {
+                "python": {
+                    "min_elapsed_ns": 10,
+                    "median_elapsed_ns": 15,
+                    "max_elapsed_ns": 20,
+                    "orders_per_second": 1.0,
+                    "median_ns_per_order": 1.0,
+                },
+                "cython": {
+                    "min_elapsed_ns": 5,
+                    "median_elapsed_ns": 8,
+                    "max_elapsed_ns": 12,
+                    "orders_per_second": 2.0,
+                    "median_ns_per_order": 0.5,
+                },
+            },
+            "cython_speedup_ratio": 2.0,
+        }
+        output = io.StringIO()
+        with patch("benchmark_matchers.benchmark_matchers", return_value=result):
+            with redirect_stdout(output):
+                main([])
+
+        self.assertIn("python: min_elapsed_ns=10", output.getvalue())
+        self.assertIn("python: max_elapsed_ns=20", output.getvalue())
+        self.assertIn("cython: min_elapsed_ns=5", output.getvalue())
+        self.assertIn("cython: max_elapsed_ns=12", output.getvalue())
 
     @unittest.skipIf(
         CythonMatchCore is None,

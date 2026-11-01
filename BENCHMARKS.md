@@ -120,6 +120,10 @@ Export each measured run from that comparison to CSV with:
 python benchmark_matchers.py --count 1000 --seed 42 --repeats 5 --warmup 1 --csv-output matcher-timings.csv --output matcher-report.json
 ```
 
+The text and JSON reports include minimum, median, and maximum elapsed batch
+times for each matcher. These values summarize full workload runs; the
+benchmark does not measure the latency of individual orders.
+
 The JSON report includes a UTC generation timestamp. The CSV includes that
 timestamp alongside the matcher name, run number, elapsed nanoseconds, order
 count, per-run orders per second, seed, measured repeat count, warm-up count,
