@@ -116,6 +116,7 @@ def save_matcher_samples_csv(path, result):
             "matcher",
             "run_number",
             "elapsed_ns",
+            "orders_per_second",
             "generated_at_utc",
             "python_version",
             "python_implementation",
@@ -130,11 +131,17 @@ def save_matcher_samples_csv(path, result):
         ))
         for matcher in ("python", "cython"):
             samples = result["results"][matcher]["samples_ns"]
-            writer.writerows(
-                (
+            for run_number, elapsed_ns in enumerate(samples, start=1):
+                orders_per_second = (
+                    configuration["count"] * 1_000_000_000 / elapsed_ns
+                    if elapsed_ns > 0
+                    else None
+                )
+                writer.writerow((
                     matcher,
                     run_number,
                     elapsed_ns,
+                    orders_per_second,
                     result["generated_at_utc"],
                     environment["python_version"],
                     environment["python_implementation"],
@@ -146,9 +153,7 @@ def save_matcher_samples_csv(path, result):
                     configuration["seed"],
                     configuration["repeats"],
                     configuration["warmup"],
-                )
-                for run_number, elapsed_ns in enumerate(samples, start=1)
-            )
+                ))
 
 
 def benchmark_matchers(count=1000, seed=42, repeats=5, warmup=1):

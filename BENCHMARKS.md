@@ -122,9 +122,9 @@ python benchmark_matchers.py --count 1000 --seed 42 --repeats 5 --warmup 1 --csv
 
 The JSON report includes a UTC generation timestamp. The CSV includes that
 timestamp alongside the matcher name, run number, elapsed nanoseconds, order
-count, seed, measured repeat count, warm-up count, Python version and
-implementation, operating system and release, machine, and pointer width. Each
-row therefore keeps its report time, workload settings, and runtime environment.
-The CSV output path must be new; existing files are not overwritten. `--output`
-saves the full JSON report, and its path must be new and different from the CSV
-path.
+count, per-run orders per second, seed, measured repeat count, warm-up count,
+Python version and implementation, operating system and release, machine, and
+pointer width. Each row therefore keeps its report time, workload settings,
+and runtime environment. The CSV output path must be new; existing files are
+not overwritten. `--output` saves the full JSON report, and its path must be
+new and different from the CSV path.

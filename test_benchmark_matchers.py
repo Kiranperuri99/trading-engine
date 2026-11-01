@@ -128,7 +128,7 @@ class TestBenchmarkMatchers(unittest.TestCase):
     def test_csv_output_saves_each_measured_matcher_run(self):
         result = {
             "configuration": {
-                "count": 2,
+                "count": 100,
                 "seed": 7,
                 "repeats": 2,
                 "warmup": 1,
@@ -143,8 +143,8 @@ class TestBenchmarkMatchers(unittest.TestCase):
                 "pointer_bits": 64,
             },
             "results": {
-                "python": {"samples_ns": [100, 120]},
-                "cython": {"samples_ns": [50, 60]},
+                "python": {"samples_ns": [100, 0]},
+                "cython": {"samples_ns": [50, 100]},
             },
             "cython_speedup_ratio": 2.0,
         }
@@ -162,6 +162,7 @@ class TestBenchmarkMatchers(unittest.TestCase):
                 "matcher",
                 "run_number",
                 "elapsed_ns",
+                "orders_per_second",
                 "generated_at_utc",
                 "python_version",
                 "python_implementation",
@@ -175,24 +176,28 @@ class TestBenchmarkMatchers(unittest.TestCase):
                 "warmup_runs",
             ],
             [
-                "python", "1", "100", "2026-11-01T12:00:00+00:00",
+                "python", "1", "100", "1000000000.0",
+                "2026-11-01T12:00:00+00:00",
                 "3.14.7", "CPython", "Windows", "11", "AMD64", "64",
-                "2", "7", "2", "1",
+                "100", "7", "2", "1",
             ],
             [
-                "python", "2", "120", "2026-11-01T12:00:00+00:00",
+                "python", "2", "0", "",
+                "2026-11-01T12:00:00+00:00",
                 "3.14.7", "CPython", "Windows", "11", "AMD64", "64",
-                "2", "7", "2", "1",
+                "100", "7", "2", "1",
             ],
             [
-                "cython", "1", "50", "2026-11-01T12:00:00+00:00",
+                "cython", "1", "50", "2000000000.0",
+                "2026-11-01T12:00:00+00:00",
                 "3.14.7", "CPython", "Windows", "11", "AMD64", "64",
-                "2", "7", "2", "1",
+                "100", "7", "2", "1",
             ],
             [
-                "cython", "2", "60", "2026-11-01T12:00:00+00:00",
+                "cython", "2", "100", "1000000000.0",
+                "2026-11-01T12:00:00+00:00",
                 "3.14.7", "CPython", "Windows", "11", "AMD64", "64",
-                "2", "7", "2", "1",
+                "100", "7", "2", "1",
             ],
         ])
 
