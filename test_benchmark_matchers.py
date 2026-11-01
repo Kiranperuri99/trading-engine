@@ -116,7 +116,12 @@ class TestBenchmarkMatchers(unittest.TestCase):
 
     def test_csv_output_saves_each_measured_matcher_run(self):
         result = {
-            "configuration": {},
+            "configuration": {
+                "count": 2,
+                "seed": 7,
+                "repeats": 2,
+                "warmup": 1,
+            },
             "environment": {},
             "results": {
                 "python": {"samples_ns": [100, 120]},
@@ -134,16 +139,29 @@ class TestBenchmarkMatchers(unittest.TestCase):
                 rows = list(csv.reader(input_file))
 
         self.assertEqual(rows, [
-            ["matcher", "run_number", "elapsed_ns"],
-            ["python", "1", "100"],
-            ["python", "2", "120"],
-            ["cython", "1", "50"],
-            ["cython", "2", "60"],
+            [
+                "matcher",
+                "run_number",
+                "elapsed_ns",
+                "order_count",
+                "seed",
+                "measured_repeats",
+                "warmup_runs",
+            ],
+            ["python", "1", "100", "2", "7", "2", "1"],
+            ["python", "2", "120", "2", "7", "2", "1"],
+            ["cython", "1", "50", "2", "7", "2", "1"],
+            ["cython", "2", "60", "2", "7", "2", "1"],
         ])
 
     def test_csv_output_does_not_overwrite_existing_file(self):
         result = {
-            "configuration": {},
+            "configuration": {
+                "count": 1,
+                "seed": 42,
+                "repeats": 1,
+                "warmup": 0,
+            },
             "environment": {},
             "results": {
                 "python": {"samples_ns": [100]},

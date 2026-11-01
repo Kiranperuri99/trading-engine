@@ -120,6 +120,8 @@ Export each measured run from that comparison to CSV with:
 python benchmark_matchers.py --count 1000 --seed 42 --repeats 5 --warmup 1 --csv-output matcher-timings.csv --output matcher-report.json
 ```
 
-The CSV includes the matcher name, run number, and elapsed nanoseconds. Its
-output path must be new; existing files are not overwritten. `--output` saves
-the full JSON report, and its path must be new and different from the CSV path.
+The CSV includes the matcher name, run number, elapsed nanoseconds, order
+count, seed, measured repeat count, and warm-up count so each timing row keeps
+its workload settings. Its output path must be new; existing files are not
+overwritten. `--output` saves the full JSON report, and its path must be new
+and different from the CSV path.

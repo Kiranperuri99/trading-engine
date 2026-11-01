@@ -107,13 +107,30 @@ def _summarize(samples_ns, count, snapshot):
 
 
 def save_matcher_samples_csv(path, result):
+    configuration = result["configuration"]
     with Path(path).open("x", newline="", encoding="utf-8") as output_file:
         writer = csv.writer(output_file)
-        writer.writerow(("matcher", "run_number", "elapsed_ns"))
+        writer.writerow((
+            "matcher",
+            "run_number",
+            "elapsed_ns",
+            "order_count",
+            "seed",
+            "measured_repeats",
+            "warmup_runs",
+        ))
         for matcher in ("python", "cython"):
             samples = result["results"][matcher]["samples_ns"]
             writer.writerows(
-                (matcher, run_number, elapsed_ns)
+                (
+                    matcher,
+                    run_number,
+                    elapsed_ns,
+                    configuration["count"],
+                    configuration["seed"],
+                    configuration["repeats"],
+                    configuration["warmup"],
+                )
                 for run_number, elapsed_ns in enumerate(samples, start=1)
             )
 
