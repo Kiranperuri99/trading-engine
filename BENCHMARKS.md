@@ -1,90 +1,65 @@
 # Benchmark Procedure
 
-## Before Measuring
+## Before measuring
 
 1. Use the same computer and Python environment for comparisons.
 2. Close unnecessary applications.
-3. Record the code version:
-   git rev-parse HEAD
-4. Run the tests:
-   python -m unittest discover -v
+3. Record the code version with `git rev-parse HEAD`.
+4. Run the tests with `python -m unittest discover -v`.
 
-## Sequential Baseline
+## Sequential baseline
 
 ```powershell
 python benchmark_simulation.py --count 1000 --seed 42
 ```
 
-## Concurrent Baseline
+## Concurrent baseline
 
 ```powershell
 python benchmark_concurrent.py
 ```
 
-The concurrent benchmark currently uses 1,000 orders, seed 42,
-capacity 16, and a 30-second runner timeout.
+The concurrent benchmark currently uses 1,000 orders, seed 42, capacity 16,
+and a 30-second runner timeout.
 
-## Repeatable Runs
+## Repeatable runs
 
 - Run each command once as a warm-up.
-- Run each command five more times.
-- Keep all five measured results.
+- Run each command five more times and keep all five results.
 - Compare the median elapsed time rather than selecting the fastest run.
 - Keep count, seed, queue capacity, and code version consistent.
 - Record environment details alongside results.
 
-## What Is Measured
+## Interpreting results
 
-Both benchmarks measure the complete simulation, including setup
-and cleanup. The concurrent benchmark also includes process startup.
+Both simulation benchmarks measure the complete run, including setup and
+cleanup. The concurrent benchmark also includes process startup. Orders per
+second is a throughput measurement. Average nanoseconds per order is total
+runtime divided by order count; it is not an individual order's latency.
 
-Orders per second is a throughput measurement.
-Average nanoseconds per order is total runtime divided by order count.
-It is not an individual order's latency.
+The concurrent version may be slower for small workloads because process
+startup, synchronization, and waiting add overhead. Do not claim a speed
+improvement or that a latency target is met without comparable measurements.
 
-## Interpretation
-
-The concurrent version may be slower for small workloads because
-process startup, synchronization, and waiting add overhead.
-
-Do not claim a speed improvement without comparable measurements.
-Do not claim the project's latency or throughput targets are met
-until they have been measured using an appropriate workload.
-
-## Future Measurements
-
-- Per-order latency with explicitly defined start and end points.
-- Median, p95, and p99 latency.
-- Larger workloads and multiple queue capacities.
-- See [CYTHON_MATCHER.md](CYTHON_MATCHER.md) for a repeatable Python-versus-Cython matcher comparison.
 ## Per-order engine latency
 
-Run this command to measure how long each `ChronosMatch.add_order()` call takes:
+Measure the time spent inside each `ChronosMatch.add_order()` call:
 
 ```powershell
 python measure_engine_latency.py --count 1000 --seed 42 --json --output latency-results.json
-### Warm-up runs
+```
 
-Use `--warmup` to process some orders before measuring. For example:
+Use `--warmup` to process orders before measuring:
 
 ```powershell
 python measure_engine_latency.py --count 1000 --warmup 100 --seed 42 --json --output latency-warmup-results.json
+```
 
-Save the file. Check that the command option appears:
-
-```powershell
-python measure_engine_latency.py --help
-Use `--include-samples` to include the latency of every measured order in the JSON report. The values appear in the `samples_ns` list. This list can make the report large, so use the option when you need to inspect individual timings.
-
-Example:
+Use `--include-samples` to include each measured latency in the JSON report's
+`samples_ns` list. Large sample lists make the report larger:
 
 ```powershell
 python measure_engine_latency.py --count 1000 --seed 42 --json --include-samples --output latency-samples.json
-
-Save the file and check that the option appears in the command help:
-
-```powershell
-python measure_engine_latency.py --help
 ```
 
 Use `--csv-output` to save one row per measured order, including its order ID,
@@ -94,5 +69,42 @@ side, latency in nanoseconds, and UTC timestamp:
 python measure_engine_latency.py --count 1000 --seed 42 --csv-output engine-latency-samples.csv
 ```
 
-The CSV file is created as a new file; an existing path is left untouched.
-The latency report includes p95, p99, and p99.9 values in nanoseconds. It uses the nearest-rank method: the percentile position is rounded up to the next sample. With 100 samples, p99.9 is the slowest sample.
+The CSV and JSON output paths must be new files; existing files are not
+overwritten.
+
+The report includes p95, p99, and p99.9 latency in nanoseconds. Percentiles use
+the nearest-rank method, which rounds the percentile position up to the next
+sample. With 100 samples, p99.9 is the slowest sample, so use a sufficiently
+large workload when examining tail latency.
+
+## Latency budgets
+
+Set a global percentile budget with `--p95-budget-ns`, `--p99-budget-ns`, or
+`--p99-9-budget-ns`. A BUY or SELL budget overrides the global budget for that
+side. Add `--fail-on-budget-exceeded` to return exit code 1 if any configured
+budget is exceeded or its percentile cannot be measured.
+
+For example, set a global p99.9 limit and separate limits for BUY and SELL:
+
+```powershell
+python measure_engine_latency.py --count 10000 --p99-9-budget-ns 50000 --buy-p99-9-budget-ns 45000 --sell-p99-9-budget-ns 55000 --fail-on-budget-exceeded
+```
+
+## Live latency dashboard
+
+Run the terminal dashboard with a rolling window and p99.9 budgets:
+
+```powershell
+python latency_dashboard.py --count 1000 --seed 42 --warmup 100 --window 50 --refresh-every 10 --p99-9-budget-ns 50000 --buy-p99-9-budget-ns 45000 --sell-p99-9-budget-ns 55000 --fail-on-budget-exceeded --output latency-dashboard.json
+```
+
+The dashboard can also use `--p99-budget-ns`, `--buy-p99-budget-ns`, and
+`--sell-p99-budget-ns`. `--output` saves the final JSON report; `--csv-output`
+saves one CSV row per measured order. Both output paths must be new files.
+
+Use `python latency_dashboard.py --help` to see all available options.
+
+## Further comparisons
+
+For a repeatable Python-versus-Cython matcher comparison, see
+[CYTHON_MATCHER.md](CYTHON_MATCHER.md).
