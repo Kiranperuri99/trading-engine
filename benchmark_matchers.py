@@ -3,6 +3,7 @@
 import argparse
 import csv
 import json
+from datetime import datetime, timezone
 from pathlib import Path
 from statistics import median
 from time import perf_counter_ns
@@ -114,6 +115,7 @@ def save_matcher_samples_csv(path, result):
             "matcher",
             "run_number",
             "elapsed_ns",
+            "generated_at_utc",
             "order_count",
             "seed",
             "measured_repeats",
@@ -126,6 +128,7 @@ def save_matcher_samples_csv(path, result):
                     matcher,
                     run_number,
                     elapsed_ns,
+                    result["generated_at_utc"],
                     configuration["count"],
                     configuration["seed"],
                     configuration["repeats"],
@@ -193,6 +196,7 @@ def benchmark_matchers(count=1000, seed=42, repeats=5, warmup=1):
     cython_median = results["cython"]["median_elapsed_ns"]
 
     return {
+        "generated_at_utc": datetime.now(timezone.utc).isoformat(),
         "configuration": {
             "mode": "matching-core",
             "count": count,

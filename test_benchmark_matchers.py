@@ -4,6 +4,7 @@ import json
 import tempfile
 import unittest
 from contextlib import redirect_stdout
+from datetime import datetime
 from pathlib import Path
 from unittest.mock import patch
 
@@ -54,6 +55,16 @@ class TestBenchmarkMatchers(unittest.TestCase):
         with patch("benchmark_matchers.CythonMatchCore", None):
             with self.assertRaisesRegex(RuntimeError, "build it with"):
                 benchmark_matchers(count=1, warmup=0, repeats=1)
+
+    def test_benchmark_report_includes_utc_generation_timestamp(self):
+        ticks = iter((0, 10, 20, 30))
+        with patch("benchmark_matchers.CythonMatchCore", ChronosMatch):
+            with patch("benchmark_matchers.perf_counter_ns", side_effect=lambda: next(ticks)):
+                result = benchmark_matchers(count=1, repeats=1, warmup=0)
+
+        timestamp = datetime.fromisoformat(result["generated_at_utc"])
+        self.assertIsNotNone(timestamp.tzinfo)
+        self.assertEqual(timestamp.utcoffset().total_seconds(), 0)
 
     def test_parser_defaults_and_custom_values(self):
         defaults = build_parser().parse_args([])
@@ -122,6 +133,7 @@ class TestBenchmarkMatchers(unittest.TestCase):
                 "repeats": 2,
                 "warmup": 1,
             },
+            "generated_at_utc": "2026-11-01T12:00:00+00:00",
             "environment": {},
             "results": {
                 "python": {"samples_ns": [100, 120]},
@@ -143,15 +155,16 @@ class TestBenchmarkMatchers(unittest.TestCase):
                 "matcher",
                 "run_number",
                 "elapsed_ns",
+                "generated_at_utc",
                 "order_count",
                 "seed",
                 "measured_repeats",
                 "warmup_runs",
             ],
-            ["python", "1", "100", "2", "7", "2", "1"],
-            ["python", "2", "120", "2", "7", "2", "1"],
-            ["cython", "1", "50", "2", "7", "2", "1"],
-            ["cython", "2", "60", "2", "7", "2", "1"],
+            ["python", "1", "100", "2026-11-01T12:00:00+00:00", "2", "7", "2", "1"],
+            ["python", "2", "120", "2026-11-01T12:00:00+00:00", "2", "7", "2", "1"],
+            ["cython", "1", "50", "2026-11-01T12:00:00+00:00", "2", "7", "2", "1"],
+            ["cython", "2", "60", "2026-11-01T12:00:00+00:00", "2", "7", "2", "1"],
         ])
 
     def test_csv_output_does_not_overwrite_existing_file(self):
@@ -162,6 +175,7 @@ class TestBenchmarkMatchers(unittest.TestCase):
                 "repeats": 1,
                 "warmup": 0,
             },
+            "generated_at_utc": "2026-11-01T12:00:00+00:00",
             "environment": {},
             "results": {
                 "python": {"samples_ns": [100]},
