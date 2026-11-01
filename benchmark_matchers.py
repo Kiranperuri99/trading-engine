@@ -109,6 +109,7 @@ def _summarize(samples_ns, count, snapshot):
 
 def save_matcher_samples_csv(path, result):
     configuration = result["configuration"]
+    environment = result["environment"]
     with Path(path).open("x", newline="", encoding="utf-8") as output_file:
         writer = csv.writer(output_file)
         writer.writerow((
@@ -116,6 +117,12 @@ def save_matcher_samples_csv(path, result):
             "run_number",
             "elapsed_ns",
             "generated_at_utc",
+            "python_version",
+            "python_implementation",
+            "operating_system",
+            "os_release",
+            "machine",
+            "pointer_bits",
             "order_count",
             "seed",
             "measured_repeats",
@@ -129,6 +136,12 @@ def save_matcher_samples_csv(path, result):
                     run_number,
                     elapsed_ns,
                     result["generated_at_utc"],
+                    environment["python_version"],
+                    environment["python_implementation"],
+                    environment["operating_system"],
+                    environment["os_release"],
+                    environment["machine"],
+                    environment["pointer_bits"],
                     configuration["count"],
                     configuration["seed"],
                     configuration["repeats"],

@@ -134,7 +134,14 @@ class TestBenchmarkMatchers(unittest.TestCase):
                 "warmup": 1,
             },
             "generated_at_utc": "2026-11-01T12:00:00+00:00",
-            "environment": {},
+            "environment": {
+                "python_version": "3.14.7",
+                "python_implementation": "CPython",
+                "operating_system": "Windows",
+                "os_release": "11",
+                "machine": "AMD64",
+                "pointer_bits": 64,
+            },
             "results": {
                 "python": {"samples_ns": [100, 120]},
                 "cython": {"samples_ns": [50, 60]},
@@ -156,15 +163,37 @@ class TestBenchmarkMatchers(unittest.TestCase):
                 "run_number",
                 "elapsed_ns",
                 "generated_at_utc",
+                "python_version",
+                "python_implementation",
+                "operating_system",
+                "os_release",
+                "machine",
+                "pointer_bits",
                 "order_count",
                 "seed",
                 "measured_repeats",
                 "warmup_runs",
             ],
-            ["python", "1", "100", "2026-11-01T12:00:00+00:00", "2", "7", "2", "1"],
-            ["python", "2", "120", "2026-11-01T12:00:00+00:00", "2", "7", "2", "1"],
-            ["cython", "1", "50", "2026-11-01T12:00:00+00:00", "2", "7", "2", "1"],
-            ["cython", "2", "60", "2026-11-01T12:00:00+00:00", "2", "7", "2", "1"],
+            [
+                "python", "1", "100", "2026-11-01T12:00:00+00:00",
+                "3.14.7", "CPython", "Windows", "11", "AMD64", "64",
+                "2", "7", "2", "1",
+            ],
+            [
+                "python", "2", "120", "2026-11-01T12:00:00+00:00",
+                "3.14.7", "CPython", "Windows", "11", "AMD64", "64",
+                "2", "7", "2", "1",
+            ],
+            [
+                "cython", "1", "50", "2026-11-01T12:00:00+00:00",
+                "3.14.7", "CPython", "Windows", "11", "AMD64", "64",
+                "2", "7", "2", "1",
+            ],
+            [
+                "cython", "2", "60", "2026-11-01T12:00:00+00:00",
+                "3.14.7", "CPython", "Windows", "11", "AMD64", "64",
+                "2", "7", "2", "1",
+            ],
         ])
 
     def test_csv_output_does_not_overwrite_existing_file(self):
