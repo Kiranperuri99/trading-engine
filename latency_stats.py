@@ -2,6 +2,8 @@ from math import ceil
 from statistics import median
 
 
+PERCENTILE_METHOD = "nearest_rank"
+
 LATENCY_HISTOGRAM_BUCKETS = (
     ("<=1000", 1_000),
     ("1001-5000", 5_000),

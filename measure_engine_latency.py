@@ -11,7 +11,11 @@ from run_simulation import non_negative_count
 from time import perf_counter_ns
 
 from engine_summary import summarize_engine
-from latency_stats import histogram_latencies, summarize_latencies
+from latency_stats import (
+    PERCENTILE_METHOD,
+    histogram_latencies,
+    summarize_latencies,
+)
 from market_simulator import generate_orders
 from trading_engine import ChronosMatch
 
@@ -70,6 +74,7 @@ def measure_engine_latency(
 
     result = {
         "schema_version": 1,
+        "percentile_method": PERCENTILE_METHOD,
         "generated_at_utc": datetime.now(timezone.utc).isoformat(),
         "environment": benchmark_environment(),
         "scope": "ChronosMatch.add_order call",

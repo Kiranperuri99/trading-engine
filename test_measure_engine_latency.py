@@ -184,6 +184,18 @@ class TestMeasureEngineLatency(unittest.TestCase):
 
         self.assertEqual(report["schema_version"], 1)
         self.assertIn("latency", report)
+
+    def test_json_report_identifies_percentile_method(self):
+        with patch(
+            "measure_engine_latency.generate_orders",
+            return_value=[],
+        ), redirect_stdout(StringIO()) as output:
+            main(["--count", "0", "--json"])
+
+        report = json.loads(output.getvalue())
+
+        self.assertEqual(report["percentile_method"], "nearest_rank")
+
     def test_human_output_includes_engine_summary(self):
         result = {
             "scope": "ChronosMatch.add_order call",
@@ -645,6 +657,7 @@ class TestMeasureEngineLatency(unittest.TestCase):
             "P99.9 budget: 120 ns | measured 125 ns | OVER BUDGET",
             output.getvalue(),
         )
+
     def test_side_only_p99_9_budget_fails_when_missed(self):
         measurement = {
             "latency": {"p99_9_ns": 90},
@@ -665,6 +678,7 @@ class TestMeasureEngineLatency(unittest.TestCase):
                 ])
 
         self.assertEqual(raised.exception.code, 1)
+
     def test_side_only_budget_is_checked_by_fail_flag(self):
         measurement = {
             "latency": {"p95_ns": 80, "p99_ns": 90},
