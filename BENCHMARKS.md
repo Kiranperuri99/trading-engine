@@ -120,6 +120,17 @@ Export each measured run from that comparison to CSV with:
 python benchmark_matchers.py --count 1000 --seed 42 --repeats 5 --warmup 1 --csv-output matcher-timings.csv --output matcher-report.json
 ```
 
+Use `--minimum-speedup-ratio` to report whether the measured Cython median
+speedup meets a threshold. For example, require a ratio of at least 1.2:
+
+```powershell
+python benchmark_matchers.py --count 1000 --repeats 5 --minimum-speedup-ratio 1.2 --json
+```
+
+The result is shown as `minimum_speedup_check` in JSON and as PASS or FAIL in
+the text report. It reports the comparison without changing the command's exit
+status.
+
 The text and JSON reports include minimum, median, and maximum elapsed batch
 times for each matcher. These values summarize full workload runs; the
 benchmark does not measure the latency of individual orders. The reports also

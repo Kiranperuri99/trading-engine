@@ -3,6 +3,7 @@
 import argparse
 import csv
 import json
+import math
 from datetime import datetime, timezone
 from pathlib import Path
 from statistics import median
@@ -55,6 +56,20 @@ def non_negative_warmup(value):
             "Warm-up count must be a non-negative whole number"
         )
     return warmup
+
+
+def positive_speedup_ratio(value):
+    try:
+        ratio = float(value)
+    except ValueError:
+        raise argparse.ArgumentTypeError(
+            "Minimum speedup ratio must be a finite positive number"
+        ) from None
+    if not math.isfinite(ratio) or ratio <= 0:
+        raise argparse.ArgumentTypeError(
+            "Minimum speedup ratio must be a finite positive number"
+        )
+    return ratio
 
 
 def _copy_orders(orders):
@@ -289,6 +304,11 @@ def build_parser():
         help="Unmeasured runs per matcher (default: 1)",
     )
     parser.add_argument(
+        "--minimum-speedup-ratio",
+        type=positive_speedup_ratio,
+        help="Report whether Cython meets this minimum speedup ratio",
+    )
+    parser.add_argument(
         "--json",
         action="store_true",
         help="Print the benchmark report as JSON",
@@ -323,6 +343,16 @@ def main(argv=None):
     except RuntimeError as error:
         parser.error(str(error))
 
+    if args.minimum_speedup_ratio is not None:
+        speedup_ratio = result["cython_speedup_ratio"]
+        result["minimum_speedup_check"] = {
+            "minimum_ratio": args.minimum_speedup_ratio,
+            "met": (
+                speedup_ratio is not None
+                and speedup_ratio >= args.minimum_speedup_ratio
+            ),
+        }
+
     if args.csv_output is not None:
         save_matcher_samples_csv(args.csv_output, result)
     if args.output is not None:
@@ -346,6 +376,14 @@ def main(argv=None):
         print(f"{name}: median_ns_per_order={values['median_ns_per_order']}")
     print(f"python_minus_cython_median_ns: {result['median_time_difference_ns']}")
     print(f"cython_speedup_ratio: {result['cython_speedup_ratio']}")
+    if "minimum_speedup_check" in result:
+        check = result["minimum_speedup_check"]
+        status = "PASS" if check["met"] else "FAIL"
+        print(
+            f"minimum_speedup_check: {status} "
+            f"(minimum={check['minimum_ratio']}, "
+            f"actual={result['cython_speedup_ratio']})"
+        )
 
 
 if __name__ == "__main__":

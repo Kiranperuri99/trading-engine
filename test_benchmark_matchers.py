@@ -78,19 +78,31 @@ class TestBenchmarkMatchers(unittest.TestCase):
         self.assertEqual(defaults.seed, 42)
         self.assertEqual(defaults.repeats, 5)
         self.assertEqual(defaults.warmup, 1)
+        self.assertIsNone(defaults.minimum_speedup_ratio)
 
         selected = build_parser().parse_args([
             "--count", "200",
             "--seed", "7",
             "--repeats", "3",
             "--warmup", "0",
+            "--minimum-speedup-ratio", "1.25",
             "--json",
         ])
         self.assertEqual(selected.count, 200)
         self.assertEqual(selected.seed, 7)
         self.assertEqual(selected.repeats, 3)
         self.assertEqual(selected.warmup, 0)
+        self.assertEqual(selected.minimum_speedup_ratio, 1.25)
         self.assertTrue(selected.json)
+
+    def test_minimum_speedup_ratio_rejects_non_positive_or_non_finite_values(self):
+        for value in ("0", "-1", "nan", "inf"):
+            with self.subTest(value=value):
+                with patch("sys.stderr", io.StringIO()):
+                    with self.assertRaises(SystemExit):
+                        build_parser().parse_args([
+                            "--minimum-speedup-ratio", value,
+                        ])
 
     def test_parser_accepts_csv_output(self):
         args = build_parser().parse_args([
@@ -274,6 +286,32 @@ class TestBenchmarkMatchers(unittest.TestCase):
 
         self.assertIn('"cython_speedup_ratio": 1.0', output.getvalue())
 
+    def test_minimum_speedup_check_is_in_json_report(self):
+        for measured_ratio, minimum_ratio, expected in (
+            (1.5, 1.25, True),
+            (0.9, 1.0, False),
+            (None, 1.0, False),
+        ):
+            with self.subTest(measured_ratio=measured_ratio):
+                output = io.StringIO()
+                result = {"cython_speedup_ratio": measured_ratio}
+                with patch(
+                    "benchmark_matchers.benchmark_matchers",
+                    return_value=result,
+                ):
+                    with redirect_stdout(output):
+                        main([
+                            "--minimum-speedup-ratio",
+                            str(minimum_ratio),
+                            "--json",
+                        ])
+
+                report = json.loads(output.getvalue())
+                self.assertEqual(
+                    report["minimum_speedup_check"],
+                    {"minimum_ratio": minimum_ratio, "met": expected},
+                )
+
     def test_text_report_includes_minimum_and_maximum_elapsed_times(self):
         result = {
             "results": {
@@ -298,13 +336,14 @@ class TestBenchmarkMatchers(unittest.TestCase):
         output = io.StringIO()
         with patch("benchmark_matchers.benchmark_matchers", return_value=result):
             with redirect_stdout(output):
-                main([])
+                main(["--minimum-speedup-ratio", "1.5"])
 
         self.assertIn("python: min_elapsed_ns=10", output.getvalue())
         self.assertIn("python: max_elapsed_ns=20", output.getvalue())
         self.assertIn("cython: min_elapsed_ns=5", output.getvalue())
         self.assertIn("cython: max_elapsed_ns=12", output.getvalue())
         self.assertIn("python_minus_cython_median_ns: -2", output.getvalue())
+        self.assertIn("minimum_speedup_check: PASS", output.getvalue())
 
     @unittest.skipIf(
         CythonMatchCore is None,
