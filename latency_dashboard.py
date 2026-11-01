@@ -2,6 +2,7 @@
 
 import argparse
 import csv
+import json
 import sys
 from collections import deque
 from datetime import datetime, timezone
@@ -515,6 +516,11 @@ def build_parser():
         help="Save the final JSON report, including measured samples, to a new file",
     )
     parser.add_argument(
+        "--json",
+        action="store_true",
+        help="Print the final JSON report to stdout and live progress to stderr",
+    )
+    parser.add_argument(
         "--csv-output",
         help="Save each measured order latency as a CSV row in a new file",
     )
@@ -545,6 +551,7 @@ def main(argv=None):
         warmup=args.warmup,
         window=args.window,
         refresh_every=args.refresh_every,
+        output=sys.stderr if args.json else None,
         report_path=args.output,
         csv_path=args.csv_output,
         p99_budget_ns=args.p99_budget_ns,
@@ -557,6 +564,8 @@ def main(argv=None):
         buy_p95_budget_ns=args.buy_p95_budget_ns,
         sell_p95_budget_ns=args.sell_p95_budget_ns,
     )
+    if args.json:
+        print(json.dumps(result, indent=2, sort_keys=True))
     budget_results = []
     if "p95_budget" in result:
         budget_results.append(result["p95_budget"]["within_budget"])

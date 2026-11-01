@@ -103,7 +103,8 @@ The dashboard can also use `--p95-budget-ns`, `--buy-p95-budget-ns`, and
 `--output` saves the final JSON report; `--csv-output`
 saves one CSV row per measured order. Both output paths must be new files. The
 JSON report records the rolling `window` and `refresh_every` settings under
-`dashboard`.
+`dashboard`. Add `--json` to print the final report to stdout while the live
+progress display is sent to stderr.
 
 Use `python latency_dashboard.py --help` to see all available options.
 

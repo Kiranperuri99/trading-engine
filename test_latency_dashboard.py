@@ -380,6 +380,7 @@ class TestLatencyDashboard(unittest.TestCase):
             "--fail-on-budget-exceeded",
             "--output", "latency-live.json",
             "--csv-output", "latency-samples.csv",
+            "--json",
         ])
 
         self.assertEqual(args.count, 20)
@@ -396,8 +397,22 @@ class TestLatencyDashboard(unittest.TestCase):
         self.assertEqual(args.buy_p99_9_budget_ns, 48000)
         self.assertEqual(args.sell_p99_9_budget_ns, 65000)
         self.assertTrue(args.fail_on_budget_exceeded)
+        self.assertTrue(args.json)
         self.assertEqual(args.output, "latency-live.json")
         self.assertEqual(args.csv_output, "latency-samples.csv")
+
+    def test_json_mode_prints_report_and_sends_live_display_to_stderr(self):
+        standard_output = io.StringIO()
+        standard_error = io.StringIO()
+
+        with patch(
+            "latency_dashboard.measure_engine_latency",
+            return_value={"latency": {"count": 0}},
+        ), patch("sys.stdout", standard_output), patch("sys.stderr", standard_error):
+            result = main(["--count", "0", "--json"])
+
+        self.assertEqual(json.loads(standard_output.getvalue()), result)
+        self.assertIn("\033[2J\033[H", standard_error.getvalue())
 
     def test_csv_output_saves_one_row_per_measured_order(self):
         with tempfile.TemporaryDirectory() as directory:
