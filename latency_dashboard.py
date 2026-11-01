@@ -357,6 +357,10 @@ def run_live_dashboard(
             result["p99_9_budget_by_side"][side_name] = _budget_result(
                 side_p99_9, side_budget
             )
+    result["dashboard"] = {
+        "window": window,
+        "refresh_every": refresh_every,
+    }
     if report_path is not None:
         save_result(report_path, result)
     if csv_path is not None:

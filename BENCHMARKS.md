@@ -100,7 +100,9 @@ python latency_dashboard.py --count 1000 --seed 42 --warmup 100 --window 50 --re
 
 The dashboard can also use `--p99-budget-ns`, `--buy-p99-budget-ns`, and
 `--sell-p99-budget-ns`. `--output` saves the final JSON report; `--csv-output`
-saves one CSV row per measured order. Both output paths must be new files.
+saves one CSV row per measured order. Both output paths must be new files. The
+JSON report records the rolling `window` and `refresh_every` settings under
+`dashboard`.
 
 Use `python latency_dashboard.py --help` to see all available options.
 

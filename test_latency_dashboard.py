@@ -402,6 +402,30 @@ class TestLatencyDashboard(unittest.TestCase):
             self.assertEqual(saved, result)
             self.assertEqual(saved["samples_ns"], [12])
 
+    def test_saved_json_records_dashboard_window_and_refresh_interval(self):
+        with tempfile.TemporaryDirectory() as directory:
+            report_path = Path(directory) / "dashboard-settings.json"
+
+            with patch(
+                "latency_dashboard.measure_engine_latency",
+                return_value={"latency": {"count": 0}},
+            ):
+                result = run_live_dashboard(
+                    count=0,
+                    window=12,
+                    refresh_every=4,
+                    output=io.StringIO(),
+                    report_path=report_path,
+                )
+
+            saved = json.loads(report_path.read_text(encoding="utf-8"))
+
+        self.assertEqual(
+            saved["dashboard"],
+            {"window": 12, "refresh_every": 4},
+        )
+        self.assertEqual(result["dashboard"], saved["dashboard"])
+
     def test_saved_json_includes_p99_budget_outcome(self):
         with tempfile.TemporaryDirectory() as directory:
             for count, budget, expected in (
