@@ -79,6 +79,7 @@ class TestBenchmarkMatchers(unittest.TestCase):
         self.assertEqual(defaults.repeats, 5)
         self.assertEqual(defaults.warmup, 1)
         self.assertIsNone(defaults.minimum_speedup_ratio)
+        self.assertFalse(defaults.fail_on_speedup_miss)
 
         selected = build_parser().parse_args([
             "--count", "200",
@@ -311,6 +312,36 @@ class TestBenchmarkMatchers(unittest.TestCase):
                     report["minimum_speedup_check"],
                     {"minimum_ratio": minimum_ratio, "met": expected},
                 )
+
+    def test_fail_on_speedup_miss_returns_failure_only_when_threshold_is_missed(self):
+        for measured_ratio, expected_status in ((1.5, 0), (0.9, 1), (None, 1)):
+            with self.subTest(measured_ratio=measured_ratio):
+                output = io.StringIO()
+                result = {"cython_speedup_ratio": measured_ratio}
+                with patch(
+                    "benchmark_matchers.benchmark_matchers",
+                    return_value=result,
+                ):
+                    with redirect_stdout(output):
+                        status = main([
+                            "--minimum-speedup-ratio", "1.0",
+                            "--fail-on-speedup-miss",
+                            "--json",
+                        ])
+
+                self.assertEqual(status, expected_status)
+                report = json.loads(output.getvalue())
+                self.assertEqual(
+                    report["minimum_speedup_check"]["met"],
+                    expected_status == 0,
+                )
+
+    def test_fail_on_speedup_miss_requires_a_threshold(self):
+        with patch("sys.stderr", io.StringIO()):
+            with self.assertRaises(SystemExit) as raised:
+                main(["--fail-on-speedup-miss"])
+
+        self.assertEqual(raised.exception.code, 2)
 
     def test_text_report_includes_minimum_and_maximum_elapsed_times(self):
         result = {

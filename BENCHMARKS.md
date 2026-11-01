@@ -128,8 +128,9 @@ python benchmark_matchers.py --count 1000 --repeats 5 --minimum-speedup-ratio 1.
 ```
 
 The result is shown as `minimum_speedup_check` in JSON and as PASS or FAIL in
-the text report. It reports the comparison without changing the command's exit
-status.
+the text report. Add `--fail-on-speedup-miss` to return exit code 1 when the
+ratio is below the requested threshold. This option requires
+`--minimum-speedup-ratio`.
 
 The text and JSON reports include minimum, median, and maximum elapsed batch
 times for each matcher. These values summarize full workload runs; the

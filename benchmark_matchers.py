@@ -309,6 +309,11 @@ def build_parser():
         help="Report whether Cython meets this minimum speedup ratio",
     )
     parser.add_argument(
+        "--fail-on-speedup-miss",
+        action="store_true",
+        help="Exit with status 1 when the minimum speedup ratio is missed",
+    )
+    parser.add_argument(
         "--json",
         action="store_true",
         help="Print the benchmark report as JSON",
@@ -329,6 +334,8 @@ def build_parser():
 def main(argv=None):
     parser = build_parser()
     args = parser.parse_args(argv)
+    if args.fail_on_speedup_miss and args.minimum_speedup_ratio is None:
+        parser.error("--fail-on-speedup-miss requires --minimum-speedup-ratio")
     if args.output is not None and args.csv_output is not None:
         if args.output.resolve() == args.csv_output.resolve():
             parser.error("--output and --csv-output must use different file paths")
@@ -360,7 +367,10 @@ def main(argv=None):
 
     if args.json:
         print(json.dumps(result, indent=2, allow_nan=False))
-        return
+        return int(
+            args.fail_on_speedup_miss
+            and not result["minimum_speedup_check"]["met"]
+        )
 
     print("ChronosMatch Python vs Cython matcher benchmark")
     print(
@@ -384,7 +394,11 @@ def main(argv=None):
             f"(minimum={check['minimum_ratio']}, "
             f"actual={result['cython_speedup_ratio']})"
         )
+    return int(
+        args.fail_on_speedup_miss
+        and not result["minimum_speedup_check"]["met"]
+    )
 
 
 if __name__ == "__main__":
-    main()
+    raise SystemExit(main())
