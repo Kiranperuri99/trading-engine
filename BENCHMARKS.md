@@ -117,8 +117,9 @@ For a repeatable Python-versus-Cython matcher comparison, see
 Export each measured run from that comparison to CSV with:
 
 ```powershell
-python benchmark_matchers.py --count 1000 --seed 42 --repeats 5 --warmup 1 --csv-output matcher-timings.csv
+python benchmark_matchers.py --count 1000 --seed 42 --repeats 5 --warmup 1 --csv-output matcher-timings.csv --output matcher-report.json
 ```
 
 The CSV includes the matcher name, run number, and elapsed nanoseconds. Its
-output path must be new; existing files are not overwritten.
+output path must be new; existing files are not overwritten. `--output` saves
+the full JSON report, and its path must be new and different from the CSV path.

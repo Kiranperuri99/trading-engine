@@ -1,5 +1,6 @@
 import csv
 import io
+import json
 import tempfile
 import unittest
 from contextlib import redirect_stdout
@@ -77,9 +78,41 @@ class TestBenchmarkMatchers(unittest.TestCase):
     def test_parser_accepts_csv_output(self):
         args = build_parser().parse_args([
             "--csv-output", "matcher-timings.csv",
+            "--output", "matcher-report.json",
         ])
 
         self.assertEqual(args.csv_output, Path("matcher-timings.csv"))
+        self.assertEqual(args.output, Path("matcher-report.json"))
+
+    def test_json_output_saves_complete_report_to_file(self):
+        result = {
+            "configuration": {"count": 1},
+            "environment": {},
+            "results": {},
+            "cython_speedup_ratio": 1.0,
+        }
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "matcher-report.json"
+            with patch("benchmark_matchers.benchmark_matchers", return_value=result):
+                with redirect_stdout(io.StringIO()):
+                    main(["--output", str(path)])
+
+            self.assertEqual(json.loads(path.read_text(encoding="utf-8")), result)
+
+    def test_json_and_csv_outputs_reject_the_same_path(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "matcher-report.json"
+            error_output = io.StringIO()
+            with patch("sys.stderr", error_output):
+                with self.assertRaises(SystemExit) as raised:
+                    main([
+                        "--output", str(path),
+                        "--csv-output", str(path.parent / "." / path.name),
+                    ])
+
+        self.assertEqual(raised.exception.code, 2)
+        self.assertIn("must use different file paths", error_output.getvalue())
+        self.assertFalse(path.exists())
 
     def test_csv_output_saves_each_measured_matcher_run(self):
         result = {

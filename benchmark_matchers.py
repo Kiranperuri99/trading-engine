@@ -9,6 +9,7 @@ from time import perf_counter_ns
 
 from benchmark_environment import benchmark_environment
 from market_simulator import generate_orders
+from result_export import save_result
 from run_simulation import non_negative_count
 from trading_engine import ChronosMatch, Order
 
@@ -228,12 +229,20 @@ def build_parser():
         type=Path,
         help="Save each measured matcher timing to a new CSV file",
     )
+    parser.add_argument(
+        "--output",
+        type=Path,
+        help="Save the complete benchmark report as JSON to a new file",
+    )
     return parser
 
 
 def main(argv=None):
     parser = build_parser()
     args = parser.parse_args(argv)
+    if args.output is not None and args.csv_output is not None:
+        if args.output.resolve() == args.csv_output.resolve():
+            parser.error("--output and --csv-output must use different file paths")
 
     try:
         result = benchmark_matchers(
@@ -247,6 +256,8 @@ def main(argv=None):
 
     if args.csv_output is not None:
         save_matcher_samples_csv(args.csv_output, result)
+    if args.output is not None:
+        save_result(args.output, result)
 
     if args.json:
         print(json.dumps(result, indent=2, allow_nan=False))
