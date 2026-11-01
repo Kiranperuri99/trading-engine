@@ -98,8 +98,9 @@ Run the terminal dashboard with a rolling window and p99.9 budgets:
 python latency_dashboard.py --count 1000 --seed 42 --warmup 100 --window 50 --refresh-every 10 --p99-9-budget-ns 50000 --buy-p99-9-budget-ns 45000 --sell-p99-9-budget-ns 55000 --fail-on-budget-exceeded --output latency-dashboard.json
 ```
 
-The dashboard can also use `--p99-budget-ns`, `--buy-p99-budget-ns`, and
-`--sell-p99-budget-ns`. `--output` saves the final JSON report; `--csv-output`
+The dashboard can also use `--p95-budget-ns`, `--buy-p95-budget-ns`, and
+`--sell-p95-budget-ns`, along with the equivalent p99 and p99.9 options.
+`--output` saves the final JSON report; `--csv-output`
 saves one CSV row per measured order. Both output paths must be new files. The
 JSON report records the rolling `window` and `refresh_every` settings under
 `dashboard`.

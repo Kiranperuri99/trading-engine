@@ -40,6 +40,21 @@ class TestLatencyDashboard(unittest.TestCase):
         self.assertIn("100.0% used", within)
         self.assertIn("105.3% used", exceeded)
 
+    def test_render_frame_reports_p95_budget_state(self):
+        within = render_frame(
+            [10, 20], completed=2, total=2, side="BUY", p95_budget_ns=20
+        )
+        exceeded = render_frame(
+            [10, 20], completed=2, total=2, side="BUY", p95_budget_ns=19
+        )
+        waiting = render_frame(
+            [], completed=0, total=0, side=None, p95_budget_ns=20
+        )
+
+        self.assertIn("P95 budget: 20 ns | within budget (p95 20 ns)", within)
+        self.assertIn("P95 budget: 19 ns | OVER BUDGET (p95 20 ns)", exceeded)
+        self.assertIn("P95 budget: 20 ns | waiting for samples", waiting)
+
     def test_render_frame_reports_p99_9_budget_state(self):
         within = render_frame(
             [10, 20], completed=2, total=2, side="BUY", p99_9_budget_ns=20
@@ -67,6 +82,16 @@ class TestLatencyDashboard(unittest.TestCase):
                 with self.assertRaisesRegex(ValueError, "p99 budget"):
                     run_live_dashboard(buy_p99_budget_ns=side_budget)
 
+    def test_live_dashboard_rejects_non_positive_p95_budgets(self):
+        for budget in (0, -1, 1.5, True):
+            with self.subTest(budget=budget):
+                with self.assertRaisesRegex(ValueError, "P95 budget"):
+                    run_live_dashboard(p95_budget_ns=budget)
+        for side_budget in (0, -1, 1.5, True):
+            with self.subTest(side_budget=side_budget):
+                with self.assertRaisesRegex(ValueError, "p95 budget"):
+                    run_live_dashboard(buy_p95_budget_ns=side_budget)
+
     def test_live_dashboard_rejects_non_positive_p99_9_budgets(self):
         for budget in (0, -1, 1.5, True):
             with self.subTest(budget=budget):
@@ -85,7 +110,8 @@ class TestLatencyDashboard(unittest.TestCase):
 
         self.assertEqual(raised.exception.code, 2)
         self.assertIn(
-            "requires at least one p99 or p99.9 budget", error_output.getvalue()
+            "requires at least one p95, p99, or p99.9 budget",
+            error_output.getvalue(),
         )
 
     def test_fail_flag_exits_nonzero_when_budget_is_missed_or_unavailable(self):
@@ -132,6 +158,37 @@ class TestLatencyDashboard(unittest.TestCase):
             ])
 
         self.assertIs(result, expected)
+
+    def test_fail_flag_accepts_side_specific_p95_budget(self):
+        expected = {
+            "p95_budget_by_side": {
+                "BUY": {"within_budget": True},
+            }
+        }
+        with patch(
+            "latency_dashboard.run_live_dashboard",
+            return_value=expected,
+        ):
+            result = main([
+                "--buy-p95-budget-ns", "40000",
+                "--fail-on-budget-exceeded",
+            ])
+
+        self.assertIs(result, expected)
+
+    def test_fail_flag_exits_nonzero_when_p95_budget_is_missed(self):
+        expected = {"p95_budget": {"within_budget": False}}
+        with patch(
+            "latency_dashboard.run_live_dashboard",
+            return_value=expected,
+        ):
+            with self.assertRaises(SystemExit) as raised:
+                main([
+                    "--p95-budget-ns", "50000",
+                    "--fail-on-budget-exceeded",
+                ])
+
+        self.assertEqual(raised.exception.code, 1)
 
     def test_fail_flag_accepts_side_specific_p99_9_budget(self):
         expected = {
@@ -261,6 +318,20 @@ class TestLatencyDashboard(unittest.TestCase):
         self.assertIn("107.1% used", frame)
         self.assertIn("75.0% used", frame)
 
+    def test_side_specific_p95_budgets_override_shared_display_budget(self):
+        frame = render_frame(
+            [10, 15, 30],
+            completed=3,
+            total=3,
+            side="SELL",
+            samples_by_side={"BUY": [10, 15], "SELL": [30]},
+            p95_budget_ns=100,
+            side_p95_budgets={"BUY": 14, "SELL": 40},
+        )
+
+        self.assertIn("p95 budget OVER BUDGET (107.1% used)", frame)
+        self.assertIn("p95 budget within budget (75.0% used)", frame)
+
     def test_live_run_refreshes_and_keeps_only_configured_window(self):
         output = io.StringIO()
 
@@ -297,8 +368,11 @@ class TestLatencyDashboard(unittest.TestCase):
             "--warmup", "5",
             "--window", "8",
             "--refresh-every", "2",
+            "--p95-budget-ns", "42000",
             "--p99-budget-ns", "50000",
             "--p99-9-budget-ns", "55000",
+            "--buy-p95-budget-ns", "43000",
+            "--sell-p95-budget-ns", "61000",
             "--buy-p99-budget-ns", "45000",
             "--sell-p99-budget-ns", "60000",
             "--buy-p99-9-budget-ns", "48000",
@@ -312,10 +386,13 @@ class TestLatencyDashboard(unittest.TestCase):
         self.assertEqual(args.warmup, 5)
         self.assertEqual(args.window, 8)
         self.assertEqual(args.refresh_every, 2)
+        self.assertEqual(args.p95_budget_ns, 42000)
         self.assertEqual(args.p99_budget_ns, 50000)
         self.assertEqual(args.p99_9_budget_ns, 55000)
         self.assertEqual(args.buy_p99_budget_ns, 45000)
         self.assertEqual(args.sell_p99_budget_ns, 60000)
+        self.assertEqual(args.buy_p95_budget_ns, 43000)
+        self.assertEqual(args.sell_p95_budget_ns, 61000)
         self.assertEqual(args.buy_p99_9_budget_ns, 48000)
         self.assertEqual(args.sell_p99_9_budget_ns, 65000)
         self.assertTrue(args.fail_on_budget_exceeded)
@@ -489,6 +566,43 @@ class TestLatencyDashboard(unittest.TestCase):
                         saved["p99_budget_by_side"],
                         result["p99_budget_by_side"],
                     )
+
+    def test_saved_json_includes_global_and_side_p95_budgets(self):
+        with tempfile.TemporaryDirectory() as directory:
+            report_path = Path(directory) / "p95-report.json"
+
+            def fake_measure(count, seed, warmup, on_sample, include_samples):
+                return {
+                    "latency": {"count": 2, "p95_ns": 45},
+                    "latency_by_side": {
+                        "BUY": {"p95_ns": 50},
+                        "SELL": {"p95_ns": 30},
+                    },
+                }
+
+            with patch(
+                "latency_dashboard.measure_engine_latency",
+                side_effect=fake_measure,
+            ):
+                result = run_live_dashboard(
+                    count=2,
+                    output=io.StringIO(),
+                    report_path=report_path,
+                    p95_budget_ns=45,
+                    buy_p95_budget_ns=40,
+                    sell_p95_budget_ns=35,
+                )
+
+            self.assertEqual(result["p95_budget"]["within_budget"], True)
+            self.assertEqual(
+                result["p95_budget_by_side"]["BUY"]["within_budget"], False
+            )
+            self.assertEqual(
+                result["p95_budget_by_side"]["SELL"]["within_budget"], True
+            )
+            self.assertEqual(
+                json.loads(report_path.read_text(encoding="utf-8")), result
+            )
 
     def test_saved_json_includes_global_and_side_p99_9_budgets(self):
         with tempfile.TemporaryDirectory() as directory:

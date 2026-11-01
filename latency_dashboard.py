@@ -56,6 +56,8 @@ def render_frame(
     side_p99_budgets=None,
     p99_9_budget_ns=None,
     side_p99_9_budgets=None,
+    p95_budget_ns=None,
+    side_p95_budgets=None,
 ):
     values = list(samples)
     stats = summarize_latencies(values)
@@ -80,6 +82,22 @@ def render_frame(
         ),
         "Recent samples (newest at bottom):",
     ]
+
+    if p95_budget_ns is not None:
+        p95_ns = stats["p95_ns"]
+        if p95_ns is None:
+            budget_status = "waiting for samples"
+        elif p95_ns <= p95_budget_ns:
+            utilization = round(p95_ns / p95_budget_ns * 100, 1)
+            budget_status = (
+                f"within budget (p95 {p95_ns} ns) | {utilization:.1f}% used"
+            )
+        else:
+            utilization = round(p95_ns / p95_budget_ns * 100, 1)
+            budget_status = (
+                f"OVER BUDGET (p95 {p95_ns} ns) | {utilization:.1f}% used"
+            )
+        lines.insert(4, f"P95 budget: {p95_budget_ns} ns | {budget_status}")
 
     if p99_budget_ns is not None:
         p99_ns = stats["p99_ns"]
@@ -124,12 +142,29 @@ def render_frame(
             side_budget_ns = (side_p99_budgets or {}).get(
                 side_name, p99_budget_ns
             )
+            side_p95_budget_ns = (side_p95_budgets or {}).get(
+                side_name, p95_budget_ns
+            )
             side_summary = (
                 f"{side_name} median {show(side_stats['median_ns'])} ns, "
                 f"p95 {show(side_stats['p95_ns'])} ns, "
                 f"p99 {show(side_stats['p99_ns'])} ns, "
                 f"p99.9 {show(side_stats['p99_9_ns'])} ns"
             )
+            if side_p95_budget_ns is not None:
+                side_p95 = side_stats["p95_ns"]
+                if side_p95 is None:
+                    side_p95_status = "waiting for samples"
+                elif side_p95 <= side_p95_budget_ns:
+                    side_p95_status = "within budget"
+                else:
+                    side_p95_status = "OVER BUDGET"
+                side_summary += f" | p95 budget {side_p95_status}"
+                if side_p95 is not None:
+                    utilization = round(
+                        side_p95 / side_p95_budget_ns * 100, 1
+                    )
+                    side_summary += f" ({utilization:.1f}% used)"
             if side_budget_ns is not None:
                 side_p99 = side_stats["p99_ns"]
                 if side_p99 is None:
@@ -224,6 +259,9 @@ def run_live_dashboard(
     p99_9_budget_ns=None,
     buy_p99_9_budget_ns=None,
     sell_p99_9_budget_ns=None,
+    p95_budget_ns=None,
+    buy_p95_budget_ns=None,
+    sell_p95_budget_ns=None,
 ):
     if type(window) is not int or window <= 0:
         raise ValueError("Window size must be a positive integer")
@@ -233,18 +271,31 @@ def run_live_dashboard(
         type(p99_budget_ns) is not int or p99_budget_ns <= 0
     ):
         raise ValueError("P99 budget must be a positive integer")
+    if p95_budget_ns is not None and (
+        type(p95_budget_ns) is not int or p95_budget_ns <= 0
+    ):
+        raise ValueError("P95 budget must be a positive integer")
     if p99_9_budget_ns is not None and (
         type(p99_9_budget_ns) is not int or p99_9_budget_ns <= 0
     ):
         raise ValueError("P99.9 budget must be a positive integer")
-    for side_name, side_budget in (
-        ("BUY", buy_p99_budget_ns),
-        ("SELL", sell_p99_budget_ns),
+    for side_name, percentile, side_budget in (
+        ("BUY", "p95", buy_p95_budget_ns),
+        ("SELL", "p95", sell_p95_budget_ns),
+        ("BUY", "p99", buy_p99_budget_ns),
+        ("SELL", "p99", sell_p99_budget_ns),
     ):
         if side_budget is not None and (
             type(side_budget) is not int or side_budget <= 0
         ):
-            raise ValueError(f"{side_name} p99 budget must be a positive integer")
+            raise ValueError(
+                f"{side_name} {percentile} budget must be a positive integer"
+            )
+
+    side_p95_budgets = {
+        "BUY": buy_p95_budget_ns if buy_p95_budget_ns is not None else p95_budget_ns,
+        "SELL": sell_p95_budget_ns if sell_p95_budget_ns is not None else p95_budget_ns,
+    }
 
     side_p99_budgets = {
         "BUY": buy_p99_budget_ns if buy_p99_budget_ns is not None else p99_budget_ns,
@@ -287,6 +338,8 @@ def run_live_dashboard(
                 side_p99_budgets=side_p99_budgets,
                 p99_9_budget_ns=p99_9_budget_ns,
                 side_p99_9_budgets=side_p99_9_budgets,
+                p95_budget_ns=p95_budget_ns,
+                side_p95_budgets=side_p95_budgets,
             )
         )
         output.write("\n")
@@ -323,6 +376,9 @@ def run_live_dashboard(
     result = measure_engine_latency(**measurement_options)
     if count == 0:
         draw(0, 0, None)
+    if p95_budget_ns is not None:
+        p95_ns = result["latency"]["p95_ns"]
+        result["p95_budget"] = _budget_result(p95_ns, p95_budget_ns)
     if p99_budget_ns is not None:
         p99_ns = result["latency"]["p99_ns"]
         result["p99_budget"] = _budget_result(p99_ns, p99_budget_ns)
@@ -342,6 +398,20 @@ def run_live_dashboard(
             )
             result["p99_budget_by_side"][side_name] = _budget_result(
                 side_p99, side_budget
+            )
+    configured_side_p95_budgets = {
+        side_name: budget
+        for side_name, budget in side_p95_budgets.items()
+        if budget is not None
+    }
+    if configured_side_p95_budgets:
+        result["p95_budget_by_side"] = {}
+        for side_name, side_budget in configured_side_p95_budgets.items():
+            side_p95 = result.get("latency_by_side", {}).get(side_name, {}).get(
+                "p95_ns"
+            )
+            result["p95_budget_by_side"][side_name] = _budget_result(
+                side_p95, side_budget
             )
     configured_side_p99_9_budgets = {
         side_name: budget
@@ -388,6 +458,11 @@ def build_parser():
         help="Redraw after this many new orders (default: 10)",
     )
     parser.add_argument(
+        "--p95-budget-ns",
+        type=positive_integer,
+        help="Show whether the rolling p95 latency stays within this nanosecond budget",
+    )
+    parser.add_argument(
         "--p99-budget-ns",
         type=positive_integer,
         help="Show whether the rolling p99 latency stays within this nanosecond budget",
@@ -396,6 +471,16 @@ def build_parser():
         "--p99-9-budget-ns",
         type=positive_integer,
         help="Show whether the rolling p99.9 latency stays within this nanosecond budget",
+    )
+    parser.add_argument(
+        "--buy-p95-budget-ns",
+        type=positive_integer,
+        help="Override the p95 latency budget for BUY orders",
+    )
+    parser.add_argument(
+        "--sell-p95-budget-ns",
+        type=positive_integer,
+        help="Override the p95 latency budget for SELL orders",
     )
     parser.add_argument(
         "--buy-p99-budget-ns",
@@ -421,7 +506,7 @@ def build_parser():
         "--fail-on-budget-exceeded",
         action="store_true",
         help=(
-            "Exit with status 1 if any configured p99 or p99.9 budget is exceeded "
+            "Exit with status 1 if any configured p95, p99, or p99.9 budget is exceeded "
             "or unavailable"
         ),
     )
@@ -440,6 +525,9 @@ def main(argv=None):
     parser = build_parser()
     args = parser.parse_args(argv)
     if args.fail_on_budget_exceeded and not any((
+        args.p95_budget_ns,
+        args.buy_p95_budget_ns,
+        args.sell_p95_budget_ns,
         args.p99_budget_ns,
         args.buy_p99_budget_ns,
         args.sell_p99_budget_ns,
@@ -448,7 +536,7 @@ def main(argv=None):
         args.sell_p99_9_budget_ns,
     )):
         parser.error(
-            "--fail-on-budget-exceeded requires at least one p99 or p99.9 budget"
+            "--fail-on-budget-exceeded requires at least one p95, p99, or p99.9 budget"
         )
 
     result = run_live_dashboard(
@@ -465,8 +553,17 @@ def main(argv=None):
         p99_9_budget_ns=args.p99_9_budget_ns,
         buy_p99_9_budget_ns=args.buy_p99_9_budget_ns,
         sell_p99_9_budget_ns=args.sell_p99_9_budget_ns,
+        p95_budget_ns=args.p95_budget_ns,
+        buy_p95_budget_ns=args.buy_p95_budget_ns,
+        sell_p95_budget_ns=args.sell_p95_budget_ns,
     )
     budget_results = []
+    if "p95_budget" in result:
+        budget_results.append(result["p95_budget"]["within_budget"])
+    budget_results.extend(
+        side_result["within_budget"]
+        for side_result in result.get("p95_budget_by_side", {}).values()
+    )
     if "p99_budget" in result:
         budget_results.append(result["p99_budget"]["within_budget"])
     budget_results.extend(
