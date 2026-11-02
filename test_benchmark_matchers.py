@@ -45,7 +45,7 @@ class TestBenchmarkMatchers(unittest.TestCase):
         self.assertEqual(result["results"]["cython"]["median_elapsed_ns"], 30)
         self.assertEqual(result["results"]["cython"]["max_elapsed_ns"], 30)
         self.assertEqual(result["median_time_difference_ns"], -5)
-        self.assertEqual(result["schema_version"], 1)
+        self.assertEqual(result["schema_version"], 2)
         self.assertAlmostEqual(result["cython_speedup_ratio"], 25 / 30)
 
     def test_benchmark_rejects_non_positive_workload_values(self):
@@ -116,7 +116,7 @@ class TestBenchmarkMatchers(unittest.TestCase):
 
     def test_json_output_saves_complete_report_to_file(self):
         result = {
-            "schema_version": 1,
+            "schema_version": 2,
             "configuration": {"count": 1},
             "environment": {},
             "results": {},
@@ -148,7 +148,7 @@ class TestBenchmarkMatchers(unittest.TestCase):
 
     def test_csv_output_saves_each_measured_matcher_run(self):
         result = {
-            "schema_version": 1,
+            "schema_version": 2,
             "configuration": {
                 "count": 100,
                 "seed": 7,
@@ -184,7 +184,11 @@ class TestBenchmarkMatchers(unittest.TestCase):
             path = Path(directory) / "matcher-timings.csv"
             with patch("benchmark_matchers.benchmark_matchers", return_value=result):
                 with redirect_stdout(io.StringIO()):
-                    main(["--csv-output", str(path), "--json"])
+                    main([
+                        "--csv-output", str(path),
+                        "--minimum-speedup-ratio", "1.2",
+                        "--json",
+                    ])
 
             with path.open(newline="", encoding="utf-8") as input_file:
                 rows = list(csv.reader(input_file))
@@ -212,38 +216,40 @@ class TestBenchmarkMatchers(unittest.TestCase):
                 "traded_quantity",
                 "pending_buy_quantity",
                 "pending_sell_quantity",
+                "minimum_speedup_ratio",
+                "minimum_speedup_met",
             ],
             [
-                "1", "python", "1", "100", "1000000000.0",
+                "2", "python", "1", "100", "1000000000.0",
                 "2.0",
                 "2026-11-01T12:00:00+00:00",
                 "3.14.7", "CPython", "Windows", "11", "AMD64", "64",
                 "100", "7", "2", "1",
-                "3", "25", "4", "5",
+                "3", "25", "4", "5", "1.2", "true",
             ],
             [
-                "1", "python", "2", "0", "",
+                "2", "python", "2", "0", "",
                 "0.0",
                 "2026-11-01T12:00:00+00:00",
                 "3.14.7", "CPython", "Windows", "11", "AMD64", "64",
                 "100", "7", "2", "1",
-                "3", "25", "4", "5",
+                "3", "25", "4", "5", "1.2", "true",
             ],
             [
-                "1", "cython", "1", "50", "2000000000.0",
+                "2", "cython", "1", "50", "2000000000.0",
                 "2.0",
                 "2026-11-01T12:00:00+00:00",
                 "3.14.7", "CPython", "Windows", "11", "AMD64", "64",
                 "100", "7", "2", "1",
-                "3", "25", "4", "5",
+                "3", "25", "4", "5", "1.2", "true",
             ],
             [
-                "1", "cython", "2", "100", "1000000000.0",
+                "2", "cython", "2", "100", "1000000000.0",
                 "0.0",
                 "2026-11-01T12:00:00+00:00",
                 "3.14.7", "CPython", "Windows", "11", "AMD64", "64",
                 "100", "7", "2", "1",
-                "3", "25", "4", "5",
+                "3", "25", "4", "5", "1.2", "true",
             ],
         ])
 

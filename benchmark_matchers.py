@@ -15,7 +15,7 @@ from result_export import save_result
 from run_simulation import non_negative_count
 from trading_engine import ChronosMatch, Order
 
-MATCHER_REPORT_SCHEMA_VERSION = 1
+MATCHER_REPORT_SCHEMA_VERSION = 2
 
 try:
     from cython_matcher import CythonMatchCore
@@ -153,7 +153,16 @@ def save_matcher_samples_csv(path, result):
             "traded_quantity",
             "pending_buy_quantity",
             "pending_sell_quantity",
+            "minimum_speedup_ratio",
+            "minimum_speedup_met",
         ))
+        speedup_check = result.get("minimum_speedup_check")
+        minimum_speedup_ratio = (
+            speedup_check["minimum_ratio"] if speedup_check is not None else ""
+        )
+        minimum_speedup_met = (
+            str(speedup_check["met"]).lower() if speedup_check is not None else ""
+        )
         python_samples = result["results"]["python"]["samples_ns"]
         cython_samples = result["results"]["cython"]["samples_ns"]
         for matcher in ("python", "cython"):
@@ -195,6 +204,8 @@ def save_matcher_samples_csv(path, result):
                     matcher_result["traded_quantity"],
                     pending_quantities["BUY"],
                     pending_quantities["SELL"],
+                    minimum_speedup_ratio,
+                    minimum_speedup_met,
                 ))
 
 
