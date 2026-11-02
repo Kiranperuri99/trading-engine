@@ -38,8 +38,10 @@ The primary engine is a Python prototype using in-memory lists.
 Trades execute at the price of the order already waiting in the book.
 
 The Cython matcher is experimental and is not wired into the main simulation.
-Simulation and benchmark tools are available; a terminal dashboard is planned.
-Performance targets have not yet been verified.
+Simulation, benchmark, and live latency dashboard tools are available. The
+dashboard reports per-order latency percentiles and supports optional latency
+budgets. Performance targets have not yet been independently verified on the
+target machine.
 ## Simulation
 
 Run the sequential ring-buffer simulation:
