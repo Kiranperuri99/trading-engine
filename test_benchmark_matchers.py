@@ -389,12 +389,18 @@ class TestBenchmarkMatchers(unittest.TestCase):
     def test_benchmark_runs_real_matchers_and_confirms_parity(self):
         result = benchmark_matchers(count=80, seed=9, repeats=1, warmup=0)
 
-        self.assertEqual(
-            result["results"]["python"]["trade_count"],
-            result["results"]["cython"]["trade_count"],
-        )
-        self.assertGreater(result["results"]["python"]["median_elapsed_ns"], 0)
-        self.assertGreater(result["results"]["cython"]["median_elapsed_ns"], 0)
+        python_result = result["results"]["python"]
+        cython_result = result["results"]["cython"]
+        for field in (
+            "trade_count",
+            "traded_quantity",
+            "pending_quantities",
+        ):
+            with self.subTest(field=field):
+                self.assertEqual(python_result[field], cython_result[field])
+
+        self.assertGreater(python_result["median_elapsed_ns"], 0)
+        self.assertGreater(cython_result["median_elapsed_ns"], 0)
 
 
 if __name__ == "__main__":
