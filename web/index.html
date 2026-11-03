@@ -1,0 +1,300 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0b1118">
+  <title>ChronosMatch — Order Matching Simulator</title>
+  <style>
+    :root{color-scheme:dark;--bg:#0b1118;--panel:#111a24;--panel-2:#0e1720;--line:#243342;--text:#e8eef4;--muted:#91a1b0;--soft:#637587;--green:#43d2a0;--green-bg:#102a24;--red:#ff7884;--red-bg:#301c23;--blue:#7abaff;--blue-bg:#14283b;--amber:#e6be76;--mono:ui-monospace,"Cascadia Code",Consolas,monospace;--sans:Inter,"Segoe UI",Arial,sans-serif}
+    *{box-sizing:border-box}body{margin:0;min-height:100vh;background:radial-gradient(ellipse at 78% -20%,#1b3042 0,transparent 38%),var(--bg);color:var(--text);font:14px/1.45 var(--sans)}button,input{font:inherit}button{cursor:pointer}button:focus-visible,input:focus-visible{outline:2px solid var(--blue);outline-offset:2px}.shell{max-width:1380px;margin:auto;padding:0 28px 30px}.topbar{height:68px;display:flex;align-items:center;gap:26px;border-bottom:1px solid var(--line);position:sticky;top:0;background:#0b1118ed;backdrop-filter:blur(12px);z-index:3}.brand{display:flex;align-items:center;gap:11px}.brand-mark{width:34px;height:34px;display:grid;place-items:center;border:1px solid #286d5e;background:#10251f;border-radius:10px;color:var(--green);font-weight:800;font-size:20px}.brand-name{font-weight:750;letter-spacing:.6px;font-size:14px}.brand-sub{color:var(--muted);font:9px var(--mono);letter-spacing:1px;margin-top:2px}.market-badge,.connection{display:flex;align-items:center;gap:8px;color:var(--muted);font:10px var(--mono);letter-spacing:.45px}.market-badge{margin-left:14px}.dot{height:7px;width:7px;border-radius:50%;background:var(--green);box-shadow:0 0 10px #43d2a060}.spacer{flex:1}.connection .dot{background:var(--amber);box-shadow:none}.connection.connected .dot{background:var(--green);box-shadow:0 0 10px #43d2a060}.connection.error .dot{background:var(--red);box-shadow:none}.button{border:1px solid var(--line);border-radius:7px;background:#14202c;color:var(--text);padding:9px 12px;font-weight:600;font-size:11px;transition:background .15s,border-color .15s}.button:hover{background:#1a2a39;border-color:#3a5366}.button:disabled{opacity:.55;cursor:wait}.intro{display:flex;align-items:flex-end;justify-content:space-between;gap:18px;padding:28px 0 18px}.eyebrow{color:#7f91a1;font:10px var(--mono);letter-spacing:1px;margin:0 0 6px}.intro h1{font-size:25px;letter-spacing:-.4px;margin:0;font-weight:650}.intro p:last-child{color:var(--muted);font-size:12px;margin:5px 0 0}.local-note{font:10px var(--mono);color:var(--soft);text-align:right}.metrics{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:10px;margin-bottom:14px}.metric,.panel{background:linear-gradient(145deg,#121c27,#101720);border:1px solid var(--line);border-radius:10px}.metric{padding:14px;min-height:92px}.metric-label{font:9px var(--mono);letter-spacing:.7px;color:var(--muted);text-transform:uppercase}.metric-value{font:600 21px var(--sans);font-variant-numeric:tabular-nums;margin-top:10px;white-space:nowrap}.metric-value.bid{color:var(--green)}.metric-value.ask{color:var(--red)}.metric-foot{color:var(--soft);font:9px var(--mono);margin-top:3px}.layout{display:grid;grid-template-columns:minmax(310px,.85fr) minmax(500px,1.35fr);gap:14px;align-items:start}.left,.right{display:grid;gap:14px}.panel{padding:16px;min-width:0}.panel-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px}.panel-head h2{font-size:15px;font-weight:650;margin:0}.panel-head p{font:9px var(--mono);color:var(--soft);margin:4px 0 0}.chip{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);border-radius:20px;padding:4px 8px;color:var(--muted);font:9px var(--mono)}.side-switch{display:grid;grid-template-columns:1fr 1fr;gap:5px;padding:4px;background:#0a1118;border:1px solid var(--line);border-radius:8px;margin-bottom:14px}.side-button{border:0;border-radius:5px;padding:8px;background:transparent;color:var(--muted);font-size:12px;font-weight:650}.side-button.active.buy{background:var(--green-bg);color:var(--green)}.side-button.active.sell{background:var(--red-bg);color:var(--red)}label{display:block;color:#a7b4bf;font:10px var(--mono);margin:11px 0 6px}.optional{color:var(--soft)}input{width:100%;height:37px;border:1px solid #2a3b4a;border-radius:6px;background:#0c141d;color:var(--text);padding:0 10px;font:12px var(--mono)}input::placeholder{color:#627487}.form-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}.form-hint{font-size:10px;line-height:1.5;color:var(--soft);margin:10px 0 12px}.submit{width:100%;display:flex;justify-content:space-between;align-items:center;padding:10px 12px;border-radius:7px;border:1px solid #26745f;background:#12352c;color:var(--green);font-weight:650;font-size:12px}.submit:hover{background:#184638}.submit.sell{border-color:#914652;background:#351f26;color:var(--red)}.submit.sell:hover{background:#472830}.message{min-height:18px;margin:9px 0 0;color:var(--muted);font:10px var(--mono)}.message.error{color:var(--red)}.message.success{color:var(--green)}.book-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}.book-col-title{display:flex;justify-content:space-between;color:var(--muted);font:9px var(--mono);letter-spacing:.6px;padding:0 3px 8px;border-bottom:1px solid var(--line)}.book-col-title .ask{color:var(--red)}.book-col-title .bid{color:var(--green)}.level{display:grid;grid-template-columns:1fr auto;gap:10px;padding:7px 4px;border-bottom:1px solid #1b2834;position:relative;font:11px var(--mono);font-variant-numeric:tabular-nums}.level:last-child{border-bottom:0}.level .price{position:relative;z-index:1}.level .qty{position:relative;z-index:1;color:#b4c1cc}.level.ask .price{color:var(--red)}.level.bid .price{color:var(--green)}.book-empty{padding:14px 4px;color:var(--soft);font:10px var(--mono)}.spread-line{display:flex;justify-content:space-between;align-items:center;gap:10px;margin:9px 0;padding:9px 10px;background:#0b141d;border:1px solid #1e2c38;border-radius:6px;color:var(--soft);font:9px var(--mono)}.spread-line strong{color:var(--text);font:600 11px var(--mono)}.table-wrap{overflow:auto}table{border-collapse:collapse;width:100%;white-space:nowrap}th{text-align:left;color:var(--soft);font:9px var(--mono);letter-spacing:.5px;padding:0 8px 8px;border-bottom:1px solid var(--line)}td{padding:9px 8px;border-bottom:1px solid #1b2834;color:#c3cdd6;font:10px var(--mono);font-variant-numeric:tabular-nums}tbody tr:last-child td{border-bottom:0}.side-tag{font-size:9px;padding:3px 6px;border-radius:4px}.side-tag.buy{color:var(--green);background:var(--green-bg)}.side-tag.sell{color:var(--red);background:var(--red-bg)}.cancel{border:0;background:transparent;color:#9cabb8;border-radius:4px;padding:4px 7px;font:10px var(--mono)}.cancel:hover{background:var(--red-bg);color:var(--red)}.empty-table{text-align:center;padding:17px;color:var(--soft);font:10px var(--mono)}.counts{display:flex;gap:8px;flex-wrap:wrap}.count{border:1px solid var(--line);border-radius:5px;padding:5px 7px;color:var(--muted);font:9px var(--mono)}.count b{color:var(--text);font-weight:600}.footer{display:flex;justify-content:space-between;gap:12px;margin-top:15px;color:var(--soft);font:9px var(--mono)}.toast{position:fixed;right:22px;bottom:20px;max-width:360px;padding:11px 14px;border:1px solid #315b4d;border-radius:8px;background:#14251f;color:#d8f4e9;font-size:11px;opacity:0;transform:translateY(7px);pointer-events:none;transition:opacity .15s,transform .15s}.toast.show{opacity:1;transform:translateY(0)}
+    @media(max-width:1050px){.metrics{grid-template-columns:repeat(3,minmax(0,1fr))}.layout{grid-template-columns:minmax(280px,.85fr) minmax(430px,1.15fr)}}@media(max-width:760px){.shell{padding:0 14px 22px}.topbar{height:60px;gap:12px}.market-badge{display:none}.connection{font-size:9px}.intro{align-items:flex-start;flex-direction:column;padding-top:22px}.local-note{text-align:left}.layout{grid-template-columns:1fr}.right{grid-row:auto}}@media(max-width:500px){.metrics{grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}.metric{padding:11px;min-height:82px}.metric-value{font-size:18px}.book-grid{gap:10px}.panel{padding:13px}.brand-name{font-size:12px}.button{padding:8px 9px}.footer{flex-direction:column}}
+    @media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;transition:none!important}}
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <header class="topbar">
+      <div class="brand"><div class="brand-mark" aria-hidden="true">↗</div><div><div class="brand-name">CHRONOSMATCH</div><div class="brand-sub">ORDER MATCHING ENGINE</div></div></div>
+      <div class="market-badge"><span class="dot"></span> SIMULATED MARKET <span aria-hidden="true">/</span> DEMO-USD</div>
+      <div class="spacer"></div>
+      <div class="connection" id="connection"><span class="dot"></span><span id="connection-text">Starting…</span></div>
+      <button class="button" id="refresh-button" type="button">Refresh</button>
+      <button class="button" id="reset-button" type="button">Reset demo</button>
+    </header>
+
+    <main>
+      <section class="intro">
+        <div><p class="eyebrow">LOCAL MATCHING SIMULATOR</p><h1>Market overview</h1><p>Place limit orders and watch ChronosMatch process the book.</p></div>
+        <div class="local-note" id="mode-note">No external market data · no live orders</div>
+      </section>
+
+      <section class="metrics" aria-label="Engine and market summary">
+        <article class="metric"><div class="metric-label">Best bid · BUY</div><div class="metric-value bid" id="best-bid">—</div><div class="metric-foot" id="bid-size">No open buy orders</div></article>
+        <article class="metric"><div class="metric-label">Best ask · SELL</div><div class="metric-value ask" id="best-ask">—</div><div class="metric-foot" id="ask-size">No open sell orders</div></article>
+        <article class="metric"><div class="metric-label">Spread</div><div class="metric-value" id="spread">—</div><div class="metric-foot">Best ask minus best bid</div></article>
+        <article class="metric"><div class="metric-label">Mid price</div><div class="metric-value" id="mid-price">—</div><div class="metric-foot">Midpoint of top of book</div></article>
+        <article class="metric"><div class="metric-label">Traded quantity</div><div class="metric-value" id="traded">0</div><div class="metric-foot" id="trade-count">0 executions</div></article>
+        <article class="metric"><div class="metric-label">Book imbalance</div><div class="metric-value" id="imbalance">—</div><div class="metric-foot">Open BUY quantity vs SELL</div></article>
+      </section>
+
+      <div class="layout">
+        <div class="left">
+          <section class="panel">
+            <div class="panel-head"><div><h2>Place a limit order</h2><p>Crossing orders trade immediately; remainder rests.</p></div><span class="chip">PRICE · TIME PRIORITY</span></div>
+            <form id="order-form">
+              <div class="side-switch" role="group" aria-label="Order side"><button class="side-button active buy" data-side="BUY" type="button">BUY</button><button class="side-button sell" data-side="SELL" type="button">SELL</button></div>
+              <input id="side-input" type="hidden" value="BUY">
+              <label for="order-id">Order ID <span class="optional">(optional; assigned automatically)</span></label>
+              <input id="order-id" type="number" min="1" step="1" placeholder="Auto" autocomplete="off">
+              <div class="form-row"><div><label for="price-input">Limit price · USD</label><input id="price-input" type="number" min="0.01" step="0.01" value="101.30" required></div><div><label for="quantity-input">Quantity · units</label><input id="quantity-input" type="number" min="1" step="1" value="2" required></div></div>
+              <p class="form-hint">Try BUY 2 at 101.30 to match the sample SELL order.</p>
+              <button class="submit" id="submit-button" type="submit"><span>Place BUY order</span><span aria-hidden="true">→</span></button>
+              <p class="message" id="form-message" role="status" aria-live="polite"></p>
+            </form>
+          </section>
+
+          <section class="panel">
+            <div class="panel-head"><div><h2>Open orders</h2><p>Cancel any order still waiting in the book.</p></div><span class="chip" id="open-count">0 OPEN</span></div>
+            <div class="table-wrap"><table><thead><tr><th>ID</th><th>SIDE</th><th>PRICE</th><th>OPEN QTY</th><th></th></tr></thead><tbody id="orders-body"></tbody></table><div id="orders-empty" class="empty-table" hidden>No open orders.</div></div>
+          </section>
+        </div>
+
+        <div class="right">
+          <section class="panel">
+            <div class="panel-head"><div><h2>Order book</h2><p>Aggregated open quantity at each price.</p></div><span class="chip">LIVE STATE</span></div>
+            <div class="book-grid"><div><div class="book-col-title"><span class="ask">SELL ORDERS</span><span>QTY</span></div><div id="asks-body"></div><div id="asks-empty" class="book-empty" hidden>No open sell orders</div></div><div><div class="book-col-title"><span class="bid">BUY ORDERS</span><span>QTY</span></div><div id="bids-body"></div><div id="bids-empty" class="book-empty" hidden>No open buy orders</div></div></div>
+            <div class="spread-line"><span>SPREAD <strong id="book-spread">—</strong></span><span id="book-mid">MID —</span><span id="book-units">0 open units</span></div>
+            <div class="counts"><span class="count">OPEN <b id="status-open">0</b></span><span class="count">FILLED <b id="status-filled">0</b></span><span class="count">CANCELLED <b id="status-cancelled">0</b></span></div>
+          </section>
+
+          <section class="panel">
+            <div class="panel-head"><div><h2>Recent trades</h2><p>Executions recorded by the matching engine.</p></div><span class="chip" id="recent-count">0 RECENT</span></div>
+            <div class="table-wrap"><table><thead><tr><th>TRADE</th><th>BUY ID</th><th>SELL ID</th><th>PRICE</th><th>QTY</th></tr></thead><tbody id="trades-body"></tbody></table><div id="trades-empty" class="empty-table" hidden>No trades yet. Submit an order that crosses the opposite side.</div></div>
+          </section>
+        </div>
+      </div>
+    </main>
+    <footer class="footer"><span>CHRONOSMATCH · LOCAL SIMULATOR</span><span>Python engine when served locally · browser-only preview when opened as a file · no real orders</span></footer>
+  </div>
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <script>
+  (() => {
+    const $ = (id) => document.getElementById(id);
+    const filePreview = location.protocol === 'file:';
+    let side = 'BUY';
+    let currentState = null;
+    let preview = null;
+    let toastTimer;
+    const money = value => value == null ? '—' : Number(value).toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2});
+    const integer = value => Number(value || 0).toLocaleString();
+
+    function newPreviewEngine() {
+      const engine = { buys: [], sells: [], trades: [], seen: new Set(), cancelled: new Set() };
+      const seeds = [
+        [1000, 'SELL', 101.30, 6], [1001, 'BUY', 101.35, 4],
+        [1002, 'BUY', 101.25, 12], [1003, 'BUY', 101.20, 18],
+        [1004, 'BUY', 101.10, 10], [1005, 'SELL', 101.45, 8],
+        [1006, 'SELL', 101.50, 16], [1007, 'SELL', 101.65, 20]
+      ];
+      seeds.forEach(([id, orderSide, price, quantity]) => previewAdd(engine, {order_id:id, side:orderSide, price, quantity}));
+      return engine;
+    }
+
+    function previewAdd(engine, data) {
+      let id = data.order_id;
+      if (id == null || id === '') id = Math.max(999, ...engine.seen) + 1;
+      if (typeof id === 'string' && /^\d+$/.test(id)) id = Number(id);
+      if (!Number.isSafeInteger(id) || id <= 0) throw new Error('Order ID must be a positive whole number.');
+      if (engine.seen.has(id)) throw new Error('Order ID has already been used.');
+      const quantity = typeof data.quantity === 'string' && /^\d+$/.test(data.quantity) ? Number(data.quantity) : data.quantity;
+      if (!Number.isSafeInteger(quantity) || quantity <= 0) throw new Error('Quantity must be a positive whole number.');
+      const price = Number(data.price);
+      if (!Number.isFinite(price) || price <= 0) throw new Error('Price must be a positive number.');
+      const orderSide = String(data.side || '').trim().toUpperCase();
+      if (!['BUY','SELL'].includes(orderSide)) throw new Error('Side must be BUY or SELL.');
+      const order = {order_id:id, side:orderSide, price, quantity};
+      (orderSide === 'BUY' ? engine.buys : engine.sells).push(order);
+      engine.seen.add(id);
+      while (engine.buys.length && engine.sells.length) {
+        let buy = engine.buys[0];
+        for (const item of engine.buys) if (item.price > buy.price) buy = item;
+        let sell = engine.sells[0];
+        for (const item of engine.sells) if (item.price < sell.price) sell = item;
+        if (buy.price < sell.price) break;
+        const traded = Math.min(buy.quantity, sell.quantity);
+        engine.trades.push({buy_order_id:buy.order_id, sell_order_id:sell.order_id, price:order === sell ? buy.price : sell.price, quantity:traded});
+        buy.quantity -= traded; sell.quantity -= traded;
+        if (!buy.quantity) engine.buys.splice(engine.buys.indexOf(buy), 1);
+        if (!sell.quantity) engine.sells.splice(engine.sells.indexOf(sell), 1);
+      }
+    }
+
+    function previewSnapshot(engine) {
+      const group = orders => {
+        const totals = new Map();
+        orders.forEach(order => totals.set(order.price, (totals.get(order.price) || 0) + order.quantity));
+        return [...totals].map(([price, quantity]) => ({price, quantity}));
+      };
+      const bids = group(engine.buys).sort((a,b) => b.price-a.price);
+      const asks = group(engine.sells).sort((a,b) => a.price-b.price);
+      const open = [...engine.buys.map(x => ({...x,side:'BUY'})), ...engine.sells.map(x => ({...x,side:'SELL'}))]
+        .sort((a,b) => a.side !== b.side ? (a.side === 'BUY' ? -1 : 1) : a.side === 'BUY' ? b.price-a.price || a.order_id-b.order_id : a.price-b.price || a.order_id-b.order_id);
+      const qty = engine.trades.reduce((sum, trade) => sum + trade.quantity, 0);
+      const vwap = qty ? engine.trades.reduce((sum, trade) => sum + trade.price*trade.quantity, 0)/qty : null;
+      const bidQty = engine.buys.reduce((sum,x) => sum+x.quantity,0), askQty = engine.sells.reduce((sum,x) => sum+x.quantity,0), allQty = bidQty+askQty;
+      const openIds = new Set(open.map(x => x.order_id));
+      const lastBid = bids[0], lastAsk = asks[0];
+      return {
+        book:{bids,asks}, best_bid:lastBid ? lastBid.price : null, best_ask:lastAsk ? lastAsk.price : null,
+        spread:lastBid && lastAsk ? lastAsk.price-lastBid.price : null,
+        mid_price:lastBid && lastAsk ? (lastAsk.price+lastBid.price)/2 : null,
+        imbalance:allQty ? (bidQty-askQty)/allQty : null,
+        book_summary:{BUY:{order_count:engine.buys.length,total_quantity:bidQty},SELL:{order_count:engine.sells.length,total_quantity:askQty}},
+        execution:{trade_count:engine.trades.length,total_quantity:qty,vwap,average_trade_size:engine.trades.length ? qty/engine.trades.length : null},
+        status_counts:{OPEN:openIds.size,FILLED:engine.seen.size-openIds.size-engine.cancelled.size,CANCELLED:engine.cancelled.size},
+        open_orders:open, trades:engine.trades.slice(-30), next_order_id:Math.max(999,...engine.seen)+1
+      };
+    }
+
+    async function request(path, options={}) {
+      const response = await fetch(path, {headers:{'Content-Type':'application/json'}, ...options});
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || `Request failed (${response.status})`);
+      return data;
+    }
+
+    function connection(kind, text) {
+      $('connection').className = `connection ${kind}`;
+      $('connection-text').textContent = text;
+    }
+
+    function showToast(text, isError=false) {
+      const node = $('toast'); node.textContent = text;
+      node.style.borderColor = isError ? '#914652' : '#315b4d';
+      node.classList.add('show'); clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => node.classList.remove('show'), 2400);
+    }
+
+    function fillLevels(containerId, emptyId, levels, className) {
+      const container = $(containerId), empty = $(emptyId);
+      container.replaceChildren(); empty.hidden = levels.length > 0;
+      levels.slice(0,8).forEach(level => {
+        const row = document.createElement('div'); row.className = `level ${className}`;
+        const price = document.createElement('span'); price.className = 'price'; price.textContent = money(level.price);
+        const quantity = document.createElement('span'); quantity.className = 'qty'; quantity.textContent = integer(level.quantity);
+        row.append(price, quantity); container.append(row);
+      });
+    }
+
+    function renderOrder(order) {
+      const row = document.createElement('tr');
+      [String(order.order_id), null, money(order.price), integer(order.quantity)].forEach((value, index) => {
+        const cell = document.createElement('td');
+        if (index === 1) { const tag = document.createElement('span'); tag.className = `side-tag ${order.side.toLowerCase()}`; tag.textContent = order.side; cell.append(tag); }
+        else cell.textContent = value;
+        row.append(cell);
+      });
+      const action = document.createElement('td'); const button = document.createElement('button');
+      button.type = 'button'; button.className = 'cancel'; button.textContent = 'Cancel';
+      button.setAttribute('aria-label', `Cancel order ${order.order_id}`);
+      button.addEventListener('click', () => cancelOrder(order.order_id)); action.append(button); row.append(action);
+      return row;
+    }
+
+    function renderTrade(trade, index, total) {
+      const row = document.createElement('tr');
+      [`TRD-${String(total-index).padStart(3,'0')}`, String(trade.buy_order_id), String(trade.sell_order_id), money(trade.price), integer(trade.quantity)].forEach(value => {const cell=document.createElement('td');cell.textContent=value;row.append(cell)});
+      return row;
+    }
+
+    function render(data) {
+      currentState = data;
+      const bids = data.book.bids || [], asks = data.book.asks || [];
+      const bid = bids[0], ask = asks[0];
+      $('best-bid').textContent = bid ? money(bid.price) : '—';
+      $('best-ask').textContent = ask ? money(ask.price) : '—';
+      $('bid-size').textContent = bid ? `${integer(bid.quantity)} units at top level` : 'No open buy orders';
+      $('ask-size').textContent = ask ? `${integer(ask.quantity)} units at top level` : 'No open sell orders';
+      $('spread').textContent = data.spread == null ? '—' : money(data.spread);
+      $('mid-price').textContent = data.mid_price == null ? '—' : money(data.mid_price);
+      $('book-spread').textContent = data.spread == null ? '—' : money(data.spread);
+      $('book-mid').textContent = data.mid_price == null ? 'MID —' : `MID ${money(data.mid_price)}`;
+      $('traded').textContent = integer(data.execution.total_quantity);
+      $('trade-count').textContent = `${data.execution.trade_count} ${data.execution.trade_count === 1 ? 'execution' : 'executions'}`;
+      $('imbalance').textContent = data.imbalance == null ? '—' : `${data.imbalance >= 0 ? '+' : ''}${(data.imbalance*100).toFixed(1)}%`;
+      $('book-units').textContent = `${integer(Object.values(data.book_summary).reduce((sum,item) => sum+item.total_quantity,0))} open units`;
+      $('status-open').textContent = integer(data.status_counts.OPEN); $('status-filled').textContent = integer(data.status_counts.FILLED); $('status-cancelled').textContent = integer(data.status_counts.CANCELLED);
+      fillLevels('asks-body','asks-empty',asks,'ask'); fillLevels('bids-body','bids-empty',bids,'bid');
+      $('open-count').textContent = `${data.open_orders.length} OPEN`;
+      const orderBody=$('orders-body'); orderBody.replaceChildren(); $('orders-empty').hidden=data.open_orders.length>0;
+      data.open_orders.forEach(order => orderBody.append(renderOrder(order)));
+      const newest=[...data.trades].reverse(); $('recent-count').textContent=`${newest.length} RECENT`;
+      const tradeBody=$('trades-body'); tradeBody.replaceChildren(); $('trades-empty').hidden=newest.length>0;
+      newest.forEach((trade,index) => tradeBody.append(renderTrade(trade,index,newest.length)));
+      if (!$('order-id').value) $('order-id').placeholder=String(data.next_order_id);
+    }
+
+    async function refresh() {
+      $('refresh-button').disabled = true;
+      try {
+        if (filePreview) { render(previewSnapshot(preview)); connection('connected','Browser preview'); }
+        else { render(await request('/api/state')); connection('connected','Python engine connected'); }
+      } catch (error) { connection('error','Start python web_app.py'); }
+      finally { $('refresh-button').disabled = false; }
+    }
+
+    async function submitOrder(event) {
+      event.preventDefault(); const message=$('form-message');
+      const payload={order_id:$('order-id').value.trim() || null, side, price:Number($('price-input').value), quantity:Number($('quantity-input').value)};
+      message.className='message'; message.textContent=''; $('submit-button').disabled=true;
+      try {
+        if (filePreview) { previewAdd(preview,payload); render(previewSnapshot(preview)); }
+        else render(await request('/api/orders',{method:'POST',body:JSON.stringify(payload)}));
+        $('order-id').value=''; message.textContent='Order accepted by the matching engine.'; message.classList.add('success'); showToast(`${side} order submitted`);
+      } catch (error) { message.textContent=error.message; message.classList.add('error'); }
+      finally { $('submit-button').disabled=false; }
+    }
+
+    async function cancelOrder(orderId) {
+      try {
+        if (filePreview) {
+          let found=false;
+          for (const book of [preview.buys,preview.sells]) { const index=book.findIndex(order=>order.order_id===orderId); if(index>=0){book.splice(index,1);preview.cancelled.add(orderId);found=true;break} }
+          render(previewSnapshot(preview)); showToast(found ? `Order ${orderId} cancelled` : `Order ${orderId} is no longer open`);
+        } else { const result=await request(`/api/orders/${orderId}`,{method:'DELETE'}); render(result); showToast(result.cancelled ? `Order ${orderId} cancelled` : `Order ${orderId} is no longer open`); }
+      } catch (error) { showToast(error.message,true); }
+    }
+
+    async function resetDemo() {
+      const button=$('reset-button'); button.disabled=true;
+      try {
+        if (filePreview) { preview=newPreviewEngine(); render(previewSnapshot(preview)); }
+        else render(await request('/api/reset',{method:'POST',body:'{}'}));
+        $('order-id').value=''; $('form-message').textContent=''; showToast('Demo market reset');
+      } catch (error) { showToast(error.message,true); }
+      finally { button.disabled=false; }
+    }
+
+    document.querySelectorAll('.side-button').forEach(button => button.addEventListener('click', () => {
+      side=button.dataset.side; $('side-input').value=side;
+      document.querySelectorAll('.side-button').forEach(item=>item.classList.toggle('active',item===button));
+      const submit=$('submit-button'); submit.classList.toggle('sell',side==='SELL'); submit.firstElementChild.textContent=`Place ${side} order`;
+      $('form-message').textContent=''; $('form-message').className='message';
+    }));
+    $('order-form').addEventListener('submit',submitOrder);
+    $('refresh-button').addEventListener('click',refresh);
+    $('reset-button').addEventListener('click',resetDemo);
+
+    if (filePreview) {
+      preview=newPreviewEngine(); $('mode-note').textContent='Browser-only preview · no external market data';
+      connection('connected','Browser preview'); render(previewSnapshot(preview));
+    } else {
+      $('mode-note').textContent='Connected to the local Python order-matching engine';
+      refresh(); setInterval(refresh,2000);
+    }
+  })();
+  </script>
+</body>
+</html>
