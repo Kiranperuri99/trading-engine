@@ -85,7 +85,30 @@ class TestLocalWebApp(unittest.TestCase):
         self.assertEqual(status, 200)
         self.assertTrue(state["cancelled"])
         self.assertNotIn(order_id, [order["order_id"] for order in state["open_orders"]])
+    def test_cancellation_is_scoped_to_symbol(self):
+        _, tcs = self.send_json(
+            "/api/orders",
+            "POST",
+            {"symbol": "TCS", "side": "SELL", "price": 4000, "quantity": 2},
+        )
+        _, infy = self.send_json(
+            "/api/orders",
+            "POST",
+            {"symbol": "INFY", "side": "SELL", "price": 2000, "quantity": 3},
+        )
 
+        self.assertIn(1006, [order["order_id"] for order in tcs["open_orders"]])
+        self.assertIn(1006, [order["order_id"] for order in infy["open_orders"]])
+
+        status, result = self.send_json(
+            "/api/orders/1006?symbol=TCS", "DELETE", {}
+        )
+        _, infy_after = self.get_json("/api/state?symbol=INFY")
+
+        self.assertEqual(status, 200)
+        self.assertTrue(result["cancelled"])
+        self.assertNotIn(1006, [order["order_id"] for order in result["open_orders"]])
+        self.assertIn(1006, [order["order_id"] for order in infy_after["open_orders"]])
     def test_invalid_order_returns_clear_error_without_mutating_engine(self):
         before = self.service.state()
         status, response = self.send_json(
