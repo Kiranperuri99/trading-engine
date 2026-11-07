@@ -33,17 +33,6 @@ def run_simulation(count=100, seed=42, trade_store=None):
 
         return summarize_engine(engine, processed)
 
-    return {
-        "orders_processed": processed,
-        "trade_count": len(engine.trades),
-        "traded_quantity": engine.total_traded_quantity(),
-        "pending_buy_quantity": pending["BUY"],
-        "pending_sell_quantity": pending["SELL"],
-        "best_bid": engine.best_bid(),
-        "best_ask": engine.best_ask(),
-        "spread": engine.spread(),
-    }
-
 def non_negative_count(value):
     try:
         count = int(value)

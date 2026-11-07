@@ -1,6 +1,13 @@
 # Python cache
 __pycache__/
 *.py[cod]
+.pytest_cache/
+
+# Cython build products
+build/
+*.so
+*.pyd
+cython_matcher.c
 
 # Virtual environments
 .venv/
@@ -9,7 +16,5 @@ venv/
 # Local secrets
 .env
 concurrent_report.json
-
-# Cython build outputs
-/build/
-/cython_matcher.c
+final-review-*.json
+trades.db
