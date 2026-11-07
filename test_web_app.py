@@ -86,29 +86,55 @@ class TestLocalWebApp(unittest.TestCase):
         self.assertTrue(state["cancelled"])
         self.assertNotIn(order_id, [order["order_id"] for order in state["open_orders"]])
     def test_cancellation_is_scoped_to_symbol(self):
-        _, tcs = self.send_json(
+        tcs_order_id = 9001
+        infy_order_id = 9002
+
+        status, tcs = self.send_json(
             "/api/orders",
             "POST",
-            {"symbol": "TCS", "side": "SELL", "price": 4000, "quantity": 2},
+            {
+                "symbol": "TCS",
+                "side": "BUY",
+                "price": 1.0,
+                "quantity": 1,
+                "order_id": tcs_order_id,
+            },
         )
-        _, infy = self.send_json(
+        self.assertEqual(status, 201)
+        self.assertIn(
+            tcs_order_id, [order["order_id"] for order in tcs["open_orders"]]
+        )
+
+        status, infy = self.send_json(
             "/api/orders",
             "POST",
-            {"symbol": "INFY", "side": "SELL", "price": 2000, "quantity": 3},
+            {
+                "symbol": "INFY",
+                "side": "BUY",
+                "price": 1.0,
+                "quantity": 1,
+                "order_id": infy_order_id,
+            },
+        )
+        self.assertEqual(status, 201)
+        self.assertIn(
+            infy_order_id, [order["order_id"] for order in infy["open_orders"]]
         )
 
-        self.assertIn(1006, [order["order_id"] for order in tcs["open_orders"]])
-        self.assertIn(1006, [order["order_id"] for order in infy["open_orders"]])
-
-        status, result = self.send_json(
-            "/api/orders/1006?symbol=TCS", "DELETE", {}
+        status, cancelled_tcs = self.send_json(
+            f"/api/orders/{tcs_order_id}?symbol=TCS", "DELETE", {}
         )
-        _, infy_after = self.get_json("/api/state?symbol=INFY")
-
         self.assertEqual(status, 200)
-        self.assertTrue(result["cancelled"])
-        self.assertNotIn(1006, [order["order_id"] for order in result["open_orders"]])
-        self.assertIn(1006, [order["order_id"] for order in infy_after["open_orders"]])
+        self.assertTrue(cancelled_tcs["cancelled"])
+        self.assertNotIn(
+            tcs_order_id,
+            [order["order_id"] for order in cancelled_tcs["open_orders"]],
+        )
+
+        _, infy_after = self.get_json("/api/state?symbol=INFY")
+        self.assertIn(
+            infy_order_id, [order["order_id"] for order in infy_after["open_orders"]]
+        )
     def test_invalid_order_returns_clear_error_without_mutating_engine(self):
         before = self.service.state()
         status, response = self.send_json(
