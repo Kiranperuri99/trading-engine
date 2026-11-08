@@ -1,300 +1,100 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#0b1118">
-  <title>ChronosMatch — Order Matching Simulator</title>
-  <style>
-    :root{color-scheme:dark;--bg:#0b1118;--panel:#111a24;--panel-2:#0e1720;--line:#243342;--text:#e8eef4;--muted:#91a1b0;--soft:#637587;--green:#43d2a0;--green-bg:#102a24;--red:#ff7884;--red-bg:#301c23;--blue:#7abaff;--blue-bg:#14283b;--amber:#e6be76;--mono:ui-monospace,"Cascadia Code",Consolas,monospace;--sans:Inter,"Segoe UI",Arial,sans-serif}
-    *{box-sizing:border-box}body{margin:0;min-height:100vh;background:radial-gradient(ellipse at 78% -20%,#1b3042 0,transparent 38%),var(--bg);color:var(--text);font:14px/1.45 var(--sans)}button,input{font:inherit}button{cursor:pointer}button:focus-visible,input:focus-visible{outline:2px solid var(--blue);outline-offset:2px}.shell{max-width:1380px;margin:auto;padding:0 28px 30px}.topbar{height:68px;display:flex;align-items:center;gap:26px;border-bottom:1px solid var(--line);position:sticky;top:0;background:#0b1118ed;backdrop-filter:blur(12px);z-index:3}.brand{display:flex;align-items:center;gap:11px}.brand-mark{width:34px;height:34px;display:grid;place-items:center;border:1px solid #286d5e;background:#10251f;border-radius:10px;color:var(--green);font-weight:800;font-size:20px}.brand-name{font-weight:750;letter-spacing:.6px;font-size:14px}.brand-sub{color:var(--muted);font:9px var(--mono);letter-spacing:1px;margin-top:2px}.market-badge,.connection{display:flex;align-items:center;gap:8px;color:var(--muted);font:10px var(--mono);letter-spacing:.45px}.market-badge{margin-left:14px}.dot{height:7px;width:7px;border-radius:50%;background:var(--green);box-shadow:0 0 10px #43d2a060}.spacer{flex:1}.connection .dot{background:var(--amber);box-shadow:none}.connection.connected .dot{background:var(--green);box-shadow:0 0 10px #43d2a060}.connection.error .dot{background:var(--red);box-shadow:none}.button{border:1px solid var(--line);border-radius:7px;background:#14202c;color:var(--text);padding:9px 12px;font-weight:600;font-size:11px;transition:background .15s,border-color .15s}.button:hover{background:#1a2a39;border-color:#3a5366}.button:disabled{opacity:.55;cursor:wait}.intro{display:flex;align-items:flex-end;justify-content:space-between;gap:18px;padding:28px 0 18px}.eyebrow{color:#7f91a1;font:10px var(--mono);letter-spacing:1px;margin:0 0 6px}.intro h1{font-size:25px;letter-spacing:-.4px;margin:0;font-weight:650}.intro p:last-child{color:var(--muted);font-size:12px;margin:5px 0 0}.local-note{font:10px var(--mono);color:var(--soft);text-align:right}.metrics{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:10px;margin-bottom:14px}.metric,.panel{background:linear-gradient(145deg,#121c27,#101720);border:1px solid var(--line);border-radius:10px}.metric{padding:14px;min-height:92px}.metric-label{font:9px var(--mono);letter-spacing:.7px;color:var(--muted);text-transform:uppercase}.metric-value{font:600 21px var(--sans);font-variant-numeric:tabular-nums;margin-top:10px;white-space:nowrap}.metric-value.bid{color:var(--green)}.metric-value.ask{color:var(--red)}.metric-foot{color:var(--soft);font:9px var(--mono);margin-top:3px}.layout{display:grid;grid-template-columns:minmax(310px,.85fr) minmax(500px,1.35fr);gap:14px;align-items:start}.left,.right{display:grid;gap:14px}.panel{padding:16px;min-width:0}.panel-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px}.panel-head h2{font-size:15px;font-weight:650;margin:0}.panel-head p{font:9px var(--mono);color:var(--soft);margin:4px 0 0}.chip{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);border-radius:20px;padding:4px 8px;color:var(--muted);font:9px var(--mono)}.side-switch{display:grid;grid-template-columns:1fr 1fr;gap:5px;padding:4px;background:#0a1118;border:1px solid var(--line);border-radius:8px;margin-bottom:14px}.side-button{border:0;border-radius:5px;padding:8px;background:transparent;color:var(--muted);font-size:12px;font-weight:650}.side-button.active.buy{background:var(--green-bg);color:var(--green)}.side-button.active.sell{background:var(--red-bg);color:var(--red)}label{display:block;color:#a7b4bf;font:10px var(--mono);margin:11px 0 6px}.optional{color:var(--soft)}input{width:100%;height:37px;border:1px solid #2a3b4a;border-radius:6px;background:#0c141d;color:var(--text);padding:0 10px;font:12px var(--mono)}input::placeholder{color:#627487}.form-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}.form-hint{font-size:10px;line-height:1.5;color:var(--soft);margin:10px 0 12px}.submit{width:100%;display:flex;justify-content:space-between;align-items:center;padding:10px 12px;border-radius:7px;border:1px solid #26745f;background:#12352c;color:var(--green);font-weight:650;font-size:12px}.submit:hover{background:#184638}.submit.sell{border-color:#914652;background:#351f26;color:var(--red)}.submit.sell:hover{background:#472830}.message{min-height:18px;margin:9px 0 0;color:var(--muted);font:10px var(--mono)}.message.error{color:var(--red)}.message.success{color:var(--green)}.book-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}.book-col-title{display:flex;justify-content:space-between;color:var(--muted);font:9px var(--mono);letter-spacing:.6px;padding:0 3px 8px;border-bottom:1px solid var(--line)}.book-col-title .ask{color:var(--red)}.book-col-title .bid{color:var(--green)}.level{display:grid;grid-template-columns:1fr auto;gap:10px;padding:7px 4px;border-bottom:1px solid #1b2834;position:relative;font:11px var(--mono);font-variant-numeric:tabular-nums}.level:last-child{border-bottom:0}.level .price{position:relative;z-index:1}.level .qty{position:relative;z-index:1;color:#b4c1cc}.level.ask .price{color:var(--red)}.level.bid .price{color:var(--green)}.book-empty{padding:14px 4px;color:var(--soft);font:10px var(--mono)}.spread-line{display:flex;justify-content:space-between;align-items:center;gap:10px;margin:9px 0;padding:9px 10px;background:#0b141d;border:1px solid #1e2c38;border-radius:6px;color:var(--soft);font:9px var(--mono)}.spread-line strong{color:var(--text);font:600 11px var(--mono)}.table-wrap{overflow:auto}table{border-collapse:collapse;width:100%;white-space:nowrap}th{text-align:left;color:var(--soft);font:9px var(--mono);letter-spacing:.5px;padding:0 8px 8px;border-bottom:1px solid var(--line)}td{padding:9px 8px;border-bottom:1px solid #1b2834;color:#c3cdd6;font:10px var(--mono);font-variant-numeric:tabular-nums}tbody tr:last-child td{border-bottom:0}.side-tag{font-size:9px;padding:3px 6px;border-radius:4px}.side-tag.buy{color:var(--green);background:var(--green-bg)}.side-tag.sell{color:var(--red);background:var(--red-bg)}.cancel{border:0;background:transparent;color:#9cabb8;border-radius:4px;padding:4px 7px;font:10px var(--mono)}.cancel:hover{background:var(--red-bg);color:var(--red)}.empty-table{text-align:center;padding:17px;color:var(--soft);font:10px var(--mono)}.counts{display:flex;gap:8px;flex-wrap:wrap}.count{border:1px solid var(--line);border-radius:5px;padding:5px 7px;color:var(--muted);font:9px var(--mono)}.count b{color:var(--text);font-weight:600}.footer{display:flex;justify-content:space-between;gap:12px;margin-top:15px;color:var(--soft);font:9px var(--mono)}.toast{position:fixed;right:22px;bottom:20px;max-width:360px;padding:11px 14px;border:1px solid #315b4d;border-radius:8px;background:#14251f;color:#d8f4e9;font-size:11px;opacity:0;transform:translateY(7px);pointer-events:none;transition:opacity .15s,transform .15s}.toast.show{opacity:1;transform:translateY(0)}
-    @media(max-width:1050px){.metrics{grid-template-columns:repeat(3,minmax(0,1fr))}.layout{grid-template-columns:minmax(280px,.85fr) minmax(430px,1.15fr)}}@media(max-width:760px){.shell{padding:0 14px 22px}.topbar{height:60px;gap:12px}.market-badge{display:none}.connection{font-size:9px}.intro{align-items:flex-start;flex-direction:column;padding-top:22px}.local-note{text-align:left}.layout{grid-template-columns:1fr}.right{grid-row:auto}}@media(max-width:500px){.metrics{grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}.metric{padding:11px;min-height:82px}.metric-value{font-size:18px}.book-grid{gap:10px}.panel{padding:13px}.brand-name{font-size:12px}.button{padding:8px 9px}.footer{flex-direction:column}}
-    @media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;transition:none!important}}
-  </style>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#171c26">
+<title>ChronosMatch — Stock Matching Simulator</title>
+<style>
+:root{color-scheme:dark;--bg:#10141c;--panel:#191f2a;--panel2:#11161f;--border:#29313e;--text:#e6e9ef;--muted:#8995a8;--green:#27c99a;--green-soft:#18352f;--red:#ff626d;--red-soft:#39252c;--blue:#8ba7d3;--sans:Inter,"Segoe UI",Arial,sans-serif;--mono:ui-monospace,"Cascadia Code",Consolas,monospace}*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--bg);color:var(--text);font:15px/1.45 var(--sans);font-variant-numeric:tabular-nums}button,input,select{font:inherit}button{cursor:pointer}button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid #7ca9ec;outline-offset:2px}.top{height:72px;display:flex;align-items:center;gap:38px;padding:0 30px;border-bottom:1px solid var(--border);background:#171c26;position:sticky;top:0;z-index:5}.brand{display:flex;align-items:center;gap:11px;min-width:max-content}.brand-icon{width:38px;height:38px;display:grid;place-items:center;border-radius:12px 12px 12px 3px;background:linear-gradient(145deg,#4be0b0,#3973dc);color:white;font-size:20px;font-weight:800;box-shadow:0 5px 22px #36b79525}.brand-name{font-weight:750;font-size:19px;letter-spacing:-.4px}.brand-name span{color:#a28aff}.nav{height:100%;display:flex;align-items:center;gap:6px}.nav button{height:44px;border:0;background:transparent;color:#9aa6ba;padding:0 20px;border-radius:10px;font-weight:600}.nav button:hover,.nav button.active{background:#0f131a;color:#fff}.nav button.active{box-shadow:inset 0 -2px var(--green)}.top-right{margin-left:auto;display:flex;align-items:center;gap:10px}.demo-label{color:var(--muted);font-size:12px;border:1px solid var(--border);border-radius:20px;padding:7px 11px}.top-action{border:1px solid var(--border);background:#1b222e;color:#e8edf5;padding:9px 13px;border-radius:8px;font-size:13px}.top-action:hover{border-color:#485567;background:#202a38}.ticker{height:49px;background:#181e28;border-bottom:1px solid var(--border);overflow:hidden;display:flex;align-items:center;position:relative}.ticker:before,.ticker:after{content:"";position:absolute;z-index:1;top:0;height:100%;width:45px;pointer-events:none}.ticker:before{left:0;background:linear-gradient(90deg,#181e28,transparent)}.ticker:after{right:0;background:linear-gradient(270deg,#181e28,transparent)}.ticker-track{width:max-content;display:flex;align-items:center;animation:scroll 68s linear infinite}.ticker:hover .ticker-track{animation-play-state:paused}.ticker-group{display:flex;align-items:center;gap:42px;padding-right:42px}.ticker-item{display:flex;gap:8px;align-items:center;white-space:nowrap;font-size:13px;font-weight:600}.ticker-symbol{color:#d7dce6}.ticker-value{font-weight:700}.positive{color:var(--green)!important}.negative{color:var(--red)!important}@keyframes scroll{to{transform:translateX(-50%)}}.wrap{max-width:1600px;margin:auto;padding:24px 30px 36px}.layout{display:grid;grid-template-columns:326px minmax(430px,1fr) 360px;gap:16px;align-items:start}.card{background:var(--panel);border:1px solid var(--border);border-radius:15px;min-width:0}.watch{padding:20px 18px 12px;max-height:calc(100vh - 165px);min-height:650px;display:flex;flex-direction:column}.card-title{font-size:17px;font-weight:650;margin:0}.subtle{color:var(--muted);font-size:13px}.search{width:100%;height:46px;margin:16px 0 11px;border:1px solid var(--border);border-radius:10px;background:var(--panel2);color:var(--text);padding:0 14px}.stocks{overflow:auto;min-height:0;scrollbar-color:#384353 transparent;scrollbar-width:thin}.stock{width:100%;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:5px 8px;text-align:left;padding:11px 10px;border:1px solid transparent;border-bottom-color:#29313a;background:transparent;color:var(--text);border-radius:8px}.stock:hover{background:#202733}.stock.selected{background:#111720;border-color:#303a48}.stock-symbol{font-weight:650}.stock-price{font-size:16px;font-weight:650;padding:0 5px;border-radius:5px}.stock-company{color:var(--muted);font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.stock-change{color:var(--muted);font-size:12px;text-align:right}.middle{display:grid;gap:16px}.chart-card{padding:21px 22px 18px}.chart-heading{display:flex;justify-content:space-between;gap:15px}.company{font-size:17px;font-weight:550}.price-line{display:flex;flex-wrap:wrap;align-items:baseline;gap:12px;margin-top:6px}.big-price{font-size:36px;line-height:1.15;font-weight:730;letter-spacing:-1.2px}.day-change{font-size:15px;font-weight:650}.market-tag{align-self:flex-start;border:1px solid var(--border);border-radius:20px;padding:6px 10px;color:var(--muted);font:11px var(--mono)}.chart{height:310px;margin-top:15px;position:relative;border-bottom:1px solid var(--border);background-image:linear-gradient(to bottom,transparent 24.7%,#ffffff0b 25%,transparent 25.3%,transparent 49.7%,#ffffff0b 50%,transparent 50.3%,transparent 74.7%,#ffffff0b 75%,transparent 75.3%)}.chart svg{width:100%;height:100%;overflow:visible}.chart-area{opacity:.13}.chart-line{fill:none;stroke-width:2.3;vector-effect:non-scaling-stroke}.chart-dot{stroke:var(--panel);stroke-width:3;vector-effect:non-scaling-stroke}.range{display:flex;gap:7px;padding-top:11px}.range button{background:none;border:0;border-radius:20px;color:var(--blue);padding:8px 12px}.range button.active{color:white;background:#482832}.range button.green-active{background:#18352f}.facts{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;padding:15px 0 0;margin-top:7px;border-top:1px solid var(--border)}.fact-label{color:var(--muted);font-size:12px}.fact-value{font-weight:650;margin-top:3px}.order{padding:21px 20px}.side-tabs{display:grid;grid-template-columns:1fr 1fr;border-bottom:1px solid var(--border);margin-bottom:16px}.side-tabs button{padding:10px 5px 13px;border:0;border-bottom:3px solid transparent;background:transparent;color:var(--muted);font-size:16px;font-weight:650}.side-tabs button.active.buy{color:var(--green);border-color:var(--green)}.side-tabs button.active.sell{color:var(--red);border-color:var(--red)}.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}.field label{display:block;color:var(--blue);font-size:13px;margin:11px 0 6px}.field input,.field select{height:46px;width:100%;border:1px solid var(--border);border-radius:10px;background:var(--panel2);color:var(--text);padding:0 13px}.field input:disabled{color:var(--muted)}.info-row{display:flex;justify-content:space-between;gap:12px;margin:11px 0;color:var(--blue)}.info-row strong{color:var(--text)}.place{height:55px;width:100%;border:0;border-radius:12px;margin-top:11px;background:var(--green);color:#fff;font-weight:750;font-size:16px}.place.sell{background:#d94f5b}.place:hover{filter:brightness(1.08)}.hint{min-height:38px;color:var(--muted);font-size:12px;margin:10px 0 0}.status{min-height:18px;font-size:12px;margin:8px 0 0}.status.error{color:var(--red)}.status.success{color:var(--green)}.below{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px}.book,.activity{padding:19px 20px;scroll-margin-top:140px}.book-header,.activity-header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:15px}.book-cols{display:grid;grid-template-columns:1fr 1fr;gap:15px}.book-label{display:flex;justify-content:space-between;padding:0 3px 8px;border-bottom:1px solid var(--border);font-size:10px;letter-spacing:.6px;color:var(--muted)}.book-label .bid{color:var(--green)}.book-label .ask{color:var(--red)}.level{height:34px;display:flex;justify-content:space-between;align-items:center;padding:0 4px;border-bottom:1px solid #ffffff09;font:12px var(--mono)}.level.buy{color:var(--green)}.level.sell{color:var(--red)}.level .qty{color:#bdc5d1}.no-data{text-align:center;color:var(--muted);font-size:12px;padding:18px 5px}.table-wrap{overflow:auto}table{border-collapse:collapse;width:100%;white-space:nowrap}th{text-align:left;color:var(--muted);font-size:10px;font-weight:550;letter-spacing:.5px;padding:0 8px 9px;border-bottom:1px solid var(--border)}td{padding:10px 8px;border-bottom:1px solid #ffffff0b;font:12px var(--mono)}.side-pill{padding:3px 6px;border-radius:4px;font-size:10px}.side-pill.buy{color:var(--green);background:var(--green-soft)}.side-pill.sell{color:var(--red);background:var(--red-soft)}.cancel{border:1px solid #64343a;background:#2a1e25;color:#ff9299;border-radius:5px;padding:4px 7px;font-size:11px}.cancel:hover{background:#48262e}.tag{font:10px var(--mono);color:var(--muted);border:1px solid var(--border);border-radius:20px;padding:4px 8px}.note{margin-top:13px;padding:10px 12px;border:1px solid #433e30;background:#26251f;color:#d0c39d;border-radius:8px;font-size:11px;line-height:1.5}.footer{margin:17px 3px 0;display:flex;justify-content:space-between;gap:12px;color:#738094;font-size:11px}.toast{position:fixed;right:22px;bottom:20px;z-index:8;max-width:min(440px,calc(100vw - 36px));padding:12px 15px;border:1px solid #315c4d;border-radius:9px;background:#162720;color:#d7f4e8;opacity:0;transform:translateY(8px);pointer-events:none;transition:.2s}.toast.show{opacity:1;transform:none}.hidden{display:none!important}
+@media(max-width:1250px){.layout{grid-template-columns:280px minmax(400px,1fr)}.order{grid-column:1/-1;display:grid;grid-template-columns:1fr 1fr;column-gap:24px}.order .card-title{grid-column:1/-1}.side-tabs{grid-column:1/-1}.order form{display:grid;grid-template-columns:1fr 1fr;gap:0 18px}.order .side-tabs{margin-bottom:0}.side-tabs{align-self:end}.form-row{align-self:start}.hint,.place,.status,.info-row{grid-column:auto}.order form .info-stack{grid-column:1/-1}.below{grid-template-columns:1fr 1fr}}@media(max-width:850px){.top{padding:0 17px;gap:18px}.nav button{padding:0 12px}.demo-label{display:none}.wrap{padding:17px}.layout{grid-template-columns:1fr}.watch{max-height:450px;min-height:0}.stocks{display:grid;grid-template-columns:1fr 1fr;gap:3px 6px}.order{grid-column:auto;display:block}.order form{display:block}.below{grid-template-columns:1fr}.chart{height:270px}}@media(max-width:540px){.top{height:62px;gap:10px}.brand-icon{width:32px;height:32px}.brand-name{font-size:16px}.nav{display:none}.top-action{font-size:12px;padding:8px}.ticker{height:42px}.ticker-group{gap:25px;padding-right:25px}.ticker-item{font-size:12px}.wrap{padding:12px}.watch{padding:15px 13px 10px}.stocks{grid-template-columns:1fr}.chart-card{padding:16px 14px}.chart{height:220px}.big-price{font-size:30px}.day-change{font-size:13px}.market-tag{font-size:9px;padding:5px 7px}.facts{grid-template-columns:1fr 1fr}.order,.book,.activity{padding:16px 14px}.form-row{gap:8px}.field input,.field select{padding:0 9px}.book-cols{gap:8px}.footer{flex-direction:column}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;animation-duration:.01ms!important;transition-duration:.01ms!important}}
+.ticker-lead{position:relative;z-index:2;flex:0 0 174px;height:100%;display:flex;align-items:center;gap:9px;padding:0 15px;background:#121a24;border-right:1px solid #2d3947;color:#e7edf7}.ticker-live-dot{width:8px;height:8px;flex:0 0 auto;border-radius:50%;background:#f0b75e;box-shadow:0 0 0 4px #f0b75e20;animation:livePulse 1.7s ease-in-out infinite}.ticker-lead-copy{display:grid;line-height:1.15}.ticker-lead-copy strong{font-size:10px;letter-spacing:.55px;text-transform:uppercase}.ticker-lead-copy small{margin-top:4px;color:#91a0b5;font-size:9px;letter-spacing:1.1px}.ticker:before{left:174px}.ticker-item{gap:9px;padding:6px 11px;border:1px solid #ffffff0c;border-radius:9px;background:linear-gradient(135deg,#ffffff08,#ffffff02);transition:border-color .2s,background .2s}.ticker-item:hover{border-color:#ffffff22;background:#ffffff0c}.ticker-price{font-variant-numeric:tabular-nums;transition:color .3s}.ticker-move{min-width:72px;text-align:right;padding:3px 6px;border-radius:5px;background:#202833;font-size:11px;transition:color .25s,background .25s}.ticker-move.positive{background:#12392e;color:#54dbad!important}.ticker-move.negative{background:#42252c;color:#ff7a83!important}.ticker-price.positive{color:#54dbad!important}.ticker-price.negative{color:#ff7a83!important}@keyframes livePulse{50%{opacity:.45;box-shadow:0 0 0 7px #f0b75e12}}@media(max-width:540px){.ticker-lead{display:none}.ticker:before{left:0}.ticker-item{padding:5px 8px}.ticker-move{min-width:64px;font-size:10px}}
+body{background-color:#0b1017;background-image:radial-gradient(ellipse at 52% -20%,#1a3040 0,transparent 48%),radial-gradient(ellipse at 100% 55%,#18233a55 0,transparent 40%)}.top{background:#111822eF;backdrop-filter:blur(18px);border-bottom-color:#354152}.brand-icon{box-shadow:0 0 26px #49dcb333,0 5px 18px #0005}.nav button.active{background:#202a36;box-shadow:inset 0 -2px #45d5ab,0 5px 20px #0003}.wrap{padding-top:26px}.layout,.below{gap:18px}.card{background:linear-gradient(145deg,#1b2430 0%,#161d27 76%);border-color:#303b4b;box-shadow:0 16px 38px #0003;transition:border-color .2s,box-shadow .2s,transform .2s}.card:hover{border-color:#415064;box-shadow:0 18px 44px #0005}.watch,.order{background:linear-gradient(155deg,#1b2430,#151b25)}.card-title{letter-spacing:-.2px}.search{background:#101720;border-color:#303c4c;transition:border-color .2s,box-shadow .2s}.search:focus{border-color:#46cda9;box-shadow:0 0 0 3px #46cda91a}.stock{border-radius:10px;margin:2px 0}.stock.selected{background:linear-gradient(95deg,#18332f,#141b24 72%);border-color:#285b4d;box-shadow:inset 3px 0 #42d4a7}.stock:hover{background:#222d39}.chart-card{background:radial-gradient(ellipse at 0 0,#2035438c,transparent 56%),linear-gradient(145deg,#1b2430,#151b25)}.company{font-size:18px;letter-spacing:-.25px}.big-price{font-size:40px;color:#74e0bd;text-shadow:0 0 26px #27c99a25}.big-price.negative{color:#ff8e95!important;text-shadow:0 0 24px #ff626d22}.chart{border-radius:9px 9px 0 0;background-color:#121923;background-image:linear-gradient(to bottom,transparent 24.7%,#ffffff0d 25%,transparent 25.3%,transparent 49.7%,#ffffff0d 50%,transparent 50.3%,transparent 74.7%,#ffffff0d 75%,transparent 75.3%)}.chart-line{filter:drop-shadow(0 0 4px #52dcb37c)}.range button{transition:background .18s,color .18s}.range button:hover{background:#273342;color:white}.range button.active{box-shadow:0 5px 16px #0003}.facts{border-top-color:#303b49}.fact-value{font-size:14px}.side-tabs button{transition:color .18s,border-color .18s}.field input,.field select{background:#111821;border-color:#303c4c;transition:border-color .18s,box-shadow .18s}.field input:focus,.field select:focus{border-color:#46cda9;box-shadow:0 0 0 3px #46cda91a}.place{box-shadow:0 8px 22px #20c6952a;transition:filter .18s,transform .18s,box-shadow .18s}.place:hover{transform:translateY(-1px);box-shadow:0 10px 26px #20c69542}.place.sell{box-shadow:0 8px 22px #d94f5b30}.book,.activity{background:linear-gradient(145deg,#1a222d,#141a23)}.note{border-color:#294459;background:linear-gradient(100deg,#162b38,#1c252e);color:#afc7d5}.footer{color:#8492a7}@media(max-width:850px){.wrap{padding-top:18px}.card:hover{transform:none}}@media(prefers-reduced-motion:reduce){.ticker-live-dot{animation:none}}
+</style>
 </head>
 <body>
-  <div class="shell">
-    <header class="topbar">
-      <div class="brand"><div class="brand-mark" aria-hidden="true">↗</div><div><div class="brand-name">CHRONOSMATCH</div><div class="brand-sub">ORDER MATCHING ENGINE</div></div></div>
-      <div class="market-badge"><span class="dot"></span> SIMULATED MARKET <span aria-hidden="true">/</span> DEMO-USD</div>
-      <div class="spacer"></div>
-      <div class="connection" id="connection"><span class="dot"></span><span id="connection-text">Starting…</span></div>
-      <button class="button" id="refresh-button" type="button">Refresh</button>
-      <button class="button" id="reset-button" type="button">Reset demo</button>
-    </header>
-
-    <main>
-      <section class="intro">
-        <div><p class="eyebrow">LOCAL MATCHING SIMULATOR</p><h1>Market overview</h1><p>Place limit orders and watch ChronosMatch process the book.</p></div>
-        <div class="local-note" id="mode-note">No external market data · no live orders</div>
-      </section>
-
-      <section class="metrics" aria-label="Engine and market summary">
-        <article class="metric"><div class="metric-label">Best bid · BUY</div><div class="metric-value bid" id="best-bid">—</div><div class="metric-foot" id="bid-size">No open buy orders</div></article>
-        <article class="metric"><div class="metric-label">Best ask · SELL</div><div class="metric-value ask" id="best-ask">—</div><div class="metric-foot" id="ask-size">No open sell orders</div></article>
-        <article class="metric"><div class="metric-label">Spread</div><div class="metric-value" id="spread">—</div><div class="metric-foot">Best ask minus best bid</div></article>
-        <article class="metric"><div class="metric-label">Mid price</div><div class="metric-value" id="mid-price">—</div><div class="metric-foot">Midpoint of top of book</div></article>
-        <article class="metric"><div class="metric-label">Traded quantity</div><div class="metric-value" id="traded">0</div><div class="metric-foot" id="trade-count">0 executions</div></article>
-        <article class="metric"><div class="metric-label">Book imbalance</div><div class="metric-value" id="imbalance">—</div><div class="metric-foot">Open BUY quantity vs SELL</div></article>
-      </section>
-
-      <div class="layout">
-        <div class="left">
-          <section class="panel">
-            <div class="panel-head"><div><h2>Place a limit order</h2><p>Crossing orders trade immediately; remainder rests.</p></div><span class="chip">PRICE · TIME PRIORITY</span></div>
-            <form id="order-form">
-              <div class="side-switch" role="group" aria-label="Order side"><button class="side-button active buy" data-side="BUY" type="button">BUY</button><button class="side-button sell" data-side="SELL" type="button">SELL</button></div>
-              <input id="side-input" type="hidden" value="BUY">
-              <label for="order-id">Order ID <span class="optional">(optional; assigned automatically)</span></label>
-              <input id="order-id" type="number" min="1" step="1" placeholder="Auto" autocomplete="off">
-              <div class="form-row"><div><label for="price-input">Limit price · USD</label><input id="price-input" type="number" min="0.01" step="0.01" value="101.30" required></div><div><label for="quantity-input">Quantity · units</label><input id="quantity-input" type="number" min="1" step="1" value="2" required></div></div>
-              <p class="form-hint">Try BUY 2 at 101.30 to match the sample SELL order.</p>
-              <button class="submit" id="submit-button" type="submit"><span>Place BUY order</span><span aria-hidden="true">→</span></button>
-              <p class="message" id="form-message" role="status" aria-live="polite"></p>
-            </form>
-          </section>
-
-          <section class="panel">
-            <div class="panel-head"><div><h2>Open orders</h2><p>Cancel any order still waiting in the book.</p></div><span class="chip" id="open-count">0 OPEN</span></div>
-            <div class="table-wrap"><table><thead><tr><th>ID</th><th>SIDE</th><th>PRICE</th><th>OPEN QTY</th><th></th></tr></thead><tbody id="orders-body"></tbody></table><div id="orders-empty" class="empty-table" hidden>No open orders.</div></div>
-          </section>
-        </div>
-
-        <div class="right">
-          <section class="panel">
-            <div class="panel-head"><div><h2>Order book</h2><p>Aggregated open quantity at each price.</p></div><span class="chip">LIVE STATE</span></div>
-            <div class="book-grid"><div><div class="book-col-title"><span class="ask">SELL ORDERS</span><span>QTY</span></div><div id="asks-body"></div><div id="asks-empty" class="book-empty" hidden>No open sell orders</div></div><div><div class="book-col-title"><span class="bid">BUY ORDERS</span><span>QTY</span></div><div id="bids-body"></div><div id="bids-empty" class="book-empty" hidden>No open buy orders</div></div></div>
-            <div class="spread-line"><span>SPREAD <strong id="book-spread">—</strong></span><span id="book-mid">MID —</span><span id="book-units">0 open units</span></div>
-            <div class="counts"><span class="count">OPEN <b id="status-open">0</b></span><span class="count">FILLED <b id="status-filled">0</b></span><span class="count">CANCELLED <b id="status-cancelled">0</b></span></div>
-          </section>
-
-          <section class="panel">
-            <div class="panel-head"><div><h2>Recent trades</h2><p>Executions recorded by the matching engine.</p></div><span class="chip" id="recent-count">0 RECENT</span></div>
-            <div class="table-wrap"><table><thead><tr><th>TRADE</th><th>BUY ID</th><th>SELL ID</th><th>PRICE</th><th>QTY</th></tr></thead><tbody id="trades-body"></tbody></table><div id="trades-empty" class="empty-table" hidden>No trades yet. Submit an order that crosses the opposite side.</div></div>
-          </section>
-        </div>
-      </div>
-    </main>
-    <footer class="footer"><span>CHRONOSMATCH · LOCAL SIMULATOR</span><span>Python engine when served locally · browser-only preview when opened as a file · no real orders</span></footer>
+<header class="top">
+  <a class="brand" href="#markets" aria-label="ChronosMatch home"><div class="brand-icon" aria-hidden="true">↗</div><div class="brand-name">chronos<span>.match</span></div></a>
+  <nav class="nav" aria-label="Main navigation"><button class="active" data-target="markets">Markets</button><button data-target="orderbook">Order book</button><button data-target="activity">Activity</button></nav>
+  <div class="top-right"><span class="demo-label">LOCAL DEMO · NO LIVE MARKET DATA</span><button class="top-action" id="refresh">Refresh</button><button class="top-action" id="reset">Reset book</button></div>
+</header>
+<div class="ticker" aria-label="Scrolling simulated stock price updates"><div class="ticker-lead"><span class="ticker-live-dot" aria-hidden="true"></span><span class="ticker-lead-copy"><strong>Market pulse</strong><small>SIMULATED SAMPLE FEED</small></span></div><div class="ticker-track" id="ticker-track"></div></div>
+<main class="wrap" id="markets">
+  <div class="layout">
+    <aside class="card watch">
+      <h2 class="card-title">Watchlist</h2><input class="search" id="search" type="search" placeholder="Search stocks" aria-label="Search stocks">
+      <div class="stocks" id="stocks" aria-live="polite"></div>
+    </aside>
+    <section class="middle" aria-label="Selected market and engine book">
+      <article class="card chart-card">
+        <div class="chart-heading"><div><div class="company" id="company">Reliance Industries</div><div class="price-line"><strong class="big-price" id="main-price">₹1,375.00</strong><span class="day-change negative" id="main-change">−48.35 (−3.40%) today</span></div></div><span class="market-tag" id="selected-symbol">RELIANCE · DEMO</span></div>
+        <div class="chart" role="img" id="chart-label" aria-label="Illustrative demo price history"><svg viewBox="0 0 800 250" preserveAspectRatio="none" aria-hidden="true"><defs><linearGradient id="chart-fill" x1="0" x2="0" y1="0" y2="1"><stop id="fill-top" offset="0%" stop-color="#ff626d" stop-opacity=".5"/><stop offset="100%" stop-color="#ff626d" stop-opacity="0"/></linearGradient></defs><polygon class="chart-area" id="chart-area" fill="url(#chart-fill)" points=""/><polyline class="chart-line" id="chart-line" points="" stroke="#ff626d"/><circle class="chart-dot" id="chart-dot" r="4" cx="0" cy="0" fill="#ff626d"/></svg></div>
+        <div class="range" aria-label="Chart range"><button class="active" data-range="1D">1D</button><button data-range="1W">1W</button><button data-range="1M">1M</button><button data-range="1Y">1Y</button></div>
+        <div class="facts"><div><div class="fact-label">Prev close</div><div class="fact-value" id="prev-close">₹1,423.35</div></div><div><div class="fact-label">Day high</div><div class="fact-value" id="day-high">₹1,462.60</div></div><div><div class="fact-label">Day low</div><div class="fact-value" id="day-low">₹1,374.15</div></div><div><div class="fact-label">Open</div><div class="fact-value" id="open-price">₹1,389.95</div></div></div>
+      </article>
+    </section>
+    <aside class="card order">
+      <div class="side-tabs" role="tablist" aria-label="Order side"><button class="active buy" data-side="BUY" role="tab" aria-selected="true">Buy</button><button data-side="SELL" role="tab" aria-selected="false">Sell</button></div>
+      <form id="order-form">
+        <div class="form-row"><div class="field"><label for="product">Product</label><select id="product" disabled><option>Order book demo</option></select></div><div class="field"><label for="order-type">Order type</label><select id="order-type"><option value="LIMIT">Limit</option></select></div></div>
+        <div class="form-row"><div class="field"><label for="quantity">Quantity</label><input id="quantity" type="number" min="1" step="1" value="1" required></div><div class="field"><label for="price">Limit price</label><input id="price" type="number" min="0.01" step="0.01" required></div></div>
+        <div class="field"><label for="order-id">Order ID <span class="subtle">(optional)</span></label><input id="order-id" type="number" min="1" step="1" placeholder="Assigned by engine"></div>
+        <div class="info-stack"><div class="info-row"><span>Order value</span><strong id="order-value">₹1,375.00</strong></div><div class="info-row"><span>Best opposite price</span><strong id="opposite-price">₹1,375.00</strong></div></div>
+        <button class="place" id="place-order" type="submit">Buy</button><p class="hint" id="order-hint">A crossing limit order executes against this symbol’s book. Remaining quantity rests in the book.</p><p class="status" id="form-status" role="status" aria-live="polite"></p>
+      </form>
+    </aside>
   </div>
-  <div id="toast" class="toast" role="status" aria-live="polite"></div>
-
-  <script>
-  (() => {
-    const $ = (id) => document.getElementById(id);
-    const filePreview = location.protocol === 'file:';
-    let side = 'BUY';
-    let currentState = null;
-    let preview = null;
-    let toastTimer;
-    const money = value => value == null ? '—' : Number(value).toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2});
-    const integer = value => Number(value || 0).toLocaleString();
-
-    function newPreviewEngine() {
-      const engine = { buys: [], sells: [], trades: [], seen: new Set(), cancelled: new Set() };
-      const seeds = [
-        [1000, 'SELL', 101.30, 6], [1001, 'BUY', 101.35, 4],
-        [1002, 'BUY', 101.25, 12], [1003, 'BUY', 101.20, 18],
-        [1004, 'BUY', 101.10, 10], [1005, 'SELL', 101.45, 8],
-        [1006, 'SELL', 101.50, 16], [1007, 'SELL', 101.65, 20]
-      ];
-      seeds.forEach(([id, orderSide, price, quantity]) => previewAdd(engine, {order_id:id, side:orderSide, price, quantity}));
-      return engine;
-    }
-
-    function previewAdd(engine, data) {
-      let id = data.order_id;
-      if (id == null || id === '') id = Math.max(999, ...engine.seen) + 1;
-      if (typeof id === 'string' && /^\d+$/.test(id)) id = Number(id);
-      if (!Number.isSafeInteger(id) || id <= 0) throw new Error('Order ID must be a positive whole number.');
-      if (engine.seen.has(id)) throw new Error('Order ID has already been used.');
-      const quantity = typeof data.quantity === 'string' && /^\d+$/.test(data.quantity) ? Number(data.quantity) : data.quantity;
-      if (!Number.isSafeInteger(quantity) || quantity <= 0) throw new Error('Quantity must be a positive whole number.');
-      const price = Number(data.price);
-      if (!Number.isFinite(price) || price <= 0) throw new Error('Price must be a positive number.');
-      const orderSide = String(data.side || '').trim().toUpperCase();
-      if (!['BUY','SELL'].includes(orderSide)) throw new Error('Side must be BUY or SELL.');
-      const order = {order_id:id, side:orderSide, price, quantity};
-      (orderSide === 'BUY' ? engine.buys : engine.sells).push(order);
-      engine.seen.add(id);
-      while (engine.buys.length && engine.sells.length) {
-        let buy = engine.buys[0];
-        for (const item of engine.buys) if (item.price > buy.price) buy = item;
-        let sell = engine.sells[0];
-        for (const item of engine.sells) if (item.price < sell.price) sell = item;
-        if (buy.price < sell.price) break;
-        const traded = Math.min(buy.quantity, sell.quantity);
-        engine.trades.push({buy_order_id:buy.order_id, sell_order_id:sell.order_id, price:order === sell ? buy.price : sell.price, quantity:traded});
-        buy.quantity -= traded; sell.quantity -= traded;
-        if (!buy.quantity) engine.buys.splice(engine.buys.indexOf(buy), 1);
-        if (!sell.quantity) engine.sells.splice(engine.sells.indexOf(sell), 1);
-      }
-    }
-
-    function previewSnapshot(engine) {
-      const group = orders => {
-        const totals = new Map();
-        orders.forEach(order => totals.set(order.price, (totals.get(order.price) || 0) + order.quantity));
-        return [...totals].map(([price, quantity]) => ({price, quantity}));
-      };
-      const bids = group(engine.buys).sort((a,b) => b.price-a.price);
-      const asks = group(engine.sells).sort((a,b) => a.price-b.price);
-      const open = [...engine.buys.map(x => ({...x,side:'BUY'})), ...engine.sells.map(x => ({...x,side:'SELL'}))]
-        .sort((a,b) => a.side !== b.side ? (a.side === 'BUY' ? -1 : 1) : a.side === 'BUY' ? b.price-a.price || a.order_id-b.order_id : a.price-b.price || a.order_id-b.order_id);
-      const qty = engine.trades.reduce((sum, trade) => sum + trade.quantity, 0);
-      const vwap = qty ? engine.trades.reduce((sum, trade) => sum + trade.price*trade.quantity, 0)/qty : null;
-      const bidQty = engine.buys.reduce((sum,x) => sum+x.quantity,0), askQty = engine.sells.reduce((sum,x) => sum+x.quantity,0), allQty = bidQty+askQty;
-      const openIds = new Set(open.map(x => x.order_id));
-      const lastBid = bids[0], lastAsk = asks[0];
-      return {
-        book:{bids,asks}, best_bid:lastBid ? lastBid.price : null, best_ask:lastAsk ? lastAsk.price : null,
-        spread:lastBid && lastAsk ? lastAsk.price-lastBid.price : null,
-        mid_price:lastBid && lastAsk ? (lastAsk.price+lastBid.price)/2 : null,
-        imbalance:allQty ? (bidQty-askQty)/allQty : null,
-        book_summary:{BUY:{order_count:engine.buys.length,total_quantity:bidQty},SELL:{order_count:engine.sells.length,total_quantity:askQty}},
-        execution:{trade_count:engine.trades.length,total_quantity:qty,vwap,average_trade_size:engine.trades.length ? qty/engine.trades.length : null},
-        status_counts:{OPEN:openIds.size,FILLED:engine.seen.size-openIds.size-engine.cancelled.size,CANCELLED:engine.cancelled.size},
-        open_orders:open, trades:engine.trades.slice(-30), next_order_id:Math.max(999,...engine.seen)+1
-      };
-    }
-
-    async function request(path, options={}) {
-      const response = await fetch(path, {headers:{'Content-Type':'application/json'}, ...options});
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error || `Request failed (${response.status})`);
-      return data;
-    }
-
-    function connection(kind, text) {
-      $('connection').className = `connection ${kind}`;
-      $('connection-text').textContent = text;
-    }
-
-    function showToast(text, isError=false) {
-      const node = $('toast'); node.textContent = text;
-      node.style.borderColor = isError ? '#914652' : '#315b4d';
-      node.classList.add('show'); clearTimeout(toastTimer);
-      toastTimer = setTimeout(() => node.classList.remove('show'), 2400);
-    }
-
-    function fillLevels(containerId, emptyId, levels, className) {
-      const container = $(containerId), empty = $(emptyId);
-      container.replaceChildren(); empty.hidden = levels.length > 0;
-      levels.slice(0,8).forEach(level => {
-        const row = document.createElement('div'); row.className = `level ${className}`;
-        const price = document.createElement('span'); price.className = 'price'; price.textContent = money(level.price);
-        const quantity = document.createElement('span'); quantity.className = 'qty'; quantity.textContent = integer(level.quantity);
-        row.append(price, quantity); container.append(row);
-      });
-    }
-
-    function renderOrder(order) {
-      const row = document.createElement('tr');
-      [String(order.order_id), null, money(order.price), integer(order.quantity)].forEach((value, index) => {
-        const cell = document.createElement('td');
-        if (index === 1) { const tag = document.createElement('span'); tag.className = `side-tag ${order.side.toLowerCase()}`; tag.textContent = order.side; cell.append(tag); }
-        else cell.textContent = value;
-        row.append(cell);
-      });
-      const action = document.createElement('td'); const button = document.createElement('button');
-      button.type = 'button'; button.className = 'cancel'; button.textContent = 'Cancel';
-      button.setAttribute('aria-label', `Cancel order ${order.order_id}`);
-      button.addEventListener('click', () => cancelOrder(order.order_id)); action.append(button); row.append(action);
-      return row;
-    }
-
-    function renderTrade(trade, index, total) {
-      const row = document.createElement('tr');
-      [`TRD-${String(total-index).padStart(3,'0')}`, String(trade.buy_order_id), String(trade.sell_order_id), money(trade.price), integer(trade.quantity)].forEach(value => {const cell=document.createElement('td');cell.textContent=value;row.append(cell)});
-      return row;
-    }
-
-    function render(data) {
-      currentState = data;
-      const bids = data.book.bids || [], asks = data.book.asks || [];
-      const bid = bids[0], ask = asks[0];
-      $('best-bid').textContent = bid ? money(bid.price) : '—';
-      $('best-ask').textContent = ask ? money(ask.price) : '—';
-      $('bid-size').textContent = bid ? `${integer(bid.quantity)} units at top level` : 'No open buy orders';
-      $('ask-size').textContent = ask ? `${integer(ask.quantity)} units at top level` : 'No open sell orders';
-      $('spread').textContent = data.spread == null ? '—' : money(data.spread);
-      $('mid-price').textContent = data.mid_price == null ? '—' : money(data.mid_price);
-      $('book-spread').textContent = data.spread == null ? '—' : money(data.spread);
-      $('book-mid').textContent = data.mid_price == null ? 'MID —' : `MID ${money(data.mid_price)}`;
-      $('traded').textContent = integer(data.execution.total_quantity);
-      $('trade-count').textContent = `${data.execution.trade_count} ${data.execution.trade_count === 1 ? 'execution' : 'executions'}`;
-      $('imbalance').textContent = data.imbalance == null ? '—' : `${data.imbalance >= 0 ? '+' : ''}${(data.imbalance*100).toFixed(1)}%`;
-      $('book-units').textContent = `${integer(Object.values(data.book_summary).reduce((sum,item) => sum+item.total_quantity,0))} open units`;
-      $('status-open').textContent = integer(data.status_counts.OPEN); $('status-filled').textContent = integer(data.status_counts.FILLED); $('status-cancelled').textContent = integer(data.status_counts.CANCELLED);
-      fillLevels('asks-body','asks-empty',asks,'ask'); fillLevels('bids-body','bids-empty',bids,'bid');
-      $('open-count').textContent = `${data.open_orders.length} OPEN`;
-      const orderBody=$('orders-body'); orderBody.replaceChildren(); $('orders-empty').hidden=data.open_orders.length>0;
-      data.open_orders.forEach(order => orderBody.append(renderOrder(order)));
-      const newest=[...data.trades].reverse(); $('recent-count').textContent=`${newest.length} RECENT`;
-      const tradeBody=$('trades-body'); tradeBody.replaceChildren(); $('trades-empty').hidden=newest.length>0;
-      newest.forEach((trade,index) => tradeBody.append(renderTrade(trade,index,newest.length)));
-      if (!$('order-id').value) $('order-id').placeholder=String(data.next_order_id);
-    }
-
-    async function refresh() {
-      $('refresh-button').disabled = true;
-      try {
-        if (filePreview) { render(previewSnapshot(preview)); connection('connected','Browser preview'); }
-        else { render(await request('/api/state')); connection('connected','Python engine connected'); }
-      } catch (error) { connection('error','Start python web_app.py'); }
-      finally { $('refresh-button').disabled = false; }
-    }
-
-    async function submitOrder(event) {
-      event.preventDefault(); const message=$('form-message');
-      const payload={order_id:$('order-id').value.trim() || null, side, price:Number($('price-input').value), quantity:Number($('quantity-input').value)};
-      message.className='message'; message.textContent=''; $('submit-button').disabled=true;
-      try {
-        if (filePreview) { previewAdd(preview,payload); render(previewSnapshot(preview)); }
-        else render(await request('/api/orders',{method:'POST',body:JSON.stringify(payload)}));
-        $('order-id').value=''; message.textContent='Order accepted by the matching engine.'; message.classList.add('success'); showToast(`${side} order submitted`);
-      } catch (error) { message.textContent=error.message; message.classList.add('error'); }
-      finally { $('submit-button').disabled=false; }
-    }
-
-    async function cancelOrder(orderId) {
-      try {
-        if (filePreview) {
-          let found=false;
-          for (const book of [preview.buys,preview.sells]) { const index=book.findIndex(order=>order.order_id===orderId); if(index>=0){book.splice(index,1);preview.cancelled.add(orderId);found=true;break} }
-          render(previewSnapshot(preview)); showToast(found ? `Order ${orderId} cancelled` : `Order ${orderId} is no longer open`);
-        } else { const result=await request(`/api/orders/${orderId}`,{method:'DELETE'}); render(result); showToast(result.cancelled ? `Order ${orderId} cancelled` : `Order ${orderId} is no longer open`); }
-      } catch (error) { showToast(error.message,true); }
-    }
-
-    async function resetDemo() {
-      const button=$('reset-button'); button.disabled=true;
-      try {
-        if (filePreview) { preview=newPreviewEngine(); render(previewSnapshot(preview)); }
-        else render(await request('/api/reset',{method:'POST',body:'{}'}));
-        $('order-id').value=''; $('form-message').textContent=''; showToast('Demo market reset');
-      } catch (error) { showToast(error.message,true); }
-      finally { button.disabled=false; }
-    }
-
-    document.querySelectorAll('.side-button').forEach(button => button.addEventListener('click', () => {
-      side=button.dataset.side; $('side-input').value=side;
-      document.querySelectorAll('.side-button').forEach(item=>item.classList.toggle('active',item===button));
-      const submit=$('submit-button'); submit.classList.toggle('sell',side==='SELL'); submit.firstElementChild.textContent=`Place ${side} order`;
-      $('form-message').textContent=''; $('form-message').className='message';
-    }));
-    $('order-form').addEventListener('submit',submitOrder);
-    $('refresh-button').addEventListener('click',refresh);
-    $('reset-button').addEventListener('click',resetDemo);
-
-    if (filePreview) {
-      preview=newPreviewEngine(); $('mode-note').textContent='Browser-only preview · no external market data';
-      connection('connected','Browser preview'); render(previewSnapshot(preview));
-    } else {
-      $('mode-note').textContent='Connected to the local Python order-matching engine';
-      refresh(); setInterval(refresh,2000);
-    }
-  })();
-  </script>
+  <div class="below">
+    <section class="card book" id="orderbook"><div class="book-header"><div><h2 class="card-title">Order book</h2><div class="subtle" id="book-subtitle">RELIANCE · price-time priority</div></div><span class="tag" id="book-level-count">0 BUY · 0 SELL LEVELS</span></div><div class="book-cols"><div><div class="book-label"><span class="bid">BUY ORDERS</span><span>PRICE / QTY</span></div><div id="bids"></div></div><div><div class="book-label"><span class="ask">SELL ORDERS</span><span>PRICE / QTY</span></div><div id="asks"></div></div></div></section>
+    <section class="card activity" id="activity"><div class="activity-header"><div><h2 class="card-title">Working orders & recent trades</h2><div class="subtle" id="activity-subtitle">RELIANCE · matching-engine activity</div></div><span class="tag" id="open-count">0 OPEN</span></div><div class="table-wrap"><table><thead><tr><th>ID</th><th>SIDE</th><th>PRICE</th><th>QTY</th><th>STATE / ACTION</th></tr></thead><tbody id="orders-body"></tbody></table><div class="no-data hidden" id="orders-empty">No working orders.</div></div><div style="height:14px"></div><div class="table-wrap"><table><thead><tr><th>TRADE ID</th><th>PRICE</th><th>QTY</th><th>BUY ORDER</th><th>SELL ORDER</th></tr></thead><tbody id="trades-body"></tbody></table><div class="no-data hidden" id="trades-empty">No trades yet for this symbol.</div></div></section>
+  </div>
+  <div class="note">The scrolling ticker uses small simulated price pulses around fixed illustrative sample values; none of the prices come from an exchange. Orders run only in the local ChronosMatch matching engine, with no brokerage, holdings, cash balance, or live trading.</div>
+  <footer class="footer"><span>ChronosMatch · deterministic local matching simulation</span><span id="connection">Connecting to local engine…</span></footer>
+</main><div class="toast" id="toast" role="status" aria-live="polite"></div>
+<script>
+'use strict';
+const MARKETS=[
+ {symbol:'RELIANCE',company:'Reliance Industries',price:1375,change:-3.40},
+ {symbol:'TCS',company:'Tata Consultancy Services',price:3122.60,change:-2.64},
+ {symbol:'INFY',company:'Infosys',price:1561.65,change:.13},
+ {symbol:'HDFCBANK',company:'HDFC Bank',price:1018.50,change:-.12},
+ {symbol:'ICICIBANK',company:'ICICI Bank',price:1364.90,change:-.78},
+ {symbol:'SBIN',company:'State Bank of India',price:807.65,change:1.08},
+ {symbol:'ITC',company:'ITC',price:418.60,change:2.94},
+ {symbol:'TATAMOTORS',company:'Tata Motors',price:688.85,change:-.40},
+ {symbol:'AXISBANK',company:'Axis Bank',price:1120,change:.62},
+ {symbol:'LT',company:'Larsen & Toubro',price:3580,change:1.21},
+ {symbol:'MARUTI',company:'Maruti Suzuki',price:12400,change:-.36},
+ {symbol:'BHARTIARTL',company:'Bharti Airtel',price:1853,change:-1.95},
+ {symbol:'SUNPHARMA',company:'Sun Pharma',price:1775.30,change:-.73},
+ {symbol:'WIPRO',company:'Wipro',price:265.60,change:-1.68},
+ {symbol:'KOTAKBANK',company:'Kotak Mahindra Bank',price:2052.80,change:1.93},
+ {symbol:'ASIANPAINT',company:'Asian Paints',price:2354.15,change:-.45}
+];
+const bySymbol=Object.fromEntries(MARKETS.map(m=>[m.symbol,m]));
+let selected='RELIANCE',side='BUY',range='1D',state=null,apiAvailable=false,toastTimer;
+const $=id=>document.getElementById(id),fmt=n=>'₹'+Number(n).toLocaleString('en-IN',{minimumFractionDigits:2,maximumFractionDigits:2}),num=n=>Number(n).toLocaleString('en-IN',{maximumFractionDigits:2}),esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function percent(m){return `${m.change>0?'+':''}${m.change.toFixed(2)}%`}
+function marketFacts(m){const prev=m.price/(1+m.change/100),open=prev*1.0007;return {prev,open,high:Math.max(m.price,open)*1.003,low:Math.min(m.price,open)*.997}}
+const tickerQuotes=Object.fromEntries(MARKETS.map(m=>[m.symbol,{price:m.price,previous:m.price}]));
+function makeTicker(){const track=$('ticker-track');const group=()=>`<div class="ticker-group">${MARKETS.map(m=>`<div class="ticker-item"><span class="ticker-symbol">${m.symbol}</span><span class="ticker-price ${m.change>=0?'positive':'negative'}" data-ticker-price="${m.symbol}">${fmt(m.price)}</span><span class="ticker-move ${m.change>=0?'positive':'negative'}" data-ticker-move="${m.symbol}">${m.change>=0?'▲':'▼'} ${Math.abs(m.change).toFixed(2)}%</span></div>`).join('')}</div>`;track.innerHTML=group()+group()}
+function updateTickerPulse(){for(const m of MARKETS){const quote=tickerQuotes[m.symbol],previous=quote.price,limit=m.price*.0035,step=(Math.random()-.5)*m.price*.0009;quote.previous=previous;quote.price=Math.min(m.price+limit,Math.max(m.price-limit,previous+step));const delta=quote.price-previous,direction=delta>=0?'positive':'negative',label=`${delta>=0?'▲':'▼'} ${Math.abs(delta/previous*100).toFixed(2)}%`;document.querySelectorAll(`[data-ticker-price="${m.symbol}"]`).forEach(el=>{el.textContent=fmt(quote.price);el.classList.toggle('positive',direction==='positive');el.classList.toggle('negative',direction==='negative')});document.querySelectorAll(`[data-ticker-move="${m.symbol}"]`).forEach(el=>{el.textContent=label;el.classList.toggle('positive',direction==='positive');el.classList.toggle('negative',direction==='negative')})}}
+function seedPreview(m){const asks=[{price:m.price,quantity:2},{price:m.price+.25,quantity:8},{price:m.price+.5,quantity:16}],bids=[{price:m.price-.25,quantity:12},{price:m.price-.5,quantity:18}];return {symbol:m.symbol,market:{symbol:m.symbol,company:m.company,price:m.price,change_amount:m.price* m.change/(100+m.change),change_percent:m.change,...marketFacts(m)},book:{bids,asks},best_bid:bids[0].price,best_ask:asks[0].price,spread:+(asks[0].price-bids[0].price).toFixed(2),execution:{trade_count:1,total_quantity:4,vwap:m.price,average_trade_size:4},open_orders:[{order_id:1000,side:'SELL',price:m.price,quantity:2},{order_id:1002,side:'BUY',price:m.price-.25,quantity:12},{order_id:1003,side:'BUY',price:m.price-.5,quantity:18},{order_id:1004,side:'SELL',price:m.price+.25,quantity:8},{order_id:1005,side:'SELL',price:m.price+.5,quantity:16}],trades:[{trade_id:1,price:m.price,quantity:4,buy_order_id:1001,sell_order_id:1000}],next_order_id:1006,level_counts:{BUY:2,SELL:3}}}
+const preview=Object.fromEntries(MARKETS.map(m=>[m.symbol,seedPreview(m)]));
+function drawWatchlist(){const q=$('search').value.trim().toLowerCase();$('stocks').innerHTML=MARKETS.filter(m=>!q||`${m.symbol} ${m.company}`.toLowerCase().includes(q)).map(m=>`<button type="button" class="stock ${m.symbol===selected?'selected':''}" data-symbol="${m.symbol}" aria-pressed="${m.symbol===selected}"><span class="stock-symbol">${m.symbol}</span><span class="stock-price ${m.change>=0?'positive':'negative'}">${fmt(m.price)}</span><span class="stock-company">${m.company}</span><span class="stock-change ${m.change>=0?'positive':'negative'}">${m.change>0?'+':''}${m.change_amount===undefined?num(m.price*m.change/100):num(m.price*m.change/(100+m.change))} (${percent(m)})</span></button>`).join('')||'<div class="no-data">No matching stocks.</div>';}
+function drawChart(){const m=bySymbol[selected],up=m.change>=0;let seed=[...selected].reduce((a,c)=>a+c.charCodeAt(0),0);const pts=[];for(let i=0;i<36;i++){seed=(seed*9301+49297)%233280;const noise=(seed/233280-.5)*.22;const trend=(i/35-.5)*(m.change/6);let y=126-(trend+noise)*175;if(range==='1W')y=126-(trend*1.3+noise*.9)*165;if(range==='1M')y=126-(trend*1.6+noise*1.2)*150;if(range==='1Y')y=126-(trend*2+noise*1.5)*140;y=Math.max(24,Math.min(220,y));pts.push(`${(i/35*800).toFixed(1)},${y.toFixed(1)}`)}const pointString=pts.join(' '),last=pts.at(-1).split(',');$('chart-line').setAttribute('points',pointString);$('chart-area').setAttribute('points',`0,250 ${pointString} 800,250`);$('chart-dot').setAttribute('cx',last[0]);$('chart-dot').setAttribute('cy',last[1]);const color=up?'#27c99a':'#ff626d';$('chart-line').setAttribute('stroke',color);$('chart-dot').setAttribute('fill',color);$('fill-top').setAttribute('stop-color',color)}
+function draw(){if(!state)return;const m=state.market,up=m.change_percent>=0,chg=m.change_amount;$('company').textContent=m.company;$('main-price').textContent=fmt(m.price);$('main-change').textContent=`${chg>0?'+':''}${num(chg)} (${m.change_percent>0?'+':''}${m.change_percent.toFixed(2)}%) today`;$('main-change').className=`day-change ${up?'positive':'negative'}`;$('selected-symbol').textContent=`${selected} · DEMO`;$('book-subtitle').textContent=`${selected} · price-time priority`;$('activity-subtitle').textContent=`${selected} · matching-engine activity`;$('prev-close').textContent=fmt(m.previous_close);$('day-high').textContent=fmt(m.day_high);$('day-low').textContent=fmt(m.day_low);$('open-price').textContent=fmt(m.open);$('price').value=Number(m.price).toFixed(2);$('book-level-count').textContent=`${state.level_counts.BUY} BUY · ${state.level_counts.SELL} SELL LEVELS`;$('open-count').textContent=`${state.open_orders.length} OPEN`;
+ const bestOpp=side==='BUY'?state.best_ask:state.best_bid;$('opposite-price').textContent=bestOpp==null?'—':fmt(bestOpp);$('chart-label').setAttribute('aria-label',`${selected} illustrative ${range} price history, ${m.change_percent>=0?'up':'down'} ${Math.abs(m.change_percent).toFixed(2)} percent`);drawChart();drawWatchlist();drawBook();drawActivity();updateEstimate();}
+function drawBook(){for(const [key,list,klass] of [['bids',state.book.bids,'buy'],['asks',state.book.asks,'sell']]){$(key).innerHTML=list.length?list.slice(0,6).map(l=>`<div class="level ${klass}"><span>${fmt(l.price)}</span><span class="qty">${num(l.quantity)}</span></div>`).join(''):'<div class="no-data">No resting orders</div>'}}
+function drawActivity(){const orders=state.open_orders;$('orders-body').innerHTML=orders.map(o=>`<tr><td>${o.order_id}</td><td><span class="side-pill ${o.side.toLowerCase()}">${o.side}</span></td><td>${fmt(o.price)}</td><td>${num(o.quantity)}</td><td><button class="cancel" data-cancel="${o.order_id}" type="button">Cancel</button></td></tr>`).join('');$('orders-empty').classList.toggle('hidden',orders.length>0);const recent=state.trades.slice(-8).reverse();$('trades-body').innerHTML=recent.map((t,index)=>`<tr><td>${state.execution.trade_count-index}</td><td>${fmt(t.price)}</td><td>${num(t.quantity)}</td><td>${t.buy_order_id}</td><td>${t.sell_order_id}</td></tr>`).join('');$('trades-empty').classList.toggle('hidden',state.trades.length>0)}
+function updateEstimate(){const qty=Number($('quantity').value),price=Number($('price').value);$('order-value').textContent=Number.isFinite(qty*price)&&qty>0&&price>0?fmt(qty*price):'—';$('place-order').textContent=side==='BUY'?'Buy':'Sell';$('place-order').classList.toggle('sell',side==='SELL');$('order-hint').textContent=side==='BUY'?'Crossing BUY limits match the lowest SELL first; any remainder rests in this symbol’s book.':'Crossing SELL limits match the highest BUY first; any remainder rests in this symbol’s book.'}
+async function getState(){try{const r=await fetch(`/api/state?symbol=${encodeURIComponent(selected)}`,{cache:'no-store'});if(!r.ok)throw Error('Local engine returned an error');state=await r.json();apiAvailable=true;$('connection').textContent='Local engine connected';}catch(e){state=preview[selected];apiAvailable=false;$('connection').textContent='Browser preview · start web_app.py to use the Python engine';}draw()}
+function toast(message){const el=$('toast');el.textContent=message;el.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.classList.remove('show'),2600)}
+async function selectSymbol(symbol){if(!bySymbol[symbol])return;selected=symbol;await getState();window.scrollTo({top:0,behavior:'smooth'})}
+document.addEventListener('click',async e=>{const stock=e.target.closest('[data-symbol]');if(stock){await selectSymbol(stock.dataset.symbol);return}const sideButton=e.target.closest('[data-side]');if(sideButton){side=sideButton.dataset.side;document.querySelectorAll('.side-tabs [data-side]').forEach(b=>{b.classList.toggle('active',b.dataset.side===side);b.classList.toggle('buy',b.dataset.side==='BUY');b.classList.toggle('sell',b.dataset.side==='SELL');b.setAttribute('aria-selected',b.dataset.side===side)});updateEstimate();return}const rangeButton=e.target.closest('[data-range]');if(rangeButton){range=rangeButton.dataset.range;document.querySelectorAll('[data-range]').forEach(b=>b.classList.toggle('active',b===rangeButton));drawChart();return}const nav=e.target.closest('[data-target]');if(nav){document.querySelectorAll('.nav button').forEach(b=>b.classList.toggle('active',b===nav));$(nav.dataset.target).scrollIntoView({behavior:'smooth',block:'start'});return}const cancel=e.target.closest('[data-cancel]');if(cancel){try{if(apiAvailable){const r=await fetch(`/api/orders/${cancel.dataset.cancel}?symbol=${encodeURIComponent(selected)}`,{method:'DELETE'});const body=await r.json();if(!r.ok)throw Error(body.error);state={...body};}else{state.open_orders=state.open_orders.filter(o=>String(o.order_id)!==cancel.dataset.cancel)}draw();toast(`Cancelled order ${cancel.dataset.cancel} · ${selected}`)}catch(err){toast(err.message)}}});
+$('search').addEventListener('input',drawWatchlist);$('quantity').addEventListener('input',updateEstimate);$('price').addEventListener('input',updateEstimate);$('refresh').addEventListener('click',getState);
+$('reset').addEventListener('click',async()=>{try{if(apiAvailable){const r=await fetch('/api/reset',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({symbol:selected})});const body=await r.json();if(!r.ok)throw Error(body.error);state=body}else state=seedPreview(bySymbol[selected]);draw();$('form-status').textContent='';toast(`${selected} book reset to its sample starting state`)}catch(e){toast(e.message)}});
+$('order-form').addEventListener('submit',async e=>{e.preventDefault();const data={symbol:selected,side,quantity:$('quantity').value,price:$('price').value,order_id:$('order-id').value||undefined};const status=$('form-status');status.className='status';try{if(apiAvailable){const r=await fetch('/api/orders',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});const body=await r.json();if(!r.ok)throw Error(body.error);state=body}else{const qty=Number(data.quantity),price=Number(data.price);if(!Number.isInteger(qty)||qty<1||!Number.isFinite(price)||price<=0)throw Error('Enter a positive whole quantity and a valid limit price.');let id=data.order_id?Number(data.order_id):state.next_order_id;if(!Number.isInteger(id)||id<1||state.open_orders.some(o=>o.order_id===id))throw Error('Order ID must be positive and unused in this symbol.');const opposing=data.side==='BUY'?state.book.asks:state.book.bids;let remaining=qty;for(const level of [...opposing]){const crosses=data.side==='BUY'?price>=level.price:price<=level.price;if(!crosses)break;const traded=Math.min(remaining,level.quantity);level.quantity-=traded;remaining-=traded;state.trades.unshift({trade_id:(state.trades[0]?.trade_id||0)+1,price:level.price,quantity:traded,buy_order_id:data.side==='BUY'?id:1001,sell_order_id:data.side==='SELL'?id:1000});state.execution.trade_count++;state.execution.total_quantity+=traded;if(!level.quantity)opposing.splice(opposing.indexOf(level),1);if(!remaining)break}if(remaining){const book=data.side==='BUY'?state.book.bids:state.book.asks;book.push({price,quantity:remaining});book.sort((a,b)=>data.side==='BUY'?b.price-a.price:a.price-b.price);state.open_orders.push({order_id:id,side:data.side,price,quantity:remaining});}state.best_bid=state.book.bids[0]?.price??null;state.best_ask=state.book.asks[0]?.price??null;state.spread=state.best_bid==null||state.best_ask==null?null:+(state.best_ask-state.best_bid).toFixed(2);state.level_counts={BUY:state.book.bids.length,SELL:state.book.asks.length};state.next_order_id=Math.max(state.next_order_id,id+1)}draw();const tradeCount=state.execution.trade_count;status.textContent=`Order ${data.order_id||'accepted'} processed in ${selected}. ${tradeCount} total executions.`;status.className='status success';$('order-id').value='';toast(`${side} ${qty} ${selected} at ${fmt(price)} processed by ChronosMatch`)}catch(err){status.textContent=err.message;status.className='status error'}});
+makeTicker();updateTickerPulse();setInterval(updateTickerPulse,1500);getState();
+</script>
 </body>
 </html>

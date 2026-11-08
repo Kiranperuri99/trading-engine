@@ -1,30 +1,35 @@
-# ChronosMatch browser front end
+# ChronosMatch multi-stock browser demo
 
-This front view is for the ChronosMatch order-matching simulator. It shows the
-best bid and ask, spread, midpoint, open quantities, order book, cancellations,
-and executed trades. It uses steady sample values; no fake stock-price ticker
-or animated price changes are included.
+The local browser screen presents a searchable watchlist, a continuously scrolling red/green ticker, a selected-symbol chart, a limit-order ticket, and per-symbol order books and trade history. The ticker animates small simulated price pulses around the sample prices; it is not a live market feed. Each supported symbol has its own in-memory `ChronosMatch` instance, so orders for one symbol never change another symbol's book.
 
-## Preview the screen by itself
+The selected-symbol chart, displayed market snapshot, and daily percentage changes are fixed illustrative values. The scrolling ticker adds simulated pulse changes for visual demonstration. None are live quotes. Orders run only through the local Python matching engine; the page does not connect to a broker or exchange and does not manage holdings, cash, or real trades.
 
-Open `ChronosMatch.html` in a browser. This is a browser-only preview, so order
-entry, matching, cancellation, and reset work in that tab without Python.
+## Run on Windows
 
-## Connect the front end to the Python project
-
-From PowerShell in the project folder, run:
+Open PowerShell in the project folder and run:
 
 ```powershell
-python web_app.py
+python -m unittest -v test_web_app
+python .\web_app.py
 ```
 
-Keep the terminal open and visit <http://127.0.0.1:8000>. The page now reads and
-updates the actual Python `ChronosMatch` engine. To stop it, press Ctrl+C in
-PowerShell. No additional packages are needed.
+Keep that terminal open, then visit <http://127.0.0.1:8000> in a browser. Press `Ctrl+C` in PowerShell to stop the server.
 
-The demo is local only. It does not connect to an exchange or send real orders.
+To choose another local port, use `python .\web_app.py --port 8080` and open <http://127.0.0.1:8080>.
 
-## Test the web server
+## Browser-only preview
+
+The `web\index.html` file can also be opened directly. If the local server is unavailable, the controls use an in-browser demonstration book. Start `web_app.py` to send orders to the real Python `ChronosMatch` engine instead.
+
+## Controls
+
+- Search or select a symbol in the watchlist; each symbol shows its own independent book.
+- Choose Buy or Sell, enter a positive whole quantity and a limit price, then submit. A crossing order matches immediately; any remaining quantity rests in the book.
+- Cancel a resting order from the activity table.
+- Reset the selected symbol's book. Other symbol books are unchanged. The reset endpoint can reset every book when no symbol is supplied.
+- Use the header navigation to jump to the order book and activity panels. Select 1D, 1W, 1M, or 1Y to redraw the deterministic illustrative chart.
+
+## Tests
 
 ```powershell
 python -m unittest -v test_web_app
